@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
-import { getSiteConfig } from "../data";
+import { BRAND_LOGO, getSiteConfig } from "../data";
 
 export function Nav() {
   const location = useLocation();
@@ -84,6 +84,26 @@ export function Nav() {
               {link.label}
             </Link>
           ))}
+
+          <a
+            href={BRAND_LOGO.canvaCatalog}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "#fff",
+              backgroundColor: "#1a1a1a",
+              textDecoration: "none",
+              padding: "10px 16px",
+              borderRadius: "999px",
+              boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+            }}
+          >
+            Katalog
+          </a>
         </div>
 
         {/* Hamburger button (mobile) */}

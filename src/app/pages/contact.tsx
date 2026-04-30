@@ -25,7 +25,7 @@ export function Contact() {
         className="flex min-h-screen flex-col justify-between"
         style={{ padding: "0 clamp(24px, 8vw, 120px)" }}
       >
-        <div style={{ paddingTop: "200px" }}>
+        <div style={{ paddingTop: "200px", maxWidth: "920px" }}>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -34,6 +34,7 @@ export function Contact() {
           >
             Hubungi Kami
           </motion.p>
+
           <motion.a
             href={getWhatsAppLink()}
             target="_blank"
@@ -67,26 +68,50 @@ export function Contact() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9, duration: 0.8 }}
-            className="mt-16 flex flex-col gap-6 md:flex-row md:gap-20"
+            className="mt-16 grid gap-6 md:grid-cols-3"
           >
-            <div>
+            <div style={{ padding: "20px 0", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
               <p style={{ ...mono, marginBottom: "12px", color: "#ccc" }}>Kunjungi</p>
               <p style={{ ...mono, lineHeight: 2.2 }}>
-                {config.address}
+                {config.address || "Pertokoan Pasar Senenan, Bangkalan"}<br />
+                Buka setiap hari
               </p>
             </div>
-            <div>
+            <div style={{ padding: "20px 0", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
               <p style={{ ...mono, marginBottom: "12px", color: "#ccc" }}>Media Sosial</p>
               <p style={{ ...mono, lineHeight: 2.2 }}>
                 Instagram: {config.instagram}<br />
                 TikTok: {config.tiktok}
               </p>
             </div>
-            <div>
+            <div style={{ padding: "20px 0", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
               <p style={{ ...mono, marginBottom: "12px", color: "#ccc" }}>WhatsApp</p>
               <p style={{ ...mono, lineHeight: 2.2 }}>
                 {config.whatsappDisplay}<br />
-                Senin &ndash; Minggu
+                Senin &ndash; Minggu · 09.00 &ndash; 21.00
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.05, duration: 0.8 }}
+            className="mt-12 grid gap-4 md:grid-cols-2"
+          >
+            <div style={{ padding: "20px", backgroundColor: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)" }}>
+              <p style={{ ...mono, color: "#ccc", marginBottom: "10px" }}>Informasi Brand</p>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", margin: 0, color: "#1a1a1a" }}>{config.businessName}</p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.8, color: "#555", marginTop: "8px" }}>
+                Buket premium, snack bouquet, money bouquet, dan rangkaian custom untuk hadiah, momen spesial, dan kebutuhan acara.
+              </p>
+            </div>
+            <div style={{ padding: "20px", backgroundColor: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.06)" }}>
+              <p style={{ ...mono, color: "#ccc", marginBottom: "10px" }}>Link Cepat</p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 2, color: "#555", marginTop: 0 }}>
+                Instagram: {config.instagram}<br />
+                WhatsApp: {config.whatsappDisplay}<br />
+                Katalog: Canva / Pinterest style catalog
               </p>
             </div>
           </motion.div>
