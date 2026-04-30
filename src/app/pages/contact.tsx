@@ -99,7 +99,7 @@ export function Contact() {
             style={{ marginTop: "60px" }}
           >
             <a
-              href={getWhatsAppLink("Halo Pesona Florist! Saya ingin bertanya tentang produk dan pemesanan bunga 🌸")}
+              href={getWhatsAppLink("Halo El Bouquet! Saya ingin bertanya tentang produk dan pemesanan bunga 🌸")}
               target="_blank"
               rel="noopener noreferrer"
               style={{

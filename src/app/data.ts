@@ -1,13 +1,22 @@
 // ==========================================
-// PESONA FLORIST - KATALOG TERBARU 2026
-// WhatsApp: 081515450611
-// Instagram: @pesonaflorist
-// Tiktok: @pesonafloristsidoarjo
-// Jl. Raya Imam Bonjol No. 05 Krian, Sidoarjo
+// EL BOUQUET - KATALOG TERBARU 2026
+// Instagram: @elbouket
+// Premium Flower & Gift Arrangements
 // ==========================================
 
+// ---- BRANDING & LOGO ----
+export const BRAND_LOGO = {
+  name: "El Bouquet",
+  tagline: "Elegant Flowers & Premium Gifts",
+  whatsapp: "6282257827867",
+  location: "Pertokoan pasar senenan Bangkalan",
+  instagram: "@elbouket",
+  canvaCatalog: "https://catalog-elbouket.my.canva.site/",
+  canvaChocolate: "https://chocolate-bouquet-elbouket.my.canva.site/"
+};
+
 // ---- Admin Config Store (localStorage-based) ----
-const ADMIN_STORAGE_KEY = "pesona_florist_admin_v3";
+const ADMIN_STORAGE_KEY = "elbouquet_admin_v1";
 
 export interface SiteConfig {
   businessName: string;
@@ -23,26 +32,28 @@ export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
   mapsEmbedUrl: string;
+  adminPassword?: string;
 }
 
 const defaultConfig: SiteConfig = {
-  businessName: "Pesona Florist",
-  tagline: "Rangkai Keindahan di Setiap Momen",
+  businessName: "El Bouquet",
+  tagline: "Elegant Flowers & Premium Gifts",
   year: "2026",
-  address: "Jl. Raya Imam Bonjol No. 05 Krian, Sidoarjo",
-  whatsappNumber: "6281515450611",
-  whatsappDisplay: "081515450611",
-  instagram: "@pesonaflorist",
-  tiktok: "@pesonafloristsidoarjo",
+  address: "",
+  whatsappNumber: "",
+  whatsappDisplay: "",
+  instagram: "@elbouket",
+  tiktok: "",
   navLinks: [
     { to: "/", label: "Katalog" },
     { to: "/studio", label: "Tentang" },
     { to: "/contact", label: "Kontak" },
   ],
   footerText: "",
-  heroTitle: "Rangkai Keindahan\ndi Setiap Momen",
-  heroSubtitle: "Buket bunga segar, hampers elegan, standing flower, dan rangkaian bunga premium untuk setiap momen spesial Anda. Handcrafted with love.",
-  mapsEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.5!2d112.5805!3d-7.4087!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMjQnMzEuMyJTIDExMsKwMzQnNDkuOCJF!5e0!3m2!1sid!2sid!4v1",
+  heroTitle: "Buket Bunga Premium\nUntuk Setiap Momen",
+  heroSubtitle: "Rangkaian bunga segar pilihan, snack bouquet unik, money bouquet eksklusif, dan vas cantik. Dibuat dengan perhatian penuh untuk moment spesial Anda.",
+  mapsEmbedUrl: "",
+  adminPassword: "elbouquet",
 };
 
 export function getSiteConfig(): SiteConfig {
@@ -68,12 +79,12 @@ export function resetSiteConfig() {
 }
 
 // Products stored in localStorage
-const PRODUCTS_STORAGE_KEY = "pesona_florist_products_v3";
-const CATEGORIES_STORAGE_KEY = "pesona_florist_categories_v3";
+const PRODUCTS_STORAGE_KEY = "elbouquet_products_v1";
+const CATEGORIES_STORAGE_KEY = "elbouquet_categories_v1";
 
 // Legacy compat
-export const WHATSAPP_NUMBER = "6281515450611";
-export const WHATSAPP_DISPLAY = "081515450611";
+export const WHATSAPP_NUMBER = "";
+export const WHATSAPP_DISPLAY = "";
 
 export const businessInfo = {
   get name() { return getSiteConfig().businessName; },
@@ -87,18 +98,13 @@ export const businessInfo = {
 };
 
 export type ProductCategory =
-  | "bouquet-classic"
-  | "bouquet-premium-medium"
-  | "bouquet-premium-big"
+  | "buket-satin"
+  | "snack-bouquet"
   | "money-bouquet"
-  | "bouquet-wedding"
-  | "bunga-mobil"
-  | "bunga-meja"
-  | "bloom-box"
-  | "standing-flower"
-  | "bunga-salib"
-  | "paket-duka"
-  | "papan-karangan";
+  | "chocolate-bouquet"
+  | "fresh-flower"
+  | "artificial-flower"
+  | "catalog-home";
 
 export interface Category {
   key: ProductCategory;
@@ -106,6 +112,7 @@ export interface Category {
   emoji: string;
   description: string;
   noted?: string;
+  canvaLink?: string;
 }
 
 export interface Product {
@@ -121,207 +128,142 @@ export interface Product {
   variant?: string;
 }
 
-// ---- Curated flower images per category ----
-const BASE = "https://images.pexels.com/photos/";
-const SUFFIX = "?auto=compress&cs=tinysrgb&w=600&h=800&fit=crop";
+export function normalizeProductRecord(product: any): Product {
+  const images = Array.isArray(product?.images)
+    ? product.images.filter(Boolean)
+    : product?.image
+      ? [product.image]
+      : [];
 
-const IMG = {
-  classic: [
-    BASE + "736230/pexels-photo-736230.jpeg" + SUFFIX,
-    BASE + "56866/garden-rose-red-pink-56866.jpeg" + SUFFIX,
-    BASE + "931166/pexels-photo-931166.jpeg" + SUFFIX,
-    BASE + "1083822/pexels-photo-1083822.jpeg" + SUFFIX,
-    BASE + "87840/daisy-pollen-flower-nature-87840.jpeg" + SUFFIX,
-  ],
-  premium: [
-    BASE + "67857/daisy-flower-spring-marguerite-67857.jpeg" + SUFFIX,
-    BASE + "132474/pexels-photo-132474.jpeg" + SUFFIX,
-    BASE + "69776/tulips-bed-colorful-color-69776.jpeg" + SUFFIX,
-    BASE + "133472/pexels-photo-133472.jpeg" + SUFFIX,
-    BASE + "1058771/pexels-photo-1058771.jpeg" + SUFFIX,
-    BASE + "85773/pexels-photo-85773.jpeg" + SUFFIX,
-  ],
-  wedding: [
-    BASE + "2567221/pexels-photo-2567221.jpeg" + SUFFIX,
-    BASE + "1083822/pexels-photo-1083822.jpeg" + SUFFIX,
-    BASE + "295826/pexels-photo-295826.jpeg" + SUFFIX,
-  ],
-  money: [
-    BASE + "2072165/pexels-photo-2072165.jpeg" + SUFFIX,
-    BASE + "2508735/pexels-photo-2508735.jpeg" + SUFFIX, 
-  ],
-  mobil: [
-    BASE + "1408196/pexels-photo-1408196.jpeg" + SUFFIX,
-    BASE + "1043952/pexels-photo-1043952.jpeg" + SUFFIX,
-  ],
-  meja: [
-    BASE + "1005058/pexels-photo-1005058.jpeg" + SUFFIX,
-    BASE + "870170/pexels-photo-870170.jpeg" + SUFFIX,
-  ],
-  bloombox: [
-    BASE + "39517/rose-flower-blossom-bloom-39517.jpeg" + SUFFIX, 
-    BASE + "736230/pexels-photo-736230.jpeg" + SUFFIX,
-  ],
-  standing: [
-    BASE + "112396/pexels-photo-112396.jpeg" + SUFFIX,
-    BASE + "1083822/pexels-photo-1083822.jpeg" + SUFFIX,
-  ],
-  salib: [
-    BASE + "133472/pexels-photo-133472.jpeg" + SUFFIX,
-    BASE + "931166/pexels-photo-931166.jpeg" + SUFFIX,
-  ],
-  papan: [
-    BASE + "67857/daisy-flower-spring-marguerite-67857.jpeg" + SUFFIX,
-    BASE + "56866/garden-rose-red-pink-56866.jpeg" + SUFFIX,
-  ],
-};
-const pick = (arr: string[], i: number) => arr[i % arr.length];
+  return {
+    ...product,
+    image: product?.image || images[0] || "",
+    images,
+  } as Product;
+}
+
+export function normalizeStoredProducts(stored: any[]): Product[] {
+  return stored.map((product) => normalizeProductRecord(product));
+}
 
 export const categories: Category[] = [
-  { key: "bouquet-classic", label: "Bouquet Classic", emoji: "💐", description: "Buket simple yang sampai sekarang tetap menjadi idola. Affordable & bebas pilih nuansa warna.", noted: "Bebas pilih nuansa warna dan custom warna. Kecuali warna ungu, biru, gold, dan hitam harga berbeda." },
-  { key: "bouquet-premium-medium", label: "Bouquet Premium", emoji: "🌹", description: "Full fresh flower dengan rangkaian premium. Medium size dengan pilihan warna yang beragam.", noted: "Full Fresh Flower. Bebas pilih nuansa warna dan custom warna." },
-  { key: "bouquet-premium-big", label: "Bouquet Premium Big", emoji: "🌺", description: "Bouquet premium ukuran besar untuk momen spesial. Full fresh flower arrangement.", noted: "Full Fresh Flower. Big size." },
-  { key: "money-bouquet", label: "Money Bouquet", emoji: "💰", description: "Buket uang custom yang unik. Tersedia model Royal & Runcing.", noted: "Harga adalah biaya jasa rangkai, belum termasuk uang. Model royal & runcing tambahan 25rb-50rb." },
-  { key: "bouquet-wedding", label: "Bouquet Wedding", emoji: "💒", description: "Bouquet pernikahan premium. Fresh & artificial flower mix.", noted: "Bebas pilih nuansa warna. Kecuali ungu, biru, gold, hitam harga berbeda." },
-  { key: "bunga-mobil", label: "Bunga Mobil", emoji: "🚗", description: "Dekorasi bunga mobil full fresh flower untuk pernikahan.", noted: "Tambah handle 15rb/handle. Tile model V 50rb, tile bawah bunga 30rb." },
-  { key: "bunga-meja", label: "Bunga Meja", emoji: "🏵️", description: "Rangkaian bunga meja elegan. Full fresh flower & anggrek.", noted: "Free kartu ucapan. Bebas pilih nuansa warna." },
-  { key: "bloom-box", label: "Bloom Box", emoji: "🎁", description: "Gift box rangkaian bunga segar. Cocok untuk Grand Opening, ulang tahun, wisuda.", noted: "Bebas Request Nuansa Warna & Ucapan." },
-  { key: "standing-flower", label: "Standing Flowers", emoji: "🌸", description: "Standing flower untuk berbagai event dan ucapan.", noted: "For all events. Bebas request nuansa warna & ucapan." },
-  { key: "bunga-salib", label: "Bunga Salib", emoji: "✝️", description: "Rangkaian bunga salib full fresh flowers.", noted: "Free ongkir radius max 10km." },
-  { key: "paket-duka", label: "Paket Duka Cita", emoji: "🕊️", description: "Paket lengkap: 1 Bunga Salib, 2 Standing XL, 2 Standing L, 2 Bunga Meja, 1 Bunga Taman." },
-  { key: "papan-karangan", label: "Papan Karangan Bunga", emoji: "📋", description: "Papan karangan bunga berbagai ukuran untuk ucapan." },
+  { 
+    key: "buket-satin", 
+    label: "Buket Satin", 
+    emoji: "💐", 
+    description: "Buket satin berkualitas tinggi dengan rangkaian bunga pilihan. Sempurna untuk berbagai momen spesial.",
+    canvaLink: "https://catalog-elbouket.my.canva.site/buket-satin"
+  },
+  { 
+    key: "snack-bouquet", 
+    label: "Snack Bouquet", 
+    emoji: "🎁", 
+    description: "Kombinasi unik bunga dengan snack premium. Hadiah yang berkesan dan fungsional.",
+    canvaLink: "https://catalog-elbouket.my.canva.site/snack-bouquet"
+  },
+  { 
+    key: "money-bouquet", 
+    label: "Money Bouquet", 
+    emoji: "💰", 
+    description: "Buket uang yang elegan untuk momen istimewa. Hadiah yang praktis dan bersesan.",
+    canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money"
+  },
+  { 
+    key: "chocolate-bouquet", 
+    label: "Chocolate Bouquet", 
+    emoji: "🍫", 
+    description: "Bunga dengan cokelat premium berkualitas tinggi. Sempurna untuk gift istimewa.",
+    canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/"
+  },
+  { 
+    key: "fresh-flower", 
+    label: "Fresh Flower", 
+    emoji: "🌹", 
+    description: "Rangkaian bunga segar pilihan terbaik dengan berbagai kombinasi warna.",
+    canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe"
+  },
+  { 
+    key: "artificial-flower", 
+    label: "Artificial Flower", 
+    emoji: "✨", 
+    description: "Rangkaian bunga artificial premium yang awet dan elegan.",
+    canvaLink: "https://catalog-elbouket.my.canva.site/vase"
+  },
+  { 
+    key: "catalog-home", 
+    label: "Premium Packages", 
+    emoji: "👑", 
+    description: "Paket premium untuk acara spesial dan kebutuhan khusus.",
+    canvaLink: "https://catalog-elbouket.my.canva.site/"
+  },
 ];
 
 const initialProducts: Product[] = [
-  // ======= BOUQUET CLASSIC =======
-  { id: "bc-01", name: "Bouquet Classic 3 Mawar", category: "bouquet-classic", price: 20000, priceLabel: "Rp 20.000", image: pick(IMG.classic,0), variant: "3 Mawar" },
-  { id: "bc-02", name: "Bouquet Classic 5 Mawar", category: "bouquet-classic", price: 30000, priceLabel: "Rp 30.000", image: pick(IMG.classic,1), variant: "5 Mawar" },
-  { id: "bc-03", name: "Bouquet Classic 7 Mawar", category: "bouquet-classic", price: 40000, priceLabel: "Rp 40.000", image: pick(IMG.classic,2), variant: "7 Mawar" },
-  { id: "bc-04", name: "Bouquet Classic 10 Mawar", category: "bouquet-classic", price: 55000, priceLabel: "Rp 55.000", image: pick(IMG.classic,3), variant: "10 Mawar" },
-  { id: "bc-05", name: "Bouquet Classic 12 Mawar", category: "bouquet-classic", price: 65000, priceLabel: "Rp 65.000", image: pick(IMG.classic,4), variant: "12 Mawar" },
-  { id: "bc-06", name: "Bouquet Classic 15 Mawar", category: "bouquet-classic", price: 80000, priceLabel: "Rp 80.000", image: pick(IMG.classic,0), variant: "15 Mawar", tag: "Populer" },
-  { id: "bc-07", name: "Bouquet Classic 20 Mawar", category: "bouquet-classic", price: 105000, priceLabel: "Rp 105.000", image: pick(IMG.classic,1), variant: "20 Mawar" },
-  { id: "bc-m1", name: "Bouquet Classic Medium", category: "bouquet-classic", price: 55000, priceLabel: "Rp 55.000", image: pick(IMG.classic,2), variant: "Medium" },
-  { id: "bc-m2", name: "Bouquet Classic Medium", category: "bouquet-classic", price: 60000, priceLabel: "Rp 60.000", image: pick(IMG.classic,3), variant: "Medium" },
-  { id: "bc-m3", name: "Bouquet Classic Medium", category: "bouquet-classic", price: 70000, priceLabel: "Rp 70.000", image: pick(IMG.classic,4), variant: "Medium" },
+  // ======= BUKET SATIN (4 items @ Rp 20.000) =======
+  { id: "bs-01", name: "Buket Satin Style 1", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-01.jpg" },
+  { id: "bs-02", name: "Buket Satin Style 2", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-02.jpg", tag: "Populer" },
+  { id: "bs-03", name: "Buket Satin Style 3", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-03.jpg" },
+  { id: "bs-04", name: "Buket Satin Style 4", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-03.jpg" },
 
-  // ======= BOUQUET PREMIUM MEDIUM =======
-  { id: "bp-01", name: "Bouquet Premium Unicorn", category: "bouquet-premium-medium", price: 300000, priceLabel: "Rp 300.000", image: pick(IMG.premium,0), description: "Mawar Putih, Daun Ruskus, Mawar Pink Soft, Babybreath. Full Fresh Flower.", tag: "✨ Premium" },
-  { id: "bp-02", name: "Bouquet Premium Soft", category: "bouquet-premium-medium", price: 85000, priceLabel: "Rp 85.000", image: pick(IMG.premium,1) },
-  { id: "bp-03", name: "Bouquet Premium Elegant", category: "bouquet-premium-medium", price: 100000, priceLabel: "Rp 100.000", image: pick(IMG.premium,2) },
-  { id: "bp-04", name: "Bouquet Premium Bloom", category: "bouquet-premium-medium", price: 120000, priceLabel: "Rp 120.000", image: pick(IMG.premium,3), tag: "Best Seller" },
-  { id: "bp-05", name: "Bouquet Premium Classic", category: "bouquet-premium-medium", price: 135000, priceLabel: "Rp 135.000", image: pick(IMG.premium,4) },
-  { id: "bp-06", name: "Bouquet Premium Luxe", category: "bouquet-premium-medium", price: 150000, priceLabel: "Rp 150.000", image: pick(IMG.premium,5) },
-  { id: "bp-07", name: "Bouquet Premium Royal", category: "bouquet-premium-medium", price: 175000, priceLabel: "Rp 175.000", image: pick(IMG.premium,6) },
-  { id: "bp-08", name: "Bouquet Premium Grand", category: "bouquet-premium-medium", price: 200000, priceLabel: "Rp 200.000", image: pick(IMG.premium,7) },
-  { id: "bp-09", name: "Bouquet Premium Deluxe", category: "bouquet-premium-medium", price: 250000, priceLabel: "Rp 250.000", image: pick(IMG.premium,0), tag: "🔥 Terlaris" },
-  { id: "bp-10", name: "Bouquet Premium Majestic", category: "bouquet-premium-medium", price: 300000, priceLabel: "Rp 300.000", image: pick(IMG.premium,1) },
-  { id: "bp-11", name: "Bouquet Premium Aurora", category: "bouquet-premium-medium", price: 350000, priceLabel: "Rp 350.000", image: pick(IMG.premium,2) },
-  { id: "bp-12", name: "Bouquet Premium Infinity", category: "bouquet-premium-medium", price: 450000, priceLabel: "Rp 450.000", image: pick(IMG.premium,3) },
-  { id: "bp-13", name: "Bouquet Premium Supreme", category: "bouquet-premium-medium", price: 550000, priceLabel: "Rp 550.000", image: pick(IMG.premium,4) },
-  { id: "bp-14", name: "Bouquet Premium Imperial", category: "bouquet-premium-medium", price: 700000, priceLabel: "Rp 700.000", image: pick(IMG.premium,5) },
-  { id: "bp-15", name: "Bouquet Premium Dynasty", category: "bouquet-premium-medium", price: 800000, priceLabel: "Rp 800.000", image: pick(IMG.premium,6), tag: "⭐ Eksklusif" },
+  // ======= SNACK BOUQUET (2 items @ Rp 35.000) =======
+  { id: "sb-01", name: "Snack Bouquet Deluxe", category: "snack-bouquet", price: 35000, priceLabel: "Rp 35.000", image: "/assets/snack-bouquet-rp35000-item-01.jpg", tag: "Unik" },
+  { id: "sb-02", name: "Snack Bouquet Premium", category: "snack-bouquet", price: 35000, priceLabel: "Rp 35.000", image: "/assets/snack-bouquet-rp35000-item-01.jpg", tag: "Best Seller" },
 
-  // ======= BOUQUET PREMIUM BIG =======
-  { id: "bpb-01", name: "Bouquet Big Rose", category: "bouquet-premium-big", price: 600000, priceLabel: "Rp 600.000", image: pick(IMG.premium,0), description: "Full Fresh Flower. Wrap hitam list gold." },
-  { id: "bpb-02", name: "Bouquet Big Garden", category: "bouquet-premium-big", price: 750000, priceLabel: "Rp 750.000", image: pick(IMG.premium,2) },
-  { id: "bpb-03", name: "Bouquet Big Royal", category: "bouquet-premium-big", price: 800000, priceLabel: "Rp 800.000", image: pick(IMG.premium,4), tag: "✨ Signature" },
-  { id: "bpb-04", name: "Bouquet Big Grand", category: "bouquet-premium-big", price: 850000, priceLabel: "Rp 850.000", image: pick(IMG.premium,6) },
-  { id: "bpb-05", name: "Bouquet Big Majestic", category: "bouquet-premium-big", price: 1000000, priceLabel: "Rp 1.000.000", image: pick(IMG.premium,1), tag: "👑 Premium" },
+  // ======= MONEY BOUQUET (9 items @ Rp 50.000) =======
+  { id: "mb-01", name: "Money Bouquet Type 1", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-01.jpg" },
+  { id: "mb-02", name: "Money Bouquet Type 2", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-02.jpg" },
+  { id: "mb-03", name: "Money Bouquet Type 3", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-03.jpg" },
+  { id: "mb-04", name: "Money Bouquet Type 4", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-04.jpg", tag: "Favorit" },
+  { id: "mb-05", name: "Money Bouquet Type 5", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-05.png" },
+  { id: "mb-06", name: "Money Bouquet Type 6", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-06.jpg", tag: "🔥 Terlaris" },
+  { id: "mb-07", name: "Money Bouquet Type 7", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-07.png" },
+  { id: "mb-08", name: "Money Bouquet Type 8", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-08.jpg" },
+  { id: "mb-09", name: "Money Bouquet Type 9", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-09.png", tag: "Premium" },
 
-  // ======= MONEY BOUQUET =======
-  { id: "mb-01", name: "Money Bouquet 0-10 Lembar", category: "money-bouquet", price: 85000, priceLabel: "Rp 85.000", image: pick(IMG.money,0), variant: "0-10 lembar" },
-  { id: "mb-02", name: "Money Bouquet 11-20 Lembar", category: "money-bouquet", price: 100000, priceLabel: "Rp 100.000", image: pick(IMG.money,1), variant: "11-20 lembar" },
-  { id: "mb-03", name: "Money Bouquet 21-30 Lembar", category: "money-bouquet", price: 150000, priceLabel: "Rp 150.000", image: pick(IMG.money,0), variant: "21-30 lembar" },
-  { id: "mb-04", name: "Money Bouquet 41-50 Lembar", category: "money-bouquet", price: 250000, priceLabel: "Rp 250.000", image: pick(IMG.money,1), variant: "41-50 lembar", tag: "Populer" },
-  { id: "mb-05", name: "Money Bouquet 91-100 Lembar", category: "money-bouquet", price: 500000, priceLabel: "Rp 500.000", image: pick(IMG.money,0), variant: "91-100 lembar" },
-  { id: "mb-06", name: "Money Bouquet 200 Lembar", category: "money-bouquet", price: 1000000, priceLabel: "Rp 1.000.000", image: pick(IMG.money,1), variant: "200 lembar", tag: "👑 Mega" },
+  // ======= CHOCOLATE BOUQUET (2 items @ Rp 20.000) =======
+  { id: "cb-01", name: "Chocolate Bouquet Classic", category: "chocolate-bouquet", price: 20000, priceLabel: "Rp 20.000", image: "/assets/chocolate-bouquet-rp20000-item-01.jpg" },
+  { id: "cb-02", name: "Chocolate Bouquet Premium", category: "chocolate-bouquet", price: 20000, priceLabel: "Rp 20.000", image: "/assets/chocolate-bouquet-rp20000-item-01.jpg", tag: "Best Seller" },
 
-  // ======= BOUQUET WEDDING =======
-  { id: "bw-01", name: "Wedding Bouquet Simple", category: "bouquet-wedding", price: 85000, priceLabel: "Rp 85.000", image: pick(IMG.wedding,0) },
-  { id: "bw-02", name: "Wedding Bouquet Elegant", category: "bouquet-wedding", price: 200000, priceLabel: "Rp 200.000", image: pick(IMG.wedding,1), tag: "Favorit" },
-  { id: "bw-03", name: "Wedding Bouquet Royal", category: "bouquet-wedding", price: 350000, priceLabel: "Rp 350.000", image: pick(IMG.wedding,2) },
-  { id: "bw-04", name: "Wedding Orchid Premium", category: "bouquet-wedding", price: 450000, priceLabel: "Rp 450.000", image: pick(IMG.wedding,3), description: "Gompie coklat, Carnation merah, Mawar peach, Anggrek, baby breath.", tag: "✨ Signature" },
-  { id: "bw-05", name: "Wedding Bouquet Luxury", category: "bouquet-wedding", price: 550000, priceLabel: "Rp 550.000", image: pick(IMG.wedding,0) },
+  // ======= FRESH FLOWER (2 items @ Rp 30.000) =======
+  { id: "ff-01", name: "Fresh Flower Arrangement", category: "fresh-flower", price: 30000, priceLabel: "Rp 30.000", image: "/assets/fresh-flower-rp30000-item-01.jpg" },
+  { id: "ff-02", name: "Fresh Flower Premium", category: "fresh-flower", price: 30000, priceLabel: "Rp 30.000", image: "/assets/fresh-flower-rp30000-item-01.jpg", tag: "Populer" },
 
-  // ======= BUNGA MOBIL =======
-  { id: "bm-01", name: "Bunga Mobil Classic", category: "bunga-mobil", price: 250000, priceLabel: "Rp 250.000", image: pick(IMG.mobil,0) },
-  { id: "bm-02", name: "Bunga Mobil Elegant", category: "bunga-mobil", price: 300000, priceLabel: "Rp 300.000", image: pick(IMG.mobil,1), tag: "Best Seller" },
-  { id: "bm-03", name: "Bunga Mobil Grand", category: "bunga-mobil", price: 350000, priceLabel: "Rp 350.000", image: pick(IMG.mobil,0) },
+  // ======= ARTIFICIAL FLOWER (1 item @ Rp 175.000) =======
+  { id: "af-01", name: "Artificial Flower Premium", category: "artificial-flower", price: 175000, priceLabel: "Rp 175.000", image: "/assets/artificial-flower-rp175000-item-01.jpg", tag: "Eksklusif" },
 
-  // ======= BUNGA MEJA =======
-  { id: "bmj-01", name: "Bunga Meja Classic", category: "bunga-meja", price: 300000, priceLabel: "Rp 300.000", image: pick(IMG.meja,0) },
-  { id: "bmj-02", name: "Bunga Meja Premium", category: "bunga-meja", price: 400000, priceLabel: "Rp 400.000", image: pick(IMG.meja,1), tag: "Populer" },
-  { id: "bmj-03", name: "Bunga Meja Grand", category: "bunga-meja", price: 500000, priceLabel: "Rp 500.000", image: pick(IMG.meja,2) },
-  { id: "bmj-04", name: "Bunga Meja Anggrek", category: "bunga-meja", price: 1000000, priceLabel: "Rp 1.000.000", image: pick(IMG.meja,3), description: "Full Anggrek Fresh. Look So Elegant.", tag: "⭐ Eksklusif" },
-  { id: "bmj-05", name: "Bunga Meja Anggrek Royal", category: "bunga-meja", price: 3000000, priceLabel: "Rp 3.000.000", image: pick(IMG.meja,0), tag: "👑 Super Premium" },
-  { id: "bmj-06", name: "Bunga Meja XL", category: "bunga-meja", price: 1250000, priceLabel: "Rp 1.250.000", image: pick(IMG.meja,1) },
-  { id: "bmj-07", name: "Bunga Meja Mega", category: "bunga-meja", price: 2250000, priceLabel: "Rp 2.250.000", image: pick(IMG.meja,2), tag: "👑 Mega" },
-
-  // ======= BLOOM BOX =======
-  { id: "bb-01", name: "Bloom Box Classic", category: "bloom-box", price: 400000, priceLabel: "Rp 400.000", image: pick(IMG.bloombox,0) },
-  { id: "bb-02", name: "Bloom Box Premium", category: "bloom-box", price: 550000, priceLabel: "Rp 550.000", image: pick(IMG.bloombox,1), tag: "Populer" },
-  { id: "bb-03", name: "Bloom Box Grand", category: "bloom-box", price: 750000, priceLabel: "Rp 750.000", image: pick(IMG.bloombox,0), tag: "🔥 Best Seller" },
-
-  // ======= STANDING FLOWER =======
-  { id: "sf-01", name: "Standing Flower Classic", category: "standing-flower", price: 500000, priceLabel: "Rp 500.000", image: pick(IMG.standing,0) },
-  { id: "sf-02", name: "Standing Flower Premium", category: "standing-flower", price: 750000, priceLabel: "Rp 750.000", image: pick(IMG.standing,1), tag: "Best Seller" },
-  { id: "sf-03", name: "Standing Flower Grand", category: "standing-flower", price: 1300000, priceLabel: "Rp 1.300.000", image: pick(IMG.standing,2) },
-  { id: "sf-04", name: "Standing Flower Imperial", category: "standing-flower", price: 2300000, priceLabel: "Rp 2.300.000", image: pick(IMG.standing,0), tag: "👑 Imperial" },
-
-  // ======= BUNGA SALIB =======
-  { id: "bs-01", name: "Bunga Salib Classic", category: "bunga-salib", price: 350000, priceLabel: "Rp 350.000", image: pick(IMG.salib,0) },
-  { id: "bs-02", name: "Bunga Salib Premium", category: "bunga-salib", price: 450000, priceLabel: "Rp 450.000", image: pick(IMG.salib,1) },
-  { id: "bs-03", name: "Bunga Salib Grand", category: "bunga-salib", price: 500000, priceLabel: "Rp 500.000", image: pick(IMG.salib,0) },
-
-  // ======= PAKET DUKA CITA =======
-  { id: "pd-01", name: "Paket Duka Cita Lengkap", category: "paket-duka", price: 4000000, priceLabel: "Rp 4.000.000", image: pick(IMG.salib,1), description: "1 Bunga Salib, 2 Standing XL, 2 Standing L, 2 Bunga Meja, 1 Bunga Taman.", tag: "Paket Lengkap" },
-
-  // ======= PAPAN KARANGAN BUNGA =======
-  { id: "pk-01", name: "Papan Karangan S", category: "papan-karangan", price: 450000, priceLabel: "Rp 450.000", image: pick(IMG.papan,0) },
-  { id: "pk-02", name: "Papan Karangan M", category: "papan-karangan", price: 600000, priceLabel: "Rp 600.000", image: pick(IMG.papan,1) },
-  { id: "pk-03", name: "Papan Karangan L", category: "papan-karangan", price: 750000, priceLabel: "Rp 750.000", image: pick(IMG.papan,0) },
-  { id: "pk-04", name: "Papan Karangan Grand", category: "papan-karangan", price: 1000000, priceLabel: "Rp 1.000.000", image: pick(IMG.papan,1), tag: "Best Seller" },
-  { id: "pk-05", name: "Papan Karangan Imperial", category: "papan-karangan", price: 2000000, priceLabel: "Rp 2.000.000", image: "", tag: "👑 Premium" },
+  // ======= CATALOG-HOME / PREMIUM PACKAGES (11 items @ Rp 150.000) =======
+  { id: "ch-01", name: "Premium Package 1", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-02.jpg" },
+  { id: "ch-02", name: "Premium Package 2", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-02.jpg", tag: "Populer" },
+  { id: "ch-03", name: "Premium Package 3", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-04.png" },
+  { id: "ch-04", name: "Premium Package 4", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-04.png" },
+  { id: "ch-05", name: "Premium Package 5", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-05.jpg" },
+  { id: "ch-06", name: "Premium Package 6", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-06.jpg", tag: "Best Seller" },
+  { id: "ch-07", name: "Premium Package 7", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-07.jpg" },
+  { id: "ch-08", name: "Premium Package 8", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-08.jpg" },
+  { id: "ch-09", name: "Premium Package 9", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-09.jpg" },
+  { id: "ch-10", name: "Premium Package 10", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-10.jpg" },
+  { id: "ch-11", name: "Premium Package 11", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-11.jpg", tag: "👑 Premium" },
 ];
 
-function getLocalImage(category: string): string {
-  switch(category) {
-    case "bouquet-classic":
-    case "bouquet-premium-medium":
-    case "bouquet-premium-big":
-    case "bloom-box":
-    case "paket-duka":
-      return "/assets/bouquet_classic.png";
-    case "money-bouquet":
-      return "/assets/money_bouquet.png";
-    case "bunga-mobil":
-      return "/assets/bunga_mobil.png";
-    case "bunga-meja":
-    case "standing-flower":
-      return "/assets/bunga_meja.png";
-    case "bunga-salib":
-      return "/assets/bunga_salib.png";
-    case "papan-karangan":
-      return "/assets/papan_karangan.png";
-    default:
-      return "/assets/bouquet_classic.png";
-  }
-}
-
-export const defaultProducts: Product[] = initialProducts.map((p) => {
-  const localImage = getLocalImage(p.category);
-  return {
-    ...p,
-    image: localImage,
-    images: [localImage, localImage, localImage]
-  };
-});
+export const defaultProducts: Product[] = initialProducts.map((p) => ({
+  ...p,
+  images: p.image ? [p.image] : [],
+}));
 
 export function getProducts(): Product[] {
   try {
     const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const parsed: any[] = JSON.parse(stored);
+      const normalized = normalizeStoredProducts(parsed);
+      const migrated = JSON.stringify(parsed) !== JSON.stringify(normalized);
+      if (migrated) {
+        try {
+          localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(normalized));
+        } catch {}
+      }
+      return normalized as Product[];
+    }
   } catch {}
   return defaultProducts;
 }
@@ -357,7 +299,7 @@ export function getWhatsAppLink(customMessage?: string): string {
 }
 
 // ---- Video Gallery ----
-const VIDEOS_STORAGE_KEY = "pesona_florist_videos_v6";
+const VIDEOS_STORAGE_KEY = "elbouquet_videos_v1";
 
 export type VideoSource = "youtube" | "instagram" | "tiktok" | "file";
 export type VideoOrientation = "vertical" | "horizontal" | "square";
@@ -403,7 +345,7 @@ export const defaultVideos: VideoItem[] = [
     url: "https://www.youtube.com/watch?v=AKEXXIh-244",
     source: "youtube",
     orientation: "horizontal",
-    caption: "Behind the Scenes — Proses merangkai buket premium Pesona Florist 🌸",
+    caption: "Behind the Scenes — Proses merangkai buket premium El Bouquet 🌸",
     featured: true,
   },
   {
@@ -411,7 +353,7 @@ export const defaultVideos: VideoItem[] = [
     url: "https://www.youtube.com/shorts/-0SM7Ihvxyo",
     source: "youtube",
     orientation: "vertical",
-    caption: "Tutorial Mini Bouquet (Layout Vertikal) 💐",
+    caption: "Tutorial Buket Satin (Layout Vertikal) 💐",
     featured: true,
   },
   {

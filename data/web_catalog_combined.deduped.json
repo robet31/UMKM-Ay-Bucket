@@ -1,0 +1,272 @@
+{
+  "generated_at": "2026-04-30T01:16:39.090288",
+  "summary": {
+    "canva_files": 31,
+    "instagram_records": 0,
+    "total_products": 31,
+    "total_categories": 7
+  },
+  "categories": {
+    "snack-bouquet": {
+      "source": "canva",
+      "count": 2,
+      "price": "35000",
+      "page_url": "https://catalog-elbouket.my.canva.site/snack-bouquet"
+    },
+    "buket-satin": {
+      "source": "canva",
+      "count": 4,
+      "price": "20000",
+      "page_url": "https://catalog-elbouket.my.canva.site/buket-satin"
+    },
+    "artificial-flower": {
+      "source": "canva",
+      "count": 1,
+      "price": "175000",
+      "page_url": "https://catalog-elbouket.my.canva.site/vase"
+    },
+    "money-bouquet": {
+      "source": "canva",
+      "count": 9,
+      "price": "50000",
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money"
+    },
+    "chocolate-bouquet": {
+      "source": "canva",
+      "count": 2,
+      "price": "20000",
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/"
+    },
+    "fresh-flower": {
+      "source": "canva",
+      "count": 2,
+      "price": "30000",
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe"
+    },
+    "catalog-home": {
+      "source": "canva",
+      "count": 11,
+      "price": "150000",
+      "page_url": "https://catalog-elbouket.my.canva.site/"
+    }
+  },
+  "products": [
+    {
+      "source": "canva",
+      "category": "snack-bouquet",
+      "filename": "snack-bouquet-rp35000-item-01.jpg",
+      "price": "35000",
+      "display_name": "snack-bouquet-rp35000-item-01"
+    },
+    {
+      "source": "canva",
+      "category": "snack-bouquet",
+      "filename": "snack-bouquet-rp35000-item-02.png",
+      "price": "35000",
+      "display_name": "snack-bouquet-rp35000-item-02"
+    },
+    {
+      "source": "canva",
+      "category": "buket-satin",
+      "filename": "buket-satin-rp20000-item-01.jpg",
+      "price": "20000",
+      "display_name": "buket-satin-rp20000-item-01"
+    },
+    {
+      "source": "canva",
+      "category": "buket-satin",
+      "filename": "buket-satin-rp20000-item-02.jpg",
+      "price": "20000",
+      "display_name": "buket-satin-rp20000-item-02"
+    },
+    {
+      "source": "canva",
+      "category": "buket-satin",
+      "filename": "buket-satin-rp20000-item-03.jpg",
+      "price": "20000",
+      "display_name": "buket-satin-rp20000-item-03"
+    },
+    {
+      "source": "canva",
+      "category": "buket-satin",
+      "filename": "buket-satin-rp20000-item-04.png",
+      "price": "20000",
+      "display_name": "buket-satin-rp20000-item-04"
+    },
+    {
+      "source": "canva",
+      "category": "artificial-flower",
+      "filename": "artificial-flower-rp175000-item-01.jpg",
+      "price": "175000",
+      "display_name": "artificial-flower-rp175000-item-01"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-01.jpg",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-01"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-02.jpg",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-02"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-03.jpg",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-03"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-04.jpg",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-04"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-05.png",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-05"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-06.jpg",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-06"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-07.png",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-07"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-08.jpg",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-08"
+    },
+    {
+      "source": "canva",
+      "category": "money-bouquet",
+      "filename": "money-bouquet-rp50000-item-09.png",
+      "price": "50000",
+      "display_name": "money-bouquet-rp50000-item-09"
+    },
+    {
+      "source": "canva",
+      "category": "chocolate-bouquet",
+      "filename": "chocolate-bouquet-rp20000-item-01.jpg",
+      "price": "20000",
+      "display_name": "chocolate-bouquet-rp20000-item-01"
+    },
+    {
+      "source": "canva",
+      "category": "chocolate-bouquet",
+      "filename": "chocolate-bouquet-rp20000-item-02.png",
+      "price": "20000",
+      "display_name": "chocolate-bouquet-rp20000-item-02"
+    },
+    {
+      "source": "canva",
+      "category": "fresh-flower",
+      "filename": "fresh-flower-rp30000-item-01.jpg",
+      "price": "30000",
+      "display_name": "fresh-flower-rp30000-item-01"
+    },
+    {
+      "source": "canva",
+      "category": "fresh-flower",
+      "filename": "fresh-flower-rp30000-item-02.png",
+      "price": "30000",
+      "display_name": "fresh-flower-rp30000-item-02"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-01.png",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-01"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-02.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-02"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-03.png",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-03"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-04.png",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-04"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-05.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-05"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-06.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-06"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-07.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-07"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-08.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-08"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-09.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-09"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-10.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-10"
+    },
+    {
+      "source": "canva",
+      "category": "catalog-home",
+      "filename": "catalog-home-rp150000-item-11.jpg",
+      "price": "150000",
+      "display_name": "catalog-home-rp150000-item-11"
+    }
+  ]
+}

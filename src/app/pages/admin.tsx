@@ -82,6 +82,8 @@ export function Admin() {
   const [saved, setSaved] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
+  const [authed, setAuthed] = useState<boolean>(sessionStorage.getItem("elbouquet_admin_authed") === "1");
+  const [passwordInput, setPasswordInput] = useState("");
 
   const showSaved = () => {
     setSaved(true);
@@ -114,6 +116,17 @@ export function Admin() {
       showSaved();
     }
   };
+
+  // add noindex meta to avoid indexing admin page
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex,nofollow";
+    document.head.appendChild(meta);
+    return () => {
+      try { document.head.removeChild(meta); } catch {}
+    };
+  }, []);
 
   const handleDeleteProduct = (id: string) => {
     const updated = products.filter((p) => p.id !== id);
@@ -173,6 +186,37 @@ export function Admin() {
     { key: "videos", label: "Video" },
     { key: "footer", label: "Footer" },
   ];
+
+  if (!authed) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#F9F9F7",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+        }}
+      >
+        <div style={{position: 'fixed', inset:0, zIndex:20000, backgroundColor: 'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center'}}>
+          <div style={{background:'#fff', padding:24, width:360, borderRadius:8}}>
+            <h3 style={{fontFamily: "'Cormorant Garamond', serif", marginBottom:12}}>Admin Login</h3>
+            <p style={{fontFamily:"'Inter',sans-serif", fontSize:12, color:'#666'}}>Masukkan password admin untuk melanjutkan.</p>
+            <input aria-label="Password admin" value={passwordInput} onChange={(e)=>setPasswordInput(e.target.value)} type="password" style={{...inputStyle, marginTop:12}} />
+            <div style={{display:'flex', gap:8, marginTop:12}}>
+              <button onClick={()=>{
+                const cfg = getSiteConfig();
+                const pass = cfg.adminPassword || 'elbouquet';
+                if(passwordInput === pass){ sessionStorage.setItem('elbouquet_admin_authed','1'); setAuthed(true); }
+                else alert('Password salah');
+              }} style={btnStyle}>Masuk</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -680,27 +724,62 @@ function FieldTextarea({ label, value, onChange }: { label: string; value: strin
 }
 
 function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave: (p: Product) => void; onCancel: () => void }) {
-  const [form, setForm] = useState<Product>({ ...product });
+  // support multiple images per product
+  const initial: Product = {
+    ...product,
+    images: (product as any).images || (product.image ? [product.image] : []),
+  };
+  const [form, setForm] = useState<Product>(initial);
   const fileRef = useRef<HTMLInputElement>(null);
+  const urlRef = useRef<HTMLInputElement>(null);
 
   const updatePrice = (val: string) => {
     const num = parseInt(val.replace(/\D/g, "")) || 0;
     setForm({ ...form, price: num, priceLabel: `Rp ${num.toLocaleString("id-ID")}` });
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File terlalu besar! Maksimal 5MB.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm({ ...form, image: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const max = 5 * 1024 * 1024;
+    const readers: Promise<string>[] = [];
+    Array.from(files).forEach((file) => {
+      if (file.size > max) return;
+      readers.push(new Promise((res) => {
+        const r = new FileReader();
+        r.onloadend = () => res(r.result as string);
+        r.readAsDataURL(file);
+      }));
+    });
+    Promise.all(readers).then((dataUrls) => {
+      setForm({ ...form, images: [...(form.images || []), ...dataUrls] });
+    });
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => handleFiles(e.target.files);
+
+  const addImageUrl = (url: string) => {
+    if (!url) return;
+    setForm({ ...form, images: [...(form.images || []), url] });
+    if (urlRef.current) urlRef.current.value = "";
+  };
+
+  const removeImageAt = (idx: number) => {
+    const imgs = [...(form.images || [])];
+    imgs.splice(idx, 1);
+    setForm({ ...form, images: imgs });
+  };
+
+  const setPrimary = (idx: number) => {
+    const imgs = [...(form.images || [])];
+    const primary = imgs.splice(idx, 1)[0];
+    imgs.unshift(primary);
+    setForm({ ...form, images: imgs });
+  };
+
+  useEffect(() => {
+    // ensure priceLabel consistent
+    if (form.price && !form.priceLabel) setForm({ ...form, priceLabel: `Rp ${form.price.toLocaleString('id-ID')}` });
+  }, []);
 
   return (
     <motion.div
@@ -724,7 +803,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
         style={{
           backgroundColor: "#F9F9F7",
           padding: "32px",
-          maxWidth: "500px",
+          maxWidth: "680px",
           width: "100%",
           maxHeight: "80vh",
           overflow: "auto",
@@ -749,46 +828,43 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
             ))}
           </select>
         </div>
-        <FieldInput label="Harga (angka saja)" value={form.price.toString()} onChange={(v) => updatePrice(v)} />
 
-        {/* Image: URL or File Upload */}
-        <FieldInput label="URL Gambar" value={form.image.startsWith("data:") ? "(file uploaded)" : form.image} onChange={(v) => setForm({ ...form, image: v })} />
+        <FieldInput label="Harga (angka saja)" value={(form.price || 0).toString()} onChange={(v) => updatePrice(v)} />
+
+        {/* Images manager */}
         <div style={{ marginBottom: "16px" }}>
-          <label style={labelStyle}>Atau Upload File Gambar</label>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-          />
-          <button
-            onClick={() => fileRef.current?.click()}
-            style={{
-              ...btnOutlineStyle,
-              width: "100%",
-              padding: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-            }}
-          >
-            📁 Pilih File Gambar
-          </button>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: "#bbb", marginTop: "4px" }}>
-            Format: JPG, PNG, WebP. Maks 5MB.
-          </p>
+          <label style={labelStyle}>Gambar Produk (multiple)</label>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            {(form.images || []).map((src, i) => (
+              <div key={i} style={{ width: 96, height: 96, position: 'relative', borderRadius: 8, overflow: 'hidden', border: i===0? '2px solid #1a1a1a' : '1px solid rgba(0,0,0,0.06)'}}>
+                <img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`img-${i}`} />
+                <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 6 }}>
+                  <button onClick={() => setPrimary(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.5)', color:'#fff' }} title="Set primary">●</button>
+                  <button onClick={() => removeImageAt(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: '#d44', color:'#fff' }} title="Hapus">✕</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => fileRef.current?.click()} style={{ ...btnOutlineStyle, padding: '10px 12px' }}>📁 Upload (multiple)</button>
+            <input ref={urlRef} placeholder="Tambah URL gambar" style={{ ...inputStyle, flex: 1 }} />
+            <button onClick={() => addImageUrl(urlRef.current?.value || '')} style={{ ...btnStyle, padding: '10px 12px' }}>+ Add</button>
+          </div>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: "#bbb", marginTop: "8px" }}>Urutan gambar menentukan gambar utama (pertama). Klik ● pada thumbnail untuk set primary.</p>
         </div>
-        {form.image && (
-          <img src={form.image} alt="Preview" style={{ width: "100%", height: "120px", objectFit: "cover", marginBottom: "16px" }} />
-        )}
+
         <FieldInput label="Tag (opsional)" value={form.tag || ""} onChange={(v) => setForm({ ...form, tag: v || undefined })} />
         <FieldInput label="Varian (opsional)" value={form.variant || ""} onChange={(v) => setForm({ ...form, variant: v || undefined })} />
         <FieldTextarea label="Deskripsi (opsional)" value={form.description || ""} onChange={(v) => setForm({ ...form, description: v || undefined })} />
 
         <div className="flex gap-3 mt-6">
-          <button onClick={() => onSave(form)} style={btnStyle}>Simpan</button>
+          <button onClick={() => {
+            // ensure image primary is set
+            const out = { ...form, image: (form.images && form.images[0]) || form.image } as Product;
+            onSave(out);
+          }} style={btnStyle}>Simpan</button>
           <button onClick={onCancel} style={btnOutlineStyle}>Batal</button>
         </div>
       </div>

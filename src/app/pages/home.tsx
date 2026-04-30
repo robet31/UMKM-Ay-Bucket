@@ -143,7 +143,7 @@ export function Home() {
               >
                 <img 
                   src="/assets/bouquet_classic.png" 
-                  alt="Pesona Florist Bouquet"
+                  alt="El Bouquet Premium Bouquet"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   onError={(e) => {
                     e.currentTarget.src = "https://placehold.co/800x1066/ebebe9/1a1a1a?text=Premium+Bouquet";
@@ -288,6 +288,40 @@ export function Home() {
                     }}>
                       Noted: {activeInfo.noted}
                     </p>
+                  )}
+                  
+                  {/* Link ke Canva Catalog */}
+                  {activeInfo.canvaLink && (
+                    <a
+                      href={activeInfo.canvaLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-block",
+                        marginTop: "16px",
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: "11px",
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        padding: "8px 14px",
+                        border: "1px solid #1a1a1a",
+                        backgroundColor: "transparent",
+                        color: "#1a1a1a",
+                        cursor: "pointer",
+                        textDecoration: "none",
+                        transition: "all 0.3s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#1a1a1a";
+                        e.currentTarget.style.color = "#fff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                        e.currentTarget.style.color = "#1a1a1a";
+                      }}
+                    >
+                      📋 Lihat Katalog
+                    </a>
                   )}
                 </div>
                 

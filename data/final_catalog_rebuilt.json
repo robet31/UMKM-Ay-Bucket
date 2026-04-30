@@ -1,0 +1,142 @@
+{
+  "source": "canva-full-rebuild",
+  "generated_at": "2026-04-30T00:18:59.100202",
+  "total_files": 29,
+  "categories": {
+    "snack-bouquet": {
+      "page_url": "https://catalog-elbouket.my.canva.site/snack-bouquet",
+      "download_folder": "snack-bouquet",
+      "count": 2,
+      "price": "35000",
+      "files": [
+        "snack-bouquet-rp35000-item-01.jpg",
+        "snack-bouquet-rp35000-item-02.png"
+      ]
+    },
+    "buket-satin": {
+      "page_url": "https://catalog-elbouket.my.canva.site/buket-satin",
+      "download_folder": "buket-satin",
+      "count": 4,
+      "price": "20000",
+      "files": [
+        "buket-satin-rp20000-item-01.jpg",
+        "buket-satin-rp20000-item-02.jpg",
+        "buket-satin-rp20000-item-03.jpg",
+        "buket-satin-rp20000-item-04.png"
+      ]
+    },
+    "artificial-flower": {
+      "page_url": "https://catalog-elbouket.my.canva.site/vase",
+      "download_folder": "vase",
+      "count": 0,
+      "price": "175000",
+      "files": []
+    },
+    "money-bouquet": {
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money",
+      "download_folder": "money-bouquet",
+      "count": 9,
+      "price": "50000",
+      "files": [
+        "money-bouquet-rp50000-item-01.jpg",
+        "money-bouquet-rp50000-item-02.jpg",
+        "money-bouquet-rp50000-item-03.jpg",
+        "money-bouquet-rp50000-item-04.jpg",
+        "money-bouquet-rp50000-item-05.png",
+        "money-bouquet-rp50000-item-06.jpg",
+        "money-bouquet-rp50000-item-07.png",
+        "money-bouquet-rp50000-item-08.jpg",
+        "money-bouquet-rp50000-item-09.png"
+      ]
+    },
+    "chocolate-bouquet": {
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/",
+      "download_folder": "chocolate-bouquet",
+      "count": 2,
+      "price": "20000",
+      "files": [
+        "chocolate-bouquet-rp20000-item-01.jpg",
+        "chocolate-bouquet-rp20000-item-02.png"
+      ]
+    },
+    "fresh-flower": {
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe",
+      "download_folder": "fresh-flower",
+      "count": 1,
+      "price": "30000",
+      "files": [
+        "fresh-flower-rp30000-item-01.jpg"
+      ]
+    },
+    "catalog-home": {
+      "page_url": "https://catalog-elbouket.my.canva.site/",
+      "download_folder": "catalog-home",
+      "count": 11,
+      "price": "150000",
+      "files": [
+        "catalog-home-rp150000-item-01.png",
+        "catalog-home-rp150000-item-02.jpg",
+        "catalog-home-rp150000-item-03.png",
+        "catalog-home-rp150000-item-04.png",
+        "catalog-home-rp150000-item-05.jpg",
+        "catalog-home-rp150000-item-06.jpg",
+        "catalog-home-rp150000-item-07.jpg",
+        "catalog-home-rp150000-item-08.jpg",
+        "catalog-home-rp150000-item-09.jpg",
+        "catalog-home-rp150000-item-10.jpg",
+        "catalog-home-rp150000-item-11.jpg"
+      ]
+    }
+  },
+  "pages": [
+    {
+      "page_url": "https://catalog-elbouket.my.canva.site/snack-bouquet",
+      "final_category": "snack-bouquet",
+      "download_folder": "snack-bouquet",
+      "count": 2,
+      "price": "35000"
+    },
+    {
+      "page_url": "https://catalog-elbouket.my.canva.site/buket-satin",
+      "final_category": "buket-satin",
+      "download_folder": "buket-satin",
+      "count": 4,
+      "price": "20000"
+    },
+    {
+      "page_url": "https://catalog-elbouket.my.canva.site/vase",
+      "final_category": "artificial-flower",
+      "download_folder": "vase",
+      "count": 1,
+      "price": "175000"
+    },
+    {
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money",
+      "final_category": "money-bouquet",
+      "download_folder": "money-bouquet",
+      "count": 9,
+      "price": "50000"
+    },
+    {
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/",
+      "final_category": "chocolate-bouquet",
+      "download_folder": "chocolate-bouquet",
+      "count": 2,
+      "price": "20000"
+    },
+    {
+      "page_url": "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe",
+      "final_category": "fresh-flower",
+      "download_folder": "fresh-flower",
+      "count": 2,
+      "price": "30000"
+    },
+    {
+      "page_url": "https://catalog-elbouket.my.canva.site/",
+      "final_category": "catalog-home",
+      "download_folder": "catalog-home",
+      "count": 11,
+      "price": "150000"
+    }
+  ]
+}

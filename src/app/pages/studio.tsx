@@ -29,43 +29,43 @@ const body = {
 const galleryProjects = [
   {
     id: "gallery-1",
-    title: "Rose Classic Collection",
-    category: "Bouquet Classic",
+    title: "Buket Satin Collection",
+    category: "Buket Satin",
     aspect: "3/4" as const,
     image: "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=800&q=80",
   },
   {
     id: "gallery-2",
-    title: "Premium Wedding Arrangement",
-    category: "Bouquet Wedding",
+    title: "Money Bouquet Premium",
+    category: "Money Bouquet",
     aspect: "1/1" as const,
     image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
   },
   {
     id: "gallery-3",
-    title: "Standing Flower Grand",
-    category: "Standing Flower",
+    title: "Snack Bouquet Unik",
+    category: "Snack Bouquet",
     aspect: "16/9" as const,
     image: "https://images.unsplash.com/photo-1523693916903-027d144a2b7d?w=800&q=80",
   },
   {
     id: "gallery-4",
-    title: "Bloom Box Gift",
-    category: "Bloom Box",
+    title: "Fresh Flower Arrangement",
+    category: "Fresh Flower",
     aspect: "3/4" as const,
     image: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=800&q=80",
   },
   {
     id: "gallery-5",
-    title: "Premium Rose Bouquet",
-    category: "Bouquet Premium",
+    title: "Chocolate Bouquet Premium",
+    category: "Chocolate Bouquet",
     aspect: "1/1" as const,
     image: "https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=800&q=80",
   },
   {
     id: "gallery-6",
-    title: "Elegant Table Arrangement",
-    category: "Bunga Meja",
+    title: "Vas Cantik & Elegan",
+    category: "Vas",
     aspect: "16/9" as const,
     image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800&q=80",
   },
@@ -81,10 +81,10 @@ const gridPositions = [
 ];
 
 const steps = [
-  { num: "01", title: "Pilih Produk", text: "Jelajahi katalog lengkap kami — dari bouquet classic yang affordable hingga rangkaian premium eksklusif. Setiap produk dirancang dengan bunga segar berkualitas." },
-  { num: "02", title: "Custom Pesanan", text: "Bebas request nuansa warna, jenis bunga, wrapping, dan kartu ucapan sesuai keinginan Anda. Kami siap membantu mewujudkan rangkaian bunga impian." },
-  { num: "03", title: "Konfirmasi via WhatsApp", text: "Hubungi kami melalui WhatsApp untuk konfirmasi pesanan, diskusi detail, dan pembayaran. Tim kami siap melayani dengan cepat dan ramah." },
-  { num: "04", title: "Pengiriman & Bahagia", text: "Pesanan dirangkai dengan penuh cinta dan ketelitian. Kami akan mengantarkan kebahagiaan langsung ke tempat tujuan." },
+  { num: "01", title: "Jelajahi Katalog", text: "Pilih dari berbagai kategori bunga premium kami — buket satin, money bouquet, snack bouquet, fresh flower, chocolate bouquet, dan vas cantik. Setiap produk berkualitas tinggi." },
+  { num: "02", title: "Custom Pesanan Anda", text: "Ingin request warna, jenis bunga, atau packaging khusus? Kami siap mewujudkan buket impian Anda dengan sentuhan personal yang sempurna." },
+  { num: "03", title: "Hubungi Kami via WhatsApp", text: "Hubungi tim El Bouquet melalui WhatsApp untuk konfirmasi pesanan, detail, dan pembayaran. Kami siap membantu dengan cepat dan profesional." },
+  { num: "04", title: "Terima Keindahan", text: "Setiap buket dirancang dengan penuh perhatian dan cinta. Kami mengantarkan bunga segar langsung ke alamat tujuan Anda." },
 ];
 
 export function Studio() {
@@ -144,16 +144,15 @@ export function Studio() {
           <div className="md:col-span-5 md:col-start-2">
             <p style={body}>
               <strong style={{ color: "#1a1a1a" }}>{config.businessName}</strong> adalah
-              florist profesional yang berlokasi di {config.address}. Kami
-              menyediakan beragam rangkaian bunga segar untuk berbagai momen spesial &mdash;
-              dari hadiah romantis hingga dekorasi acara besar.
+              studio florist yang spesialis dalam menciptakan rangkaian bunga premium untuk setiap momen spesial Anda &mdash;
+              dari buket satin elegan hingga money bouquet unik, snack bouquet kreatif, dan berbagai pilihan premium lainnya.
             </p>
           </div>
           <div className="md:col-span-4 md:col-start-8">
             <p style={body}>
-              Dengan pengalaman dan dedikasi, setiap rangkaian kami dibuat dengan
-              bunga segar berkualitas tinggi dan sentuhan artistik yang elegan.
-              Kami percaya bahwa bunga adalah bahasa universal kebahagiaan.
+              Kami berkomitmen menggunakan bunga segar berkualitas tertinggi dengan sentuhan artistik yang elegan.
+              Setiap rangkaian dirancang dengan cinta dan perhatian penuh, karena kami percaya bunga adalah cara terindah
+              untuk mengekspresikan perasaan.
             </p>
           </div>
         </motion.div>
@@ -449,7 +448,7 @@ export function Studio() {
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Lokasi Pesona Florist"
+                title="Lokasi El Bouquet"
                 onMouseEnter={(e) => {
                   (e.target as HTMLIFrameElement).style.filter = "grayscale(0%) contrast(1)";
                 }}

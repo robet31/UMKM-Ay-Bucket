@@ -58,7 +58,7 @@ export function WhatsAppFloat() {
               Ada yang bisa kami bantu? Chat langsung via WhatsApp untuk pemesanan bunga.
             </p>
             <a
-              href={getWhatsAppLink("Halo Pesona Florist! Saya mau pesan bunga 🌸")}
+              href={getWhatsAppLink("Halo El Bouquet! Saya mau pesan bunga 🌸")}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -94,7 +94,7 @@ export function WhatsAppFloat() {
 
       {/* Float Button */}
       <motion.a
-        href={getWhatsAppLink("Halo Pesona Florist! Saya mau pesan bunga 🌸")}
+        href={getWhatsAppLink("Halo El Bouquet! Saya mau pesan bunga 🌸")}
         target="_blank"
         rel="noopener noreferrer"
         onMouseEnter={() => { setShowTooltip(true); setPulse(false); }}

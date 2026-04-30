@@ -1,0 +1,120 @@
+{
+  "source": "canva-renamed",
+  "generated_at": "2026-04-29T23:46:20.541514",
+  "total_files_renamed": 16,
+  "categories": 4,
+  "files": [
+    {
+      "original": "001-afa1720ae17bb4e0741080e02f1b63eb.jpg",
+      "renamed": "buket-satin-rp12000-item-01.jpg",
+      "category": "buket-satin",
+      "price": "12000",
+      "path": "buket-satin\\buket-satin-rp12000-item-01.jpg"
+    },
+    {
+      "original": "002-b746bca71c19f88d5d5adba9c23a3006.jpg",
+      "renamed": "buket-satin-rp12000-item-02.jpg",
+      "category": "buket-satin",
+      "price": "12000",
+      "path": "buket-satin\\buket-satin-rp12000-item-02.jpg"
+    },
+    {
+      "original": "003-3b58f28270fec28921b91817b98a6348.jpg",
+      "renamed": "buket-satin-rp12000-item-03.jpg",
+      "category": "buket-satin",
+      "price": "12000",
+      "path": "buket-satin\\buket-satin-rp12000-item-03.jpg"
+    },
+    {
+      "original": "004-da49433961abc8cde57847eb432ea8b0.png",
+      "renamed": "buket-satin-rp12000-item-04.png",
+      "category": "buket-satin",
+      "price": "12000",
+      "path": "buket-satin\\buket-satin-rp12000-item-04.png"
+    },
+    {
+      "original": "001-269144fd5cacd0fdabf930d296876f4e.jpg",
+      "renamed": "money-bouquet-rp20000-item-01.jpg",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-01.jpg"
+    },
+    {
+      "original": "002-3dcbd6545249118aa4af34e5716f5e6d.jpg",
+      "renamed": "money-bouquet-rp20000-item-02.jpg",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-02.jpg"
+    },
+    {
+      "original": "003-7de2e45a4777fb9107d209c4f73c50d4.jpg",
+      "renamed": "money-bouquet-rp20000-item-03.jpg",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-03.jpg"
+    },
+    {
+      "original": "004-eb660d2b355f01fd3e1405cfb7eda965.jpg",
+      "renamed": "money-bouquet-rp20000-item-04.jpg",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-04.jpg"
+    },
+    {
+      "original": "005-4a16123c607ce38f4bb1d791a0c8e57b.png",
+      "renamed": "money-bouquet-rp20000-item-05.png",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-05.png"
+    },
+    {
+      "original": "006-3a10be8067aff3a5a3fb1e4fab03d0eb.jpg",
+      "renamed": "money-bouquet-rp20000-item-06.jpg",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-06.jpg"
+    },
+    {
+      "original": "007-7025f2ff81ef68b2ff3ad57fd43ea763.png",
+      "renamed": "money-bouquet-rp20000-item-07.png",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-07.png"
+    },
+    {
+      "original": "008-362df109cb4f45b18db37f6e96fc8cf9.jpg",
+      "renamed": "money-bouquet-rp20000-item-08.jpg",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-08.jpg"
+    },
+    {
+      "original": "009-fc83c28d87bc261dd6442f606a0e278f.png",
+      "renamed": "money-bouquet-rp20000-item-09.png",
+      "category": "money-bouquet",
+      "price": "20000",
+      "path": "money-bouquet\\money-bouquet-rp20000-item-09.png"
+    },
+    {
+      "original": "001-3aac2b185615caf39e27215dae4cf4c8.jpg",
+      "renamed": "snack-bouquet-rp35000-item-01.jpg",
+      "category": "snack-bouquet",
+      "price": "35000",
+      "path": "snack-bouquet\\snack-bouquet-rp35000-item-01.jpg"
+    },
+    {
+      "original": "002-517f65daf8b3ec61376df8c9ad4922d9.png",
+      "renamed": "snack-bouquet-rp35000-item-02.png",
+      "category": "snack-bouquet",
+      "price": "35000",
+      "path": "snack-bouquet\\snack-bouquet-rp35000-item-02.png"
+    },
+    {
+      "original": "001-16c3e38f6b7e9133c6548bdf6f15d900.jpg",
+      "renamed": "vase-rp12000-item-01.jpg",
+      "category": "vase",
+      "price": "12000",
+      "path": "vase\\vase-rp12000-item-01.jpg"
+    }
+  ]
+}
