@@ -19,7 +19,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "/admin",
+    path: "/_admin",
     Component: Admin,
   },
 ]);

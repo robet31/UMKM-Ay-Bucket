@@ -2,8 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
+  defaultGalleryProjects,
   getSiteConfig,
+  getGalleryProjects,
   saveSiteConfig,
+  setGalleryProjects,
+  resetGalleryProjects,
   resetSiteConfig,
   getProducts,
   saveProducts,
@@ -15,6 +19,8 @@ import {
   resetVideos,
   defaultVideos,
   detectVideoSource,
+  formatRupiah,
+  type GalleryProject,
   type SiteConfig,
   type Product,
   type VideoItem,
@@ -72,17 +78,19 @@ const sectionStyle: React.CSSProperties = {
   marginBottom: "40px",
 };
 
-type Tab = "general" | "products" | "navbar" | "footer" | "hero" | "videos";
+type Tab = "general" | "products" | "navbar" | "footer" | "hero" | "videos" | "gallery";
 
 export function Admin() {
   const [config, setConfig] = useState<SiteConfig>(getSiteConfig());
   const [products, setProductsList] = useState<Product[]>(getProducts());
   const [videos, setVideosList] = useState<VideoItem[]>(getVideos());
+  const [galleryProjects, setGalleryProjectsList] = useState<GalleryProject[]>(getGalleryProjects());
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saved, setSaved] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
   const [authed, setAuthed] = useState<boolean>(sessionStorage.getItem("elbouquet_admin_authed") === "1");
+  const [usernameInput, setUsernameInput] = useState("admin");
   const [passwordInput, setPasswordInput] = useState("");
 
   const showSaved = () => {
@@ -105,14 +113,21 @@ export function Admin() {
     showSaved();
   };
 
+  const handleSaveGallery = () => {
+    setGalleryProjects(galleryProjects);
+    showSaved();
+  };
+
   const handleResetAll = () => {
     if (confirm("Reset semua pengaturan ke default?")) {
       resetSiteConfig();
       resetProducts();
       resetVideos();
+      resetGalleryProjects();
       setConfig(getSiteConfig());
       setProductsList(defaultProducts);
       setVideosList(defaultVideos);
+      setGalleryProjectsList(defaultGalleryProjects);
       showSaved();
     }
   };
@@ -123,8 +138,13 @@ export function Admin() {
     meta.name = "robots";
     meta.content = "noindex,nofollow";
     document.head.appendChild(meta);
+    const canonical = document.createElement("meta");
+    canonical.name = "googlebot";
+    canonical.content = "noindex,nofollow,noarchive";
+    document.head.appendChild(canonical);
     return () => {
-      try { document.head.removeChild(meta); } catch {}
+      try { document.head.removeChild(meta); } catch { }
+      try { document.head.removeChild(canonical); } catch { }
     };
   }, []);
 
@@ -144,10 +164,11 @@ export function Admin() {
     const newProduct: Product = {
       id: `custom-${Date.now()}`,
       name: "Produk Baru",
-      category: "bouquet-classic",
+      category: "catalog-home",
       price: 100000,
       priceLabel: "Rp 100.000",
       image: "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=600&q=80",
+      images: ["https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=600&q=80"],
     };
     setProductsList([...products, newProduct]);
     setEditingProduct(newProduct);
@@ -178,11 +199,44 @@ export function Admin() {
     setEditingVideo(null);
   };
 
+  const handleAddGalleryProject = () => {
+    const newItem: GalleryProject = {
+      id: `gallery-${Date.now()}`,
+      title: "Gallery Baru",
+      category: "Kategori",
+      aspect: "3/4",
+      image: "",
+    };
+    setGalleryProjectsList([...galleryProjects, newItem]);
+  };
+
+  const updateGalleryProject = (id: string, patch: Partial<GalleryProject>) => {
+    setGalleryProjectsList((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
+  const removeGalleryProject = (id: string) => {
+    setGalleryProjectsList((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const uploadGalleryImage = (id: string, file: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran gambar maksimal 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      updateGalleryProject(id, { image: String(reader.result || "") });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "general", label: "Umum" },
     { key: "hero", label: "Hero" },
     { key: "navbar", label: "Navbar" },
     { key: "products", label: "Produk" },
+    { key: "gallery", label: "Galeri" },
     { key: "videos", label: "Video" },
     { key: "footer", label: "Footer" },
   ];
@@ -199,16 +253,18 @@ export function Admin() {
           padding: "24px",
         }}
       >
-        <div style={{position: 'fixed', inset:0, zIndex:20000, backgroundColor: 'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center'}}>
-          <div style={{background:'#fff', padding:24, width:360, borderRadius:8}}>
-            <h3 style={{fontFamily: "'Cormorant Garamond', serif", marginBottom:12}}>Admin Login</h3>
-            <p style={{fontFamily:"'Inter',sans-serif", fontSize:12, color:'#666'}}>Masukkan password admin untuk melanjutkan.</p>
-            <input aria-label="Password admin" value={passwordInput} onChange={(e)=>setPasswordInput(e.target.value)} type="password" style={{...inputStyle, marginTop:12}} />
-            <div style={{display:'flex', gap:8, marginTop:12}}>
-              <button onClick={()=>{
+        <div style={{ position: 'fixed', inset: 0, zIndex: 20000, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 24, width: 360, borderRadius: 8 }}>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", marginBottom: 12 }}>Admin Login</h3>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#666' }}>Masukkan username dan password admin untuk melanjutkan.</p>
+            <input aria-label="Username admin" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} type="text" style={{ ...inputStyle, marginTop: 12 }} />
+            <input aria-label="Password admin" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} type="password" style={{ ...inputStyle, marginTop: 12 }} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={() => {
                 const cfg = getSiteConfig();
-                const pass = cfg.adminPassword || 'elbouquet';
-                if(passwordInput === pass){ sessionStorage.setItem('elbouquet_admin_authed','1'); setAuthed(true); }
+                const username = cfg.adminUsername || 'admin';
+                const pass = cfg.adminPassword || 'admin123';
+                if (usernameInput === username && passwordInput === pass) { sessionStorage.setItem('elbouquet_admin_authed', '1'); setAuthed(true); }
                 else alert('Password salah');
               }} style={btnStyle}>Masuk</button>
             </div>
@@ -340,6 +396,10 @@ export function Admin() {
               <FieldInput label="Instagram" value={config.instagram} onChange={(v) => setConfig({ ...config, instagram: v })} />
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
             </div>
+            <div style={sectionStyle}>
+              <FieldInput label="Username Admin" value={config.adminUsername || "admin"} onChange={(v) => setConfig({ ...config, adminUsername: v })} />
+              <FieldInput label="Password Admin" value={config.adminPassword || "admin123"} onChange={(v) => setConfig({ ...config, adminPassword: v })} />
+            </div>
             <button onClick={handleSaveConfig} style={btnStyle}>Simpan Pengaturan</button>
           </div>
         )}
@@ -352,8 +412,68 @@ export function Admin() {
             <div style={sectionStyle}>
               <FieldTextarea label="Judul Hero (gunakan Enter untuk baris baru)" value={config.heroTitle} onChange={(v) => setConfig({ ...config, heroTitle: v })} />
               <FieldTextarea label="Subtitle Hero" value={config.heroSubtitle} onChange={(v) => setConfig({ ...config, heroSubtitle: v })} />
+              <FieldInput label="Hero Fallback Image URL" value={config.heroFallbackImage || ""} onChange={(v) => setConfig({ ...config, heroFallbackImage: v })} />
             </div>
             <button onClick={handleSaveConfig} style={btnStyle}>Simpan Hero</button>
+          </div>
+        )}
+
+        {activeTab === "gallery" && (
+          <div>
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "#1a1a1a" }}>
+                Asset Gambar Galeri ({galleryProjects.length})
+              </h2>
+              <div className="flex gap-2 flex-wrap">
+                <button onClick={handleAddGalleryProject} style={btnStyle}>+ Tambah Item</button>
+                <button onClick={handleSaveGallery} style={{ ...btnStyle, backgroundColor: "#25D366", borderColor: "#25D366" }}>💾 Simpan Galeri</button>
+              </div>
+            </div>
+
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "16px", lineHeight: 1.7 }}>
+              Gambar di tab ini dipakai oleh halaman Studio/Galeri. Kamu bisa ubah judul, kategori, rasio, dan gambar (URL atau upload file).
+            </p>
+
+            <div style={{ display: "grid", gap: "14px" }}>
+              {galleryProjects.map((item) => (
+                <div key={item.id} style={{ border: "1px solid rgba(0,0,0,0.08)", background: "#fff", padding: "14px" }}>
+                  <div style={{ display: "grid", gap: "10px" }}>
+                    <FieldInput label="Judul" value={item.title} onChange={(v) => updateGalleryProject(item.id, { title: v })} />
+                    <FieldInput label="Kategori" value={item.category} onChange={(v) => updateGalleryProject(item.id, { category: v })} />
+                    <div>
+                      <label style={labelStyle}>Rasio</label>
+                      <select
+                        style={inputStyle}
+                        value={item.aspect}
+                        onChange={(e) => updateGalleryProject(item.id, { aspect: e.target.value as GalleryProject["aspect"] })}
+                      >
+                        <option value="3/4">3 / 4</option>
+                        <option value="1/1">1 / 1</option>
+                        <option value="16/9">16 / 9</option>
+                      </select>
+                    </div>
+                    <FieldInput label="URL Gambar" value={item.image} onChange={(v) => updateGalleryProject(item.id, { image: v })} />
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                      <label style={{ ...btnOutlineStyle, padding: "8px 12px", cursor: "pointer" }}>
+                        Upload Gambar
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) => uploadGalleryImage(item.id, e.target.files?.[0] || null)}
+                        />
+                      </label>
+                      <button onClick={() => removeGalleryProject(item.id)} style={{ ...btnOutlineStyle, borderColor: "#d44", color: "#d44", padding: "8px 12px" }}>
+                        Hapus
+                      </button>
+                    </div>
+                    {item.image ? (
+                      <img src={item.image} alt={item.title} style={{ width: "100%", maxWidth: "280px", height: "160px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.06)" }} />
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -730,12 +850,20 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
     images: (product as any).images || (product.image ? [product.image] : []),
   };
   const [form, setForm] = useState<Product>(initial);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
   const fileRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const updatePrice = (val: string) => {
     const num = parseInt(val.replace(/\D/g, "")) || 0;
-    setForm({ ...form, price: num, priceLabel: `Rp ${num.toLocaleString("id-ID")}` });
+    setForm({ ...form, price: num, priceLabel: formatRupiah(num) });
   };
 
   const handleFiles = (files: FileList | null) => {
@@ -778,7 +906,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
   useEffect(() => {
     // ensure priceLabel consistent
-    if (form.price && !form.priceLabel) setForm({ ...form, priceLabel: `Rp ${form.price.toLocaleString('id-ID')}` });
+    if (form.price && !form.priceLabel) setForm({ ...form, priceLabel: formatRupiah(form.price) });
   }, []);
 
   return (
@@ -792,9 +920,10 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
         zIndex: 10000,
         backgroundColor: "rgba(0,0,0,0.5)",
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-start" : "center",
         justifyContent: "center",
-        padding: "24px",
+        padding: isMobile ? "10px" : "24px",
+        overflowY: "auto",
       }}
       onClick={onCancel}
     >
@@ -802,10 +931,10 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: "#F9F9F7",
-          padding: "32px",
+          padding: isMobile ? "18px" : "32px",
           maxWidth: "680px",
           width: "100%",
-          maxHeight: "80vh",
+          maxHeight: isMobile ? "92dvh" : "80vh",
           overflow: "auto",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
         }}
@@ -836,21 +965,21 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
           <label style={labelStyle}>Gambar Produk (multiple)</label>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             {(form.images || []).map((src, i) => (
-              <div key={i} style={{ width: 96, height: 96, position: 'relative', borderRadius: 8, overflow: 'hidden', border: i===0? '2px solid #1a1a1a' : '1px solid rgba(0,0,0,0.06)'}}>
+              <div key={i} style={{ width: 96, height: 96, position: 'relative', borderRadius: 8, overflow: 'hidden', border: i === 0 ? '2px solid #1a1a1a' : '1px solid rgba(0,0,0,0.06)' }}>
                 <img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`img-${i}`} />
                 <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 6 }}>
-                  <button onClick={() => setPrimary(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.5)', color:'#fff' }} title="Set primary">●</button>
-                  <button onClick={() => removeImageAt(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: '#d44', color:'#fff' }} title="Hapus">✕</button>
+                  <button type="button" onClick={() => setPrimary(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff' }} title="Set primary">●</button>
+                  <button type="button" onClick={() => removeImageAt(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: '#d44', color: '#fff' }} title="Hapus">✕</button>
                 </div>
               </div>
             ))}
           </div>
 
           <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFileUpload} style={{ display: 'none' }} />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => fileRef.current?.click()} style={{ ...btnOutlineStyle, padding: '10px 12px' }}>📁 Upload (multiple)</button>
-            <input ref={urlRef} placeholder="Tambah URL gambar" style={{ ...inputStyle, flex: 1 }} />
-            <button onClick={() => addImageUrl(urlRef.current?.value || '')} style={{ ...btnStyle, padding: '10px 12px' }}>+ Add</button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => fileRef.current?.click()} style={{ ...btnOutlineStyle, padding: '10px 12px', width: isMobile ? '100%' : undefined }}>📁 Upload (multiple)</button>
+            <input ref={urlRef} placeholder="Tambah URL gambar" style={{ ...inputStyle, flex: 1, minWidth: isMobile ? '100%' : '200px' }} />
+            <button type="button" onClick={() => addImageUrl(urlRef.current?.value || '')} style={{ ...btnStyle, padding: '10px 12px', width: isMobile ? '100%' : undefined }}>+ Add</button>
           </div>
           <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: "#bbb", marginTop: "8px" }}>Urutan gambar menentukan gambar utama (pertama). Klik ● pada thumbnail untuk set primary.</p>
         </div>
@@ -859,13 +988,13 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
         <FieldInput label="Varian (opsional)" value={form.variant || ""} onChange={(v) => setForm({ ...form, variant: v || undefined })} />
         <FieldTextarea label="Deskripsi (opsional)" value={form.description || ""} onChange={(v) => setForm({ ...form, description: v || undefined })} />
 
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 mt-6" style={{ flexWrap: "wrap" }}>
           <button onClick={() => {
             // ensure image primary is set
             const out = { ...form, image: (form.images && form.images[0]) || form.image } as Product;
             onSave(out);
-          }} style={btnStyle}>Simpan</button>
-          <button onClick={onCancel} style={btnOutlineStyle}>Batal</button>
+          }} style={{ ...btnStyle, width: isMobile ? "100%" : undefined }}>Simpan</button>
+          <button onClick={onCancel} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
         </div>
       </div>
     </motion.div>
@@ -874,7 +1003,15 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
 function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v: VideoItem) => void; onCancel: () => void }) {
   const [form, setForm] = useState<VideoItem>({ ...video });
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleUrlChange = (url: string) => {
     const source = detectVideoSource(url);
@@ -916,9 +1053,10 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
         zIndex: 10000,
         backgroundColor: "rgba(0,0,0,0.5)",
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-start" : "center",
         justifyContent: "center",
-        padding: "24px",
+        padding: isMobile ? "10px" : "24px",
+        overflowY: "auto",
       }}
       onClick={onCancel}
     >
@@ -926,10 +1064,10 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: "#F9F9F7",
-          padding: "32px",
+          padding: isMobile ? "18px" : "32px",
           maxWidth: "500px",
           width: "100%",
-          maxHeight: "80vh",
+          maxHeight: isMobile ? "92dvh" : "80vh",
           overflow: "auto",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
         }}
@@ -1066,9 +1204,9 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
-          <button onClick={() => onSave(form)} style={btnStyle}>Simpan</button>
-          <button onClick={onCancel} style={btnOutlineStyle}>Batal</button>
+        <div className="flex gap-3 mt-6" style={{ flexWrap: "wrap" }}>
+          <button onClick={() => onSave(form)} style={{ ...btnStyle, width: isMobile ? "100%" : undefined }}>Simpan</button>
+          <button onClick={onCancel} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
         </div>
       </div>
     </motion.div>

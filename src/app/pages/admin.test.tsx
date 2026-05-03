@@ -30,7 +30,8 @@ describe('Admin gate', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getAllByLabelText(/password admin/i)[0], { target: { value: 'elbouquet' } });
+    fireEvent.change(screen.getAllByLabelText(/username admin/i)[0], { target: { value: 'admin' } });
+    fireEvent.change(screen.getAllByLabelText(/password admin/i)[0], { target: { value: 'admin123' } });
     fireEvent.click(screen.getAllByText('Masuk')[0]);
 
     expect(screen.getByText('🛠️ Pengaturan Website')).toBeTruthy();

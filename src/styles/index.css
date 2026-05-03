@@ -1,3 +1,163 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+/* Animated petals used as decorative placeholders */
+/* full-screen interactive sakura petals overlay */
+.animated-petals{
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	overflow: visible;
+	z-index: 60;
+}
+.animated-petals .petal{
+	position: absolute;
+	width: 16px;
+	height: 12px;
+	background: linear-gradient(180deg, rgba(255,182,193,0.95), rgba(255,192,203,0.7));
+	border-radius: 6px 12px 6px 12px;
+	transform-origin: center;
+	opacity: 0.95;
+	transition: transform 220ms ease-out, opacity 240ms ease-out, left 260ms ease-out, top 260ms ease-out;
+	filter: drop-shadow(0 0 10px rgba(255, 170, 190, 0.25));
+}
+.animated-petals .p1{ left: 6%; top: -8%; animation: floatPetal 8.2s linear infinite; animation-delay: 0s;}
+.animated-petals .p2{ left: 12%; top: -18%; animation: floatPetal 9.5s linear infinite; animation-delay: 0.9s;}
+.animated-petals .p3{ left: 18%; top: -12%; animation: floatPetal 7.8s linear infinite; animation-delay: 0.3s;}
+.animated-petals .p4{ left: 27%; top: -20%; animation: floatPetal 10s linear infinite; animation-delay: 1.1s;}
+.animated-petals .p5{ left: 36%; top: -10%; animation: floatPetal 8.7s linear infinite; animation-delay: 0.5s;}
+.animated-petals .p6{ left: 44%; top: -14%; animation: floatPetal 9.2s linear infinite; animation-delay: 1.4s;}
+.animated-petals .p7{ left: 52%; top: -8%; animation: floatPetal 7.5s linear infinite; animation-delay: 0.7s;}
+.animated-petals .p8{ left: 60%; top: -16%; animation: floatPetal 8.9s linear infinite; animation-delay: 1.7s;}
+.animated-petals .p9{ left: 68%; top: -10%; animation: floatPetal 9.8s linear infinite; animation-delay: 0.4s;}
+.animated-petals .p10{ left: 76%; top: -22%; animation: floatPetal 8.4s linear infinite; animation-delay: 1.3s;}
+.animated-petals .p11{ left: 84%; top: -12%; animation: floatPetal 7.9s linear infinite; animation-delay: 0.8s;}
+.animated-petals .p12{ left: 92%; top: -18%; animation: floatPetal 10.2s linear infinite; animation-delay: 1.9s;}
+.animated-petals .p13{ left: 22%; top: -6%; animation: floatPetal 9.1s linear infinite; animation-delay: 2.1s;}
+.animated-petals .p14{ left: 40%; top: -24%; animation: floatPetal 8.6s linear infinite; animation-delay: 2.3s;}
+.animated-petals .p15{ left: 66%; top: -6%; animation: floatPetal 9.9s linear infinite; animation-delay: 2.7s;}
+.animated-petals .p16{ left: 88%; top: -14%; animation: floatPetal 8.0s linear infinite; animation-delay: 2.5s;}
+
+@keyframes floatPetal{
+	0%{ transform: translateY(-10vh) translateX(0) rotate(0deg) scale(0.9); opacity: 0 }
+	10%{ opacity: 0.95 }
+	25%{ transform: translateY(20vh) translateX(20px) rotate(30deg) scale(1.04); opacity: 1 }
+	50%{ transform: translateY(50vh) translateX(-18px) rotate(180deg) scale(0.98); opacity: 0.95 }
+	75%{ transform: translateY(80vh) translateX(14px) rotate(300deg) scale(1.03); opacity: 0.9 }
+	100%{ transform: translateY(110vh) translateX(-10px) rotate(360deg) scale(0.92); opacity: 0 }
+}
+
+/* Performance-optimized hover states — replace onMouseEnter/Leave DOM mutations */
+.category-card-hover {
+	will-change: background-color, border-color;
+}
+.category-card-hover:hover {
+	background-color: rgba(0, 0, 0, 0.04) !important;
+	border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+.category-link-hover {
+	will-change: background-color, border-color;
+}
+.category-link-hover:hover {
+	background-color: rgba(0, 0, 0, 0.03) !important;
+	border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.whatsapp-btn-hover {
+	will-change: background-color;
+	transition: background-color 0.3s ease;
+}
+.whatsapp-btn-hover:hover {
+	background-color: #128C7E !important;
+}
+
+.case-study-link-hover {
+	will-change: background-color, color;
+	transition: all 0.3s ease;
+}
+.case-study-link-hover:hover {
+	background-color: #1a1a1a !important;
+	color: #fff !important;
+}
+
+.map-iframe-hover {
+	will-change: filter;
+}
+.map-iframe-hover:hover {
+	filter: grayscale(0%) contrast(1) !important;
+}
+
+/* Video preview card hover effects */
+.video-card-group {
+	will-change: transform;
+}
+.video-card-group:hover .video-card-play-overlay {
+	opacity: 1 !important;
+}
+.video-card-group:hover img {
+	transform: scale(1.04) !important;
+}
+/* Accessibility and motion preferences */
+.skip-link {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	z-index: 10000;
+	padding: 10px 14px;
+	border-radius: 999px;
+	background: #1a1a1a;
+	color: #fff;
+	font-family: 'JetBrains Mono', monospace;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	text-decoration: none;
+	transform: translateY(-160%);
+	transition: transform 180ms ease, opacity 180ms ease;
+	opacity: 0;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+	transform: translateY(0);
+	opacity: 1;
+	outline: 3px solid rgba(255, 150, 173, 0.45);
+	outline-offset: 2px;
+}
+
+:where(a, button, input, textarea, select, summary):focus-visible {
+	outline: 3px solid rgba(255, 150, 173, 0.55);
+	outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+
+	.animated-petals,
+	.ambient-glow,
+	.ambient-glow-2,
+	.custom-cursor,
+	.page-transition {
+		display: none !important;
+	}
+
+	.animated-petals .petal {
+		animation: none !important;
+		transform: none !important;
+	}
+}
+
+@media (pointer: coarse), (hover: none) {
+	.custom-cursor {
+		display: none !important;
+	}
+}

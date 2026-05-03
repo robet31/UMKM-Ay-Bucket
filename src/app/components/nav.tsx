@@ -2,11 +2,13 @@ import { Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
 import { BRAND_LOGO, getSiteConfig } from "../data";
+import { useLanguage } from "../language";
 
 export function Nav() {
   const location = useLocation();
   const [, setTick] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [language, setLanguage] = useLanguage();
 
   useEffect(() => {
     const handler = () => setTick((t) => t + 1);
@@ -14,15 +16,39 @@ export function Nav() {
     return () => window.removeEventListener("siteConfigChanged", handler);
   }, []);
 
-  // Close menu on route change
+  const toggleLanguage = () => {
+    setLanguage(language === "id" ? "en" : "id");
+  };
+
+  const getNavLabel = (to: string) => {
+    if (to === "/") return language === "id" ? "Katalog" : "Catalog";
+    if (to === "/studio") return language === "id" ? "Tentang" : "About";
+    if (to === "/contact") return language === "id" ? "Kontak" : "Contact";
+    return to;
+  };
+
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Prevent body scroll when menu is open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
   const config = getSiteConfig();
@@ -30,6 +56,7 @@ export function Nav() {
   return (
     <>
       <motion.nav
+        aria-label="Primary navigation"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 0.2 }}
@@ -43,6 +70,7 @@ export function Nav() {
       >
         <Link
           to="/"
+          aria-label={language === "id" ? "Beranda El Bouquet" : "El Bouquet home"}
           style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: "clamp(18px, 3vw, 22px)",
@@ -56,11 +84,18 @@ export function Nav() {
             zIndex: 60,
           }}
         >
-          <span style={{ fontSize: "clamp(20px, 3vw, 24px)" }}>🌸</span>
-          {config.businessName}
+          {BRAND_LOGO.logo ? (
+            <img
+              src={BRAND_LOGO.logo}
+              alt={`${config.businessName} logo`}
+              style={{ width: "44px", height: "44px", objectFit: "cover", borderRadius: "8px" }}
+            />
+          ) : (
+            <span style={{ fontSize: "clamp(20px, 3vw, 24px)" }}>🌸</span>
+          )}
+          <span style={{ marginLeft: 8 }}>{config.businessName}</span>
         </Link>
 
-        {/* Desktop nav links */}
         <div
           className="items-center gap-8"
           style={{ display: "none" }}
@@ -70,6 +105,7 @@ export function Nav() {
             <Link
               key={link.to}
               to={link.to}
+              aria-current={location.pathname === link.to ? "page" : undefined}
               className="relative"
               style={{
                 fontSize: "11px",
@@ -81,9 +117,38 @@ export function Nav() {
                 textDecoration: "none",
               }}
             >
-              {link.label}
+              {getNavLabel(link.to)}
             </Link>
           ))}
+
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            aria-label={language === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
+            style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "#999",
+              backgroundColor: "transparent",
+              border: "1px solid rgba(0,0,0,0.12)",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#1a1a1a";
+              e.currentTarget.style.color = "#1a1a1a";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)";
+              e.currentTarget.style.color = "#999";
+            }}
+          >
+            {language === "id" ? "🇮🇩 ID" : "🇬🇧 ENG"}
+          </button>
 
           <a
             href={BRAND_LOGO.canvaCatalog}
@@ -102,15 +167,17 @@ export function Nav() {
               boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
             }}
           >
-            Katalog
+            {language === "id" ? "Katalog" : "Catalog"}
           </a>
         </div>
 
-        {/* Hamburger button (mobile) */}
         <button
+          type="button"
           onClick={() => setMenuOpen(!menuOpen)}
           id="mobile-menu-btn"
-          aria-label="Menu"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu-overlay"
           style={{
             display: "none",
             background: "transparent",
@@ -161,10 +228,12 @@ export function Nav() {
         </button>
       </motion.nav>
 
-      {/* Mobile fullscreen menu overlay */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={language === "id" ? "Menu navigasi" : "Navigation menu"}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -194,6 +263,7 @@ export function Nav() {
                 <Link
                   to={link.to}
                   onClick={() => setMenuOpen(false)}
+                  aria-current={location.pathname === link.to ? "page" : undefined}
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "32px",
@@ -206,10 +276,44 @@ export function Nav() {
                     padding: "8px 0",
                   }}
                 >
-                  {link.label}
+                  {getNavLabel(link.to)}
                 </Link>
               </motion.div>
             ))}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: config.navLinks.length * 0.08 + 0.15 }}
+              style={{ marginTop: "24px" }}
+            >
+              <button
+                type="button"
+                onClick={toggleLanguage}
+                aria-label={language === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "#1a1a1a",
+                  backgroundColor: "rgba(0,0,0,0.04)",
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  padding: "10px 16px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.04)";
+                }}
+              >
+                {language === "id" ? "🇮🇩 Bahasa Indonesia" : "🇬🇧 English"}
+              </button>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -233,7 +337,6 @@ export function Nav() {
         )}
       </AnimatePresence>
 
-      {/* Responsive CSS */}
       <style>{`
         @media (min-width: 768px) {
           #desktop-nav { display: flex !important; }

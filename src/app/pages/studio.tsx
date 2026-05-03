@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
+import AnimatedPetals from "../components/animated-petals";
 import { StudioVideoSection } from "../components/video-gallery";
-import { getSiteConfig, categories, getWhatsAppLink } from "../data";
+import { getSiteConfig, categories, getWhatsAppLink, BRAND_LOGO, getGalleryProjects, type GalleryProject } from "../data";
+import { useLanguage } from "../language";
 
 const mono = {
   fontFamily: "'JetBrains Mono', monospace",
@@ -25,51 +27,7 @@ const body = {
   maxWidth: "520px",
 };
 
-// ---- Original Atelier masonry gallery data ----
-const galleryProjects = [
-  {
-    id: "gallery-1",
-    title: "Buket Satin Collection",
-    category: "Buket Satin",
-    aspect: "3/4" as const,
-    image: "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=800&q=80",
-  },
-  {
-    id: "gallery-2",
-    title: "Money Bouquet Premium",
-    category: "Money Bouquet",
-    aspect: "1/1" as const,
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
-  },
-  {
-    id: "gallery-3",
-    title: "Snack Bouquet Unik",
-    category: "Snack Bouquet",
-    aspect: "16/9" as const,
-    image: "https://images.unsplash.com/photo-1523693916903-027d144a2b7d?w=800&q=80",
-  },
-  {
-    id: "gallery-4",
-    title: "Fresh Flower Arrangement",
-    category: "Fresh Flower",
-    aspect: "3/4" as const,
-    image: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=800&q=80",
-  },
-  {
-    id: "gallery-5",
-    title: "Chocolate Bouquet Premium",
-    category: "Chocolate Bouquet",
-    aspect: "1/1" as const,
-    image: "https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=800&q=80",
-  },
-  {
-    id: "gallery-6",
-    title: "Vas Cantik & Elegan",
-    category: "Vas",
-    aspect: "16/9" as const,
-    image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800&q=80",
-  },
-];
+// ---- Original Atelier masonry gallery data moved to data.ts for admin customization ----
 
 const gridPositions = [
   { col: "1 / 5", mt: 0 },
@@ -81,18 +39,38 @@ const gridPositions = [
 ];
 
 const steps = [
-  { num: "01", title: "Jelajahi Katalog", text: "Pilih dari berbagai kategori bunga premium kami — buket satin, money bouquet, snack bouquet, fresh flower, chocolate bouquet, dan vas cantik. Setiap produk berkualitas tinggi." },
-  { num: "02", title: "Custom Pesanan Anda", text: "Ingin request warna, jenis bunga, atau packaging khusus? Kami siap mewujudkan buket impian Anda dengan sentuhan personal yang sempurna." },
-  { num: "03", title: "Hubungi Kami via WhatsApp", text: "Hubungi tim El Bouquet melalui WhatsApp untuk konfirmasi pesanan, detail, dan pembayaran. Kami siap membantu dengan cepat dan profesional." },
-  { num: "04", title: "Terima Keindahan", text: "Setiap buket dirancang dengan penuh perhatian dan cinta. Kami mengantarkan bunga segar langsung ke alamat tujuan Anda." },
+  { num: "01", title: "Jelajahi Katalog", titleEn: "Explore Catalog", text: "Pilih dari berbagai kategori bunga premium kami — buket satin, money bouquet, snack bouquet, fresh flower, chocolate bouquet, dan vas cantik. Setiap produk berkualitas tinggi.", textEn: "Choose from various premium flower categories — satin bouquets, money bouquets, snack bouquets, fresh flowers, chocolate bouquets, and beautiful vases. Every product is high quality." },
+  { num: "02", title: "Custom Pesanan Anda", titleEn: "Customize Your Order", text: "Ingin request warna, jenis bunga, atau packaging khusus? Kami siap mewujudkan buket impian Anda dengan sentuhan personal yang sempurna.", textEn: "Want to request colors, flower types, or special packaging? We're ready to bring your dream bouquet to life with perfect personal touches." },
+  { num: "03", title: "Hubungi Kami via WhatsApp", titleEn: "Contact Us via WhatsApp", text: "Hubungi tim El Bouquet melalui WhatsApp untuk konfirmasi pesanan, detail, dan pembayaran. Kami siap membantu dengan cepat dan profesional.", textEn: "Contact the El Bouquet team via WhatsApp for order confirmation, details, and payment. We're ready to help quickly and professionally." },
+  { num: "04", title: "Terima Keindahan", titleEn: "Receive Beauty", text: "Setiap buket dirancang dengan penuh perhatian dan cinta. Kami mengantarkan bunga segar langsung ke alamat tujuan Anda.", textEn: "Every bouquet is designed with full attention and love. We deliver fresh flowers directly to your destination." },
+];
+
+const catalogLinks = [
+  { label: "Snack Bouquet", url: "https://catalog-elbouket.my.canva.site/snack-bouquet" },
+  { label: "Buket Satin", url: "https://catalog-elbouket.my.canva.site/buket-satin" },
+  { label: "Vase", url: "https://catalog-elbouket.my.canva.site/vase" },
+  { label: "Money Bouquet", url: "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money" },
+  { label: "Chocolate Bouquet", url: "https://chocolate-bouquet-elbouket.my.canva.site/" },
+  { label: "Fresh Flower", url: "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe" },
 ];
 
 export function Studio() {
   const [, setTick] = useState(0);
+  const [language] = useLanguage();
+  const [galleryProjects, setGalleryProjects] = useState<GalleryProject[]>([]);
+
   useEffect(() => {
-    const handler = () => setTick((t) => t + 1);
+    setGalleryProjects(getGalleryProjects());
+    const handler = () => {
+      setTick((t) => t + 1);
+      setGalleryProjects(getGalleryProjects());
+    };
     window.addEventListener("siteConfigChanged", handler);
-    return () => window.removeEventListener("siteConfigChanged", handler);
+    window.addEventListener("galleryProjectsChanged", handler);
+    return () => {
+      window.removeEventListener("siteConfigChanged", handler);
+      window.removeEventListener("galleryProjectsChanged", handler);
+    };
   }, []);
 
   const config = getSiteConfig();
@@ -101,14 +79,55 @@ export function Studio() {
     <PageTransition>
       <div style={{ padding: "0 clamp(24px, 8vw, 120px)" }}>
         {/* Header */}
-        <div style={{ paddingTop: "160px", paddingBottom: "100px" }}>
+        <div style={{ paddingTop: "160px", paddingBottom: "100px", position: "relative", overflow: "hidden" }}>
+          {/* Animated flower decorations */}
+          <motion.div
+            animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              position: "absolute",
+              top: "20px",
+              left: "5%",
+              fontSize: "40px",
+              opacity: 0.3,
+            }}
+          >
+            🌹
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 15, 0], rotate: [0, -5, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            style={{
+              position: "absolute",
+              top: "60px",
+              right: "8%",
+              fontSize: "36px",
+              opacity: 0.25,
+            }}
+          >
+            💐
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, -25, 0], rotate: [0, 8, 0] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            style={{
+              position: "absolute",
+              bottom: "40px",
+              right: "12%",
+              fontSize: "44px",
+              opacity: 0.2,
+            }}
+          >
+            🌸
+          </motion.div>
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
             style={mono}
           >
-            Tentang Kami
+            {language === "id" ? "Tentang Kami" : "About Us"}
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
@@ -123,12 +142,25 @@ export function Studio() {
               color: "#1a1a1a",
               marginTop: "16px",
               maxWidth: "700px",
+              position: "relative",
+              zIndex: 2,
             }}
           >
-            Rangkai keindahan
-            <br />
-            dengan sepenuh{" "}
-            <em>hati</em>
+            {language === "id" ? (
+              <>
+                Rangkai keindahan
+                <br />
+                dengan sepenuh{" "}
+                <em>hati</em>
+              </>
+            ) : (
+              <>
+                Arrange beauty
+                <br />
+                with all our{" "}
+                <em>heart</em>
+              </>
+            )}
           </motion.h1>
         </div>
 
@@ -143,19 +175,23 @@ export function Studio() {
         >
           <div className="md:col-span-5 md:col-start-2">
             <p style={body}>
-              <strong style={{ color: "#1a1a1a" }}>{config.businessName}</strong> adalah
-              studio florist yang spesialis dalam menciptakan rangkaian bunga premium untuk setiap momen spesial Anda &mdash;
-              dari buket satin elegan hingga money bouquet unik, snack bouquet kreatif, dan berbagai pilihan premium lainnya.
+              <strong style={{ color: "#1a1a1a" }}>{config.businessName}</strong> {language === "id" ? "adalah" : "is"}
+              {language === "id"
+                ? " studio florist yang spesialis dalam menciptakan rangkaian bunga premium untuk setiap momen spesial Anda &mdash; dari buket satin elegan hingga money bouquet unik, snack bouquet kreatif, dan berbagai pilihan premium lainnya."
+                : " a florist studio specializing in premium flower arrangements for every special moment &mdash; from elegant satin bouquets to unique money bouquets, creative snack bouquets, and other premium selections."}
             </p>
           </div>
           <div className="md:col-span-4 md:col-start-8">
             <p style={body}>
-              Kami berkomitmen menggunakan bunga segar berkualitas tertinggi dengan sentuhan artistik yang elegan.
-              Setiap rangkaian dirancang dengan cinta dan perhatian penuh, karena kami percaya bunga adalah cara terindah
-              untuk mengekspresikan perasaan.
+              {language === "id"
+                ? "Kami berkomitmen menggunakan bunga segar berkualitas tertinggi dengan sentuhan artistik yang elegan. Setiap rangkaian dirancang dengan cinta dan perhatian penuh, karena kami percaya bunga adalah cara terindah untuk mengekspresikan perasaan."
+                : "We are committed to using the freshest, highest quality flowers with elegant artistic touches. Every arrangement is designed with love and full attention, because we believe flowers are the most beautiful way to express feelings."}
             </p>
           </div>
         </motion.div>
+
+        {/* Removed Detail Katalog section */}
+        {/* Removed Kategori Produk & Layanan sections */}
 
         {/* ===== ORIGINAL ATELIER MASONRY GALLERY ===== */}
         <div
@@ -172,7 +208,7 @@ export function Studio() {
             viewport={{ once: true }}
             style={{ ...mono, marginBottom: "16px" }}
           >
-            Galeri Karya Kami
+            {language === "id" ? "Galeri Karya Kami" : "Our Works Gallery"}
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -189,8 +225,17 @@ export function Studio() {
               maxWidth: "500px",
             }}
           >
-            Setiap rangkaian adalah{" "}
-            <em style={{ fontWeight: 300 }}>karya seni</em>
+            {language === "id" ? (
+              <>
+                Setiap rangkaian adalah{" "}
+                <em style={{ fontWeight: 300 }}>karya seni</em>
+              </>
+            ) : (
+              <>
+                Every arrangement is a{" "}
+                <em style={{ fontWeight: 300 }}>work of art</em>
+              </>
+            )}
           </motion.p>
 
           {/* Desktop Masonry Grid */}
@@ -299,56 +344,66 @@ export function Studio() {
           </div>
         </div>
 
-        {/* Categories */}
-        <div
-          className="border-t"
-          style={{ borderColor: "rgba(0,0,0,0.08)", paddingTop: "80px", paddingBottom: "40px" }}
-        >
-          <p style={mono}>Kategori Produk</p>
-          <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-4 md:grid-cols-4" style={{ maxWidth: "700px" }}>
-            {categories.map((cat) => (
-              <span key={cat.key} style={{ ...mono, fontSize: "8px", lineHeight: 2.4 }}>
-                {cat.emoji} {cat.label}
-              </span>
-            ))}
-          </div>
-        </div>
+        {/* Removed Kategori Produk and Layanan Kami sections */}
 
-        {/* Services */}
-        <div
-          className="border-t"
-          style={{ borderColor: "rgba(0,0,0,0.08)", paddingTop: "80px", paddingBottom: "40px" }}
-        >
-          <p style={mono}>Layanan Kami</p>
-          <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-4 md:grid-cols-4" style={{ maxWidth: "600px" }}>
-            {["Bouquet Fresh Flower", "Hampers & Gift Box", "Standing Flower", "Bunga Meja", "Money Bouquet", "Bloom Box", "Wedding Bouquet", "Bunga Mobil", "Papan Karangan", "Bunga Salib", "Custom Order", "Free Kartu Ucapan"].map((s) => (
-              <span key={s} style={{ ...mono, fontSize: "8px", lineHeight: 2.4 }}>{s}</span>
-            ))}
-          </div>
-        </div>
-
-        {/* The Process */}
+        {/* ===== ORDERING PROCESS SECTION ===== */}
         <div
           className="border-t"
           style={{ borderColor: "rgba(0,0,0,0.08)", marginTop: "80px", paddingTop: "80px", paddingBottom: "120px" }}
         >
-          <p style={{ ...mono, marginBottom: "60px" }}>Cara Pemesanan</p>
+          <p style={{ ...mono, marginBottom: "60px" }}>{language === "id" ? "Cara Pemesanan" : "Ordering Process"}</p>
           <div className="flex flex-col gap-20 md:ml-[16.6%]" style={{ maxWidth: "520px" }}>
-            {steps.map((step, i) => (
-              <motion.div
-                key={step.num}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: i * 0.05 }}
-              >
-                <span style={{ ...mono, color: "#ccc" }}>{step.num}</span>
-                <h3 style={{ ...serif, fontSize: "28px", fontWeight: 400, color: "#1a1a1a", marginTop: "8px", marginBottom: "16px", letterSpacing: "-0.02em", lineHeight: 1.3 }}>
-                  {step.title}
-                </h3>
-                <p style={{ ...body, fontSize: "14px" }}>{step.text}</p>
-              </motion.div>
-            ))}
+            {steps.map((step, i) => {
+              const stepIcons = ["📋", "🎨", "💬", "🌸"];
+              const stepColors = ["#d48a6a", "#c98b3f", "#7d5ba6", "#c05d5d"];
+              return (
+                <motion.div
+                  key={step.num}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: i * 0.05 }}
+                  style={{ display: "flex", gap: "24px" }}
+                >
+                  <motion.div
+                    animate={{ y: [0, -8, 0], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
+                    style={{
+                      minWidth: "60px",
+                      width: "60px",
+                      height: "60px",
+                      borderRadius: "50%",
+                      background: `linear-gradient(135deg, ${stepColors[i]} 0%, ${stepColors[i]}dd 100%)`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "28px",
+                      boxShadow: `0 8px 24px ${stepColors[i]}40`,
+                      position: "relative",
+                    }}
+                  >
+                    {stepIcons[i]}
+                    <motion.div
+                      animate={{ opacity: [0.3, 0.8, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "50%",
+                        border: `2px solid ${stepColors[i]}`,
+                      }}
+                    />
+                  </motion.div>
+                  <div>
+                    <span style={{ ...mono, color: stepColors[i], fontSize: "10px", fontWeight: 700 }}>STEP {step.num}</span>
+                    <h3 style={{ ...serif, fontSize: "28px", fontWeight: 400, color: "#1a1a1a", marginTop: "8px", marginBottom: "16px", letterSpacing: "-0.02em", lineHeight: 1.3 }}>
+                      {language === "id" ? step.title : step.titleEn}
+                    </h3>
+                    <p style={{ ...body, fontSize: "14px" }}>{language === "id" ? step.text : step.textEn}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* CTA WhatsApp */}
@@ -378,9 +433,9 @@ export function Studio() {
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
-              Hubungi via WhatsApp
+              {language === "id" ? "Hubungi via WhatsApp" : "Contact via WhatsApp"}
             </a>
           </motion.div>
         </div>
@@ -404,7 +459,7 @@ export function Studio() {
               viewport={{ once: true }}
               style={{ ...mono, marginBottom: "16px" }}
             >
-              Lokasi Kami
+              {language === "id" ? "Lokasi Kami" : "Our Location"}
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -421,74 +476,191 @@ export function Studio() {
                 maxWidth: "500px",
               }}
             >
-              Kunjungi <em style={{ fontWeight: 300 }}>{config.businessName}</em>
+              {language === "id" ? "Kunjungi" : "Visit"} <em style={{ fontWeight: 300 }}>{config.businessName}</em>
             </motion.h2>
 
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
               style={{
                 position: "relative",
                 overflow: "hidden",
-                boxShadow: "0 12px 48px rgba(0,0,0,0.08)",
+                borderRadius: "16px",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.12)",
+                backgroundColor: "#f8f8f8",
+              }}
+              whileHover={{
+                boxShadow: "0 30px 80px rgba(0,0,0,0.18)",
               }}
             >
-              <iframe
-                src={config.mapsEmbedUrl}
-                width="100%"
-                height="400"
+              {/* Map container with smooth aspect ratio */}
+              <div
                 style={{
-                  border: 0,
-                  display: "block",
-                  filter: "grayscale(30%) contrast(1.05)",
-                  transition: "filter 0.5s ease",
+                  position: "relative",
+                  width: "100%",
+                  paddingBottom: "56.25%",
+                  height: 0,
+                  overflow: "hidden",
+                  borderRadius: "16px",
                 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Lokasi El Bouquet"
-                onMouseEnter={(e) => {
-                  (e.target as HTMLIFrameElement).style.filter = "grayscale(0%) contrast(1)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLIFrameElement).style.filter = "grayscale(30%) contrast(1.05)";
+              >
+                <iframe
+                  src={config.mapsEmbedUrl}
+                  width="100%"
+                  height="100%"
+                  className="map-iframe-hover"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    border: 0,
+                    display: "block",
+                    filter: "grayscale(15%) contrast(1.1) brightness(1.05)",
+                    transition: "filter 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
+                  }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title={language === "id" ? "Lokasi El Bouquet" : "El Bouquet Location"}
+                />
+              </div>
+
+              {/* Map decoration overlay */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(135deg, rgba(192, 93, 93, 0.05) 0%, rgba(201, 139, 63, 0.03) 100%)",
+                  pointerEvents: "none",
+                  borderRadius: "16px",
                 }}
               />
             </motion.div>
 
             <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: "24px",
+                paddingTop: "40px",
+                "@media (min-width: 768px)": {
+                  gridTemplateColumns: "1fr 1fr",
+                },
+              }}
               className="mt-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
-              style={{ paddingTop: "24px" }}
             >
-              <div>
-                <p style={{ ...mono, color: "#bbb", marginBottom: "4px" }}>Alamat</p>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "#555" }}>
-                  📍 {config.address}
-                </p>
-              </div>
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(config.address)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* Address card */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
                 style={{
-                  ...mono,
-                  fontSize: "10px",
-                  padding: "10px 20px",
-                  border: "1px solid #1a1a1a",
-                  color: "#1a1a1a",
-                  textDecoration: "none",
-                  display: "inline-block",
-                  transition: "all 0.3s ease",
-                  marginTop: "12px",
+                  padding: "24px",
+                  background: "linear-gradient(135deg, rgba(192, 93, 93, 0.08), rgba(201, 139, 63, 0.05))",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(192, 93, 93, 0.15)",
                 }}
               >
-                Buka di Google Maps →
-              </a>
+                <p style={{ ...mono, color: "#bbb", marginBottom: "8px" }}>{language === "id" ? "Alamat" : "Address"}</p>
+                <p style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "clamp(13px, 1.5vw, 16px)",
+                  color: "#1a1a1a",
+                  lineHeight: 1.6,
+                  fontWeight: 500,
+                }}>
+                  📍 {config.address}
+                </p>
+              </motion.div>
+
+              {/* Google Maps button */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", "@media (min-width: 768px)": { justifyContent: "flex-end" } }}
+              >
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(config.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    ...mono,
+                    fontSize: "10px",
+                    padding: "12px 28px",
+                    border: "1px solid #1a1a1a",
+                    color: "#1a1a1a",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+                    borderRadius: "8px",
+                    background: "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#1a1a1a";
+                    e.currentTarget.style.color = "#fff";
+                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(26, 26, 26, 0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "#1a1a1a";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <span>{language === "id" ? "Navigasi ke Lokasi" : "Navigate to Location"}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              </motion.div>
             </div>
+
+            {/* Hours or additional info */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              style={{
+                marginTop: "32px",
+                padding: "24px",
+                background: "rgba(255,255,255,0.4)",
+                borderRadius: "12px",
+                border: "1px solid rgba(0,0,0,0.06)",
+                backdrop: "blur(4px)",
+              }}
+            >
+              <p style={{ ...mono, marginBottom: "12px", color: "#999" }}>{language === "id" ? "Jam Operasional" : "Operating Hours"}</p>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                gap: "16px",
+              }}>
+                <div>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "#1a1a1a", fontWeight: 600 }}>
+                    {language === "id" ? "Senin - Jum'at" : "Monday - Friday"}
+                  </p>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#999" }}>09:00 - 18:00</p>
+                </div>
+                <div>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "#1a1a1a", fontWeight: 600 }}>
+                    {language === "id" ? "Sabtu - Minggu" : "Saturday - Sunday"}
+                  </p>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#999" }}>10:00 - 17:00</p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         )}
+      </div>
+      <div style={{ marginTop: 48 }}>
+        <AnimatedPetals />
       </div>
       <Footer />
     </PageTransition>
