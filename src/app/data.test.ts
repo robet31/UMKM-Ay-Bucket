@@ -16,7 +16,7 @@ describe('catalog data', () => {
   });
 
   it('keeps the expected default product count', () => {
-    expect(defaultProducts).toHaveLength(31);
+    expect(defaultProducts).toHaveLength(42);
   });
 
   it('normalizes legacy products into images arrays', () => {

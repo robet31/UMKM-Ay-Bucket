@@ -6,11 +6,14 @@
 
 // ---- BRANDING & LOGO ----
 export const BRAND_LOGO = {
-  name: "El Bouquet",
-  tagline: "Elegant Flowers & Premium Gifts",
+  name: "ay buket",
+  tagline: "Wujudkan Hadiah Impianmu",
   whatsapp: "6282257827867",
   location: "Pertokoan pasar senenan Bangkalan",
-  instagram: "@elbouket",
+  instagram: "@aybuket",
+  // Path to the logo file. Place `5.jpg` (or a processed/transparent version)
+  // into `public/assets/ay-logo-5.jpg` to have it served at runtime.
+  logo: "/assets/ay-logo-5.jpg",
   canvaCatalog: "https://catalog-elbouket.my.canva.site/",
   canvaChocolate: "https://chocolate-bouquet-elbouket.my.canva.site/"
 };
@@ -31,13 +34,15 @@ export interface SiteConfig {
   footerText: string;
   heroTitle: string;
   heroSubtitle: string;
+  heroFallbackImage: string;
   mapsEmbedUrl: string;
+  adminUsername?: string;
   adminPassword?: string;
 }
 
 const defaultConfig: SiteConfig = {
-  businessName: "El Bouquet",
-  tagline: "Elegant Flowers & Premium Gifts",
+  businessName: "ay buket",
+  tagline: "Wujudkan Hadiah Impianmu",
   year: "2026",
   address: "",
   whatsappNumber: "",
@@ -52,16 +57,30 @@ const defaultConfig: SiteConfig = {
   footerText: "",
   heroTitle: "Buket Bunga Premium\nUntuk Setiap Momen",
   heroSubtitle: "Rangkaian bunga segar pilihan, snack bouquet unik, money bouquet eksklusif, dan vas cantik. Dibuat dengan perhatian penuh untuk moment spesial Anda.",
+  heroFallbackImage: "/assets/catalog-home-rp150000-item-02.jpg",
   mapsEmbedUrl: "",
-  adminPassword: "elbouquet",
+  adminUsername: "admin",
+  adminPassword: "admin123",
 };
 
 export function getSiteConfig(): SiteConfig {
   try {
     const stored = localStorage.getItem(ADMIN_STORAGE_KEY);
-    if (stored) return { ...defaultConfig, ...JSON.parse(stored) };
-  } catch {}
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<SiteConfig>;
+      const merged = { ...defaultConfig, ...parsed } as SiteConfig;
+      if (!merged.adminUsername) merged.adminUsername = "admin";
+      if (!merged.adminPassword || merged.adminPassword === "elbouquet") merged.adminPassword = "admin123";
+      return merged;
+    }
+  } catch { }
   return defaultConfig;
+}
+
+export function formatRupiah(value: number | string): string {
+  const parsed = typeof value === "number" ? value : parseInt(String(value).replace(/\D/g, ""), 10);
+  const amount = Number.isFinite(parsed) ? parsed : 0;
+  return `Rp ${amount.toLocaleString("id-ID")}`;
 }
 
 export function saveSiteConfig(config: Partial<SiteConfig>) {
@@ -70,7 +89,7 @@ export function saveSiteConfig(config: Partial<SiteConfig>) {
     const merged = { ...current, ...config };
     localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
     window.dispatchEvent(new Event("siteConfigChanged"));
-  } catch {}
+  } catch { }
 }
 
 export function resetSiteConfig() {
@@ -129,6 +148,13 @@ export interface Product {
 }
 
 export function normalizeProductRecord(product: any): Product {
+  const numericPrice = typeof product?.price === "number"
+    ? product.price
+    : parseInt(String(product?.price || 0).replace(/\D/g, ""), 10) || 0;
+  const normalizedLabel = typeof product?.priceLabel === "string" && product.priceLabel.trim().length > 0
+    ? (product.priceLabel.toLowerCase().includes("rp") ? product.priceLabel : formatRupiah(product.priceLabel))
+    : formatRupiah(numericPrice);
+
   const images = Array.isArray(product?.images)
     ? product.images.filter(Boolean)
     : product?.image
@@ -137,6 +163,8 @@ export function normalizeProductRecord(product: any): Product {
 
   return {
     ...product,
+    price: numericPrice,
+    priceLabel: normalizedLabel,
     image: product?.image || images[0] || "",
     images,
   } as Product;
@@ -147,56 +175,137 @@ export function normalizeStoredProducts(stored: any[]): Product[] {
 }
 
 export const categories: Category[] = [
-  { 
-    key: "buket-satin", 
-    label: "Buket Satin", 
-    emoji: "💐", 
+  {
+    key: "buket-satin",
+    label: "Buket Satin",
+    emoji: "💐",
     description: "Buket satin berkualitas tinggi dengan rangkaian bunga pilihan. Sempurna untuk berbagai momen spesial.",
     canvaLink: "https://catalog-elbouket.my.canva.site/buket-satin"
   },
-  { 
-    key: "snack-bouquet", 
-    label: "Snack Bouquet", 
-    emoji: "🎁", 
+  {
+    key: "snack-bouquet",
+    label: "Snack Bouquet",
+    emoji: "🎁",
     description: "Kombinasi unik bunga dengan snack premium. Hadiah yang berkesan dan fungsional.",
     canvaLink: "https://catalog-elbouket.my.canva.site/snack-bouquet"
   },
-  { 
-    key: "money-bouquet", 
-    label: "Money Bouquet", 
-    emoji: "💰", 
-    description: "Buket uang yang elegan untuk momen istimewa. Hadiah yang praktis dan bersesan.",
+  {
+    key: "money-bouquet",
+    label: "Money Bouquet",
+    emoji: "💰",
+    description: "Buket uang yang elegan untuk momen istimewa. Hadiah yang praktis dan berkesan.",
     canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money"
   },
-  { 
-    key: "chocolate-bouquet", 
-    label: "Chocolate Bouquet", 
-    emoji: "🍫", 
+  {
+    key: "chocolate-bouquet",
+    label: "Chocolate Bouquet",
+    emoji: "🍫",
     description: "Bunga dengan cokelat premium berkualitas tinggi. Sempurna untuk gift istimewa.",
     canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/"
   },
-  { 
-    key: "fresh-flower", 
-    label: "Fresh Flower", 
-    emoji: "🌹", 
+  {
+    key: "fresh-flower",
+    label: "Fresh Flower",
+    emoji: "🌹",
     description: "Rangkaian bunga segar pilihan terbaik dengan berbagai kombinasi warna.",
     canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe"
   },
-  { 
-    key: "artificial-flower", 
-    label: "Artificial Flower", 
-    emoji: "✨", 
+  {
+    key: "artificial-flower",
+    label: "Artificial Flower",
+    emoji: "✨",
     description: "Rangkaian bunga artificial premium yang awet dan elegan.",
     canvaLink: "https://catalog-elbouket.my.canva.site/vase"
   },
-  { 
-    key: "catalog-home", 
-    label: "Premium Packages", 
-    emoji: "👑", 
+  {
+    key: "catalog-home",
+    label: "Premium Packages",
+    emoji: "👑",
     description: "Paket premium untuk acara spesial dan kebutuhan khusus.",
     canvaLink: "https://catalog-elbouket.my.canva.site/"
   },
 ];
+
+// ============================================
+// GALLERY PROJECTS - Admin Customizable
+// ============================================
+export interface GalleryProject {
+  id: string;
+  title: string;
+  category: string;
+  aspect: "3/4" | "1/1" | "16/9";
+  image: string;
+}
+
+const GALLERY_STORAGE_KEY = "elbouquet_gallery_v1";
+
+export const defaultGalleryProjects: GalleryProject[] = [
+  {
+    id: "gallery-1",
+    title: "Buket Satin Collection",
+    category: "Buket Satin",
+    aspect: "3/4",
+    image: "/assets/buket-satin-rp20000-item-01.jpg",
+  },
+  {
+    id: "gallery-2",
+    title: "Money Bouquet Premium",
+    category: "Money Bouquet",
+    aspect: "1/1",
+    image: "/assets/money-bouquet-rp50000-item-01.jpg",
+  },
+  {
+    id: "gallery-3",
+    title: "Snack Bouquet Unik",
+    category: "Snack Bouquet",
+    aspect: "16/9",
+    image: "/assets/snack-bouquet-rp35000-item-01.jpg",
+  },
+  {
+    id: "gallery-4",
+    title: "Fresh Flower Arrangement",
+    category: "Fresh Flower",
+    aspect: "3/4",
+    image: "/assets/catalog-home-rp150000-item-02.jpg",
+  },
+  {
+    id: "gallery-5",
+    title: "Chocolate Bouquet Premium",
+    category: "Chocolate Bouquet",
+    aspect: "1/1",
+    image: "/assets/catalog-home-rp150000-item-02.jpg",
+  },
+  {
+    id: "gallery-6",
+    title: "Artificial Flower Collection",
+    category: "Artificial Flower",
+    aspect: "16/9",
+    image: "/assets/catalog-home-rp150000-item-02.jpg",
+  },
+];
+
+export function getGalleryProjects(): GalleryProject[] {
+  if (typeof window === "undefined") return defaultGalleryProjects;
+  const stored = localStorage.getItem(GALLERY_STORAGE_KEY);
+  if (!stored) return defaultGalleryProjects;
+  try {
+    return JSON.parse(stored) as GalleryProject[];
+  } catch {
+    return defaultGalleryProjects;
+  }
+}
+
+export function setGalleryProjects(projects: GalleryProject[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(projects));
+  window.dispatchEvent(new Event("galleryProjectsChanged"));
+}
+
+export function resetGalleryProjects(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(GALLERY_STORAGE_KEY);
+  window.dispatchEvent(new Event("galleryProjectsChanged"));
+}
 
 const initialProducts: Product[] = [
   // ======= BUKET SATIN (4 items @ Rp 20.000) =======
@@ -243,6 +352,19 @@ const initialProducts: Product[] = [
   { id: "ch-09", name: "Premium Package 9", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-09.jpg" },
   { id: "ch-10", name: "Premium Package 10", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-10.jpg" },
   { id: "ch-11", name: "Premium Package 11", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-11.jpg", tag: "👑 Premium" },
+
+  // ======= AY BUKET — CURATED PREMIUM COLLECTION (11 items) =======
+  { id: "ay-accessories-1", name: "Akrilik Frame Mini", category: "accessories", price: 95000, priceLabel: "Rp 95.000", image: "/assets/Akrilik frame mini - Rp 95.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan (10).png", tag: "Favorit Kami" },
+  { id: "ay-accessories-2", name: "Sewa Per Jam Standing Akrilik Bulat", category: "accessories", price: 40000, priceLabel: "Rp 40.000", image: "/assets/Sewa Standing Akrilik bulat (PROMO) - sewa 3 jam Rp 40.000 - sewa 12 jam Rp 50.000 - sewa 24jam Rp 75.000 - bisa untuk segala acara Ready set (2).png", tag: "Favorit Kami" },
+  { id: "ay-buckets-3", name: "Bucket Aesthetic", category: "buckets", price: 100000, priceLabel: "Rp 100.000", image: "/assets/Round Pita Satin - Rp 100.000,00 (2).png", tag: "Favorit Kami" },
+  { id: "ay-buckets-4", name: "Bucket Bunga Gradoll (Graduation Doll) Big Mesh", category: "buckets", price: 170000, priceLabel: "Rp 170.000", image: "/assets/Buket Bunga Gradoll (Graduation Doll) Big Mesh - Rp 170.000,00 - bunga palsu mix isian tidak bisa sama persis, ukuran & jumlah bu (2).png" },
+  { id: "ay-fresh-flower-5", name: "Bunga Mawar Palsu", category: "fresh-flower", price: 250000, priceLabel: "Rp 250.000", image: "/assets/Bunga Mawar Palsu Premium (ukuran Big) - Rp 250.000,00 (2).png" },
+  { id: "ay-fresh-flower-6", name: "Bunga White Sedap", category: "fresh-flower", price: 125000, priceLabel: "Rp 125.000", image: "/assets/bunga white sedap - Rp 125.000,00 - 125ribu hanya bunga asli saja (10tangkai sedap malam & 10tangkai asteria) (2).png" },
+  { id: "ay-catalog-home-7", name: "Frame Birthday Edelweis", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/Frame Birthday Edelweis - Rp 150.000,00 - frame ukuran 25cm x 35cm - bisa request tulisan + 2 foto - bunga edelweis mini (2).png" },
+  { id: "ay-catalog-home-8", name: "Mawar Candy (Bunga Asli)", category: "catalog-home", price: 170000, priceLabel: "Rp 170.000", image: "/assets/Mawar Candy (Bunga Asli) - Rp 170.000,00 (2).png" },
+  { id: "ay-wreaths-9", name: "Karangan Bunga", category: "wreaths", price: 500000, priceLabel: "Rp 500.000", image: "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.000,00 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala (2).png" },
+  { id: "ay-packaging-10", name: "Packing Luxury Elegant", category: "packaging", price: 25000, priceLabel: "Rp 25.000", image: "/assets/packing luxury elegant - Rp 25.000,00 - packing box + kertas + pita organza (2).png" },
+  { id: "ay-ribbons-11", name: "Selempang Wisuda 3 Titik", category: "ribbons", price: 95000, priceLabel: "Rp 95.000", image: "/assets/Selempang Wisuda 3 Titik - Rp 95.000,00 (2).png" },
 ];
 
 export const defaultProducts: Product[] = initialProducts.map((p) => ({
@@ -260,11 +382,11 @@ export function getProducts(): Product[] {
       if (migrated) {
         try {
           localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(normalized));
-        } catch {}
+        } catch { }
       }
       return normalized as Product[];
     }
-  } catch {}
+  } catch { }
   return defaultProducts;
 }
 
@@ -378,7 +500,7 @@ export function getVideos(): VideoItem[] {
   try {
     const stored = localStorage.getItem(VIDEOS_STORAGE_KEY);
     if (stored) return JSON.parse(stored);
-  } catch {}
+  } catch { }
   return defaultVideos;
 }
 
