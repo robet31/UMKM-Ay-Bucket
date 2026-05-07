@@ -93,9 +93,10 @@ export function Admin() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
-  const [authed, setAuthed] = useState<boolean>(() => (typeof window !== "undefined" && sessionStorage.getItem("aybucket_admin_authed") === "1") || false);
-  const [usernameInput, setUsernameInput] = useState("admin");
+  const [authed, setAuthed] = useState<boolean>(false);
+  const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
     if (!authed) {
@@ -318,34 +319,130 @@ export function Admin() {
   ];
 
   if (!authed) {
+    const handleLogin = () => {
+      const cfg = getSiteConfig();
+      const username = cfg.adminUsername || 'admin';
+      const pass = cfg.adminPassword || 'AyBucket2026!';
+      if (usernameInput === username && passwordInput === pass) {
+        setLoginError("");
+        setAuthed(true);
+      } else {
+        setLoginError("Username atau password salah!");
+        setPasswordInput("");
+      }
+    };
+
     return (
       <div
         style={{
           minHeight: "100vh",
-          backgroundColor: "#F9F9F7",
+          background: "linear-gradient(135deg, #1a1a1a 0%, #2d2016 50%, #1a1a1a 100%)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: "24px",
         }}
       >
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', padding: 24, width: 360, borderRadius: 8 }}>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", marginBottom: 12 }}>Admin Login</h3>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#666' }}>Masukkan username dan password admin untuk melanjutkan.</p>
-            <input aria-label="Username admin" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} type="text" style={{ ...inputStyle, marginTop: 12 }} />
-            <input aria-label="Password admin" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} type="password" style={{ ...inputStyle, marginTop: 12 }} />
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={() => {
-                const cfg = getSiteConfig();
-                const username = cfg.adminUsername || 'admin';
-                const pass = cfg.adminPassword || 'admin123';
-                if (usernameInput === username && passwordInput === pass) { sessionStorage.setItem('aybucket_admin_authed', '1'); setAuthed(true); }
-                else alert('Password salah');
-              }} style={btnStyle}>Masuk</button>
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            background: '#fff',
+            padding: '40px 32px',
+            width: '100%',
+            maxWidth: '380px',
+            borderRadius: '20px',
+            boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+          }}
+        >
+          {/* Logo */}
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #b85c3b, #d17047)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '24px' }}>
+              🔐
             </div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '26px', fontWeight: 400, color: '#1a1a1a', margin: '0 0 4px 0' }}>Admin Panel</h3>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#999', margin: 0 }}>
+              Ay Bucket & Gift
+            </p>
           </div>
-        </div>
+
+          {/* Error message */}
+          <AnimatePresence>
+            {loginError && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                style={{
+                  padding: '10px 14px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '10px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span style={{ fontSize: '14px' }}>⚠️</span>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#dc2626', margin: 0 }}>{loginError}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Form */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#999', display: 'block', marginBottom: '6px' }}>Username</label>
+              <input
+                aria-label="Username admin"
+                value={usernameInput}
+                onChange={(e) => { setUsernameInput(e.target.value); setLoginError(""); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                type="text"
+                placeholder="Masukkan username"
+                autoComplete="username"
+                style={{ ...inputStyle, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', border: '1px solid rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#999', display: 'block', marginBottom: '6px' }}>Password</label>
+              <input
+                aria-label="Password admin"
+                value={passwordInput}
+                onChange={(e) => { setPasswordInput(e.target.value); setLoginError(""); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                type="password"
+                placeholder="Masukkan password"
+                autoComplete="current-password"
+                style={{ ...inputStyle, borderRadius: '10px', padding: '12px 14px', fontSize: '14px', border: '1px solid rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+            <motion.button
+              onClick={handleLogin}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                ...btnStyle,
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                fontSize: '11px',
+                letterSpacing: '0.12em',
+                marginTop: '4px',
+                background: 'linear-gradient(135deg, #1a1a1a, #333)',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+              }}
+            >
+              MASUK
+            </motion.button>
+          </div>
+
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '10px', color: '#ccc', textAlign: 'center', marginTop: '20px', lineHeight: 1.5 }}>
+            Hanya administrator yang berwenang yang dapat mengakses halaman ini.
+          </p>
+        </motion.div>
       </div>
     );
   }
