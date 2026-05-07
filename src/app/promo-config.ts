@@ -8,13 +8,13 @@ export const PROMO_CONFIG: Record<string, { originalPrice: number; promoPrice: n
   //   promoPrice: 95000,
   //   label: "PROMO SPESIAL 35%"
   // },
-  
+
   // Add your promos below:
 };
 
 export function applyPromoToProduct(product: any): any {
   const promoConfig = PROMO_CONFIG[product.name];
-  
+
   if (!promoConfig) {
     return product;
   }

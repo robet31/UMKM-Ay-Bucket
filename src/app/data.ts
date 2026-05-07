@@ -269,7 +269,7 @@ export type ProductCategory =
   | "packaging"
   | "ribbons"
   | "sewa";
-  
+
 
 export interface Category {
   key: ProductCategory;

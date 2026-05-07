@@ -90,7 +90,7 @@ export function Admin() {
   const [saved, setSaved] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
-  const [authed, setAuthed] = useState<boolean>(sessionStorage.getItem("aybucket_admin_authed") === "1");
+  const [authed, setAuthed] = useState<boolean>(() => (typeof window !== "undefined" && sessionStorage.getItem("aybucket_admin_authed") === "1") || false);
   const [usernameInput, setUsernameInput] = useState("admin");
   const [passwordInput, setPasswordInput] = useState("");
 
@@ -297,7 +297,7 @@ export function Admin() {
           padding: "24px",
         }}
       >
-        <div style={{ position: 'fixed', inset: 0, zIndex: 20000, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', padding: 24, width: 360, borderRadius: 8 }}>
             <h3 style={{ fontFamily: "'Cormorant Garamond', serif", marginBottom: 12 }}>Admin Login</h3>
             <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: '#666' }}>Masukkan username dan password admin untuk melanjutkan.</p>
@@ -461,21 +461,21 @@ export function Admin() {
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
             </div>
             <div style={sectionStyle}>
-              <FieldSelect 
-                label="Tipe Link Katalog" 
-                value={config.catalogLinkType || "wa"} 
+              <FieldSelect
+                label="Tipe Link Katalog"
+                value={config.catalogLinkType || "wa"}
                 options={[
                   { value: "wa", label: " WhatsApp" },
                   { value: "link", label: " Link Eksternal (Canva/etc)" },
                   { value: "pdf", label: " File PDF" },
                 ]}
-                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })} 
+                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })}
               />
-              <FieldInput 
-                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"} 
-                value={config.catalogLink || ""} 
+              <FieldInput
+                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"}
+                value={config.catalogLink || ""}
                 placeholder={config.catalogLinkType === "wa" ? "628xxx..." : config.catalogLinkType === "pdf" ? "https://..." : "https://..."}
-                onChange={(v) => setConfig({ ...config, catalogLink: v })} 
+                onChange={(v) => setConfig({ ...config, catalogLink: v })}
               />
             </div>
             <div style={sectionStyle}>
@@ -520,7 +520,7 @@ export function Admin() {
         )}
 
         {activeTab === "gallery" && (
-          <GalleryManager 
+          <GalleryManager
             items={galleryProjects}
             onUpdate={setGalleryProjectsList}
             onSave={handleSaveGallery}
@@ -597,21 +597,21 @@ export function Admin() {
               <FieldInput label="Instagram" value={config.instagram} onChange={(v) => setConfig({ ...config, instagram: v })} />
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
               <FieldInput label="Nomor WhatsApp Display" value={config.whatsappDisplay} onChange={(v) => setConfig({ ...config, whatsappDisplay: v })} />
-              <FieldSelect 
-                label="Tipe Link Katalog" 
-                value={config.catalogLinkType || "wa"} 
+              <FieldSelect
+                label="Tipe Link Katalog"
+                value={config.catalogLinkType || "wa"}
                 options={[
                   { value: "wa", label: " WhatsApp" },
                   { value: "link", label: " Link Eksternal (Canva/etc)" },
                   { value: "pdf", label: " File PDF" },
                 ]}
-                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })} 
+                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })}
               />
-              <FieldInput 
-                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"} 
-                value={config.catalogLink || ""} 
+              <FieldInput
+                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"}
+                value={config.catalogLink || ""}
                 placeholder={config.catalogLinkType === "wa" ? "628xxx..." : config.catalogLinkType === "pdf" ? "https://..." : "https://..."}
-                onChange={(v) => setConfig({ ...config, catalogLink: v })} 
+                onChange={(v) => setConfig({ ...config, catalogLink: v })}
               />
               <FieldTextarea label="Teks Tambahan Footer" value={config.footerText} onChange={(v) => setConfig({ ...config, footerText: v })} />
             </div>
@@ -1250,17 +1250,17 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 10000,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: isMobile ? "flex-start" : "center",
-        justifyContent: "center",
-        padding: isMobile ? "10px" : "24px",
-        overflowY: "auto",
-      }}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 2147483647,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: isMobile ? "flex-start" : "center",
+          justifyContent: "center",
+          padding: isMobile ? "10px" : "24px",
+          overflow: "hidden",
+        }}
       onClick={onCancel}
     >
       <div
@@ -1271,7 +1271,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
           maxWidth: "680px",
           width: "100%",
           maxHeight: isMobile ? "92dvh" : "80vh",
-          overflow: "auto",
+          overflow: "hidden",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
         }}
       >
@@ -1362,12 +1362,13 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
               style={{
                 position: "fixed",
                 inset: 0,
-                zIndex: 10020,
+                zIndex: 2147483647,
                 background: "rgba(0,0,0,0.72)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 padding: 20,
+                overflow: "hidden",
               }}
               onClick={() => setSelectedImageIndex(null)}
             >
@@ -1381,7 +1382,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
                   maxWidth: 920,
                   width: "100%",
                   maxHeight: "90vh",
-                  overflow: "auto",
+                  overflow: "hidden",
                   padding: 20,
                   boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
                 }}
@@ -1479,17 +1480,17 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 10000,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: isMobile ? "flex-start" : "center",
-        justifyContent: "center",
-        padding: isMobile ? "10px" : "24px",
-        overflowY: "auto",
-      }}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 2147483647,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: isMobile ? "flex-start" : "center",
+          justifyContent: "center",
+          padding: isMobile ? "10px" : "24px",
+          overflow: "hidden",
+        }}
       onClick={onCancel}
     >
       <div
@@ -1500,7 +1501,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
           maxWidth: "500px",
           width: "100%",
           maxHeight: isMobile ? "92dvh" : "80vh",
-          overflow: "auto",
+          overflow: "hidden",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
         }}
       >

@@ -424,14 +424,14 @@ export function Home() {
                 const isLastRow = currentRow === totalRows;
                 const itemsInLastRow = displayedProducts.length % itemsPerRow || itemsPerRow;
                 const shouldCenter = isLastRow && itemsInLastRow % 2 === 1;
-                
+
                 return (
-                  <div 
-                    key={p.id} 
-                    onClick={() => setSelectedProduct(p)} 
-                    style={{ 
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedProduct(p)}
+                    style={{
                       cursor: "pointer",
-                      ...(shouldCenter && idx === displayedProducts.length - 1 
+                      ...(shouldCenter && idx === displayedProducts.length - 1
                         ? { gridColumn: `${Math.floor(itemsPerRow / 2) + 1} / span 1`, justifySelf: "center" }
                         : {})
                     }}
@@ -548,9 +548,9 @@ export function Home() {
 
       <AnimatePresence>
         {selectedProduct && (
-          <ProductDetailModal 
-            key={selectedProduct.id} 
-            product={selectedProduct} 
+          <ProductDetailModal
+            key={selectedProduct.id}
+            product={selectedProduct}
             allProducts={displayedProducts}
             onClose={() => setSelectedProduct(null)}
             onNavigate={setSelectedProduct}
@@ -665,7 +665,7 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
   const images = product.images && product.images.length > 0 ? product.images : product.image ? [product.image] : [];
   const hasMultipleImages = images.length > 1;
   const currentImage = images[currentImageIndex] || product.image;
-  
+
   const accent = {
     "buket-satin": "#d48a6a",
     "snack-bouquet": "#c98b3f",
@@ -909,7 +909,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
-  
+
   // Product navigation
   const currentIndex = allProducts ? allProducts.findIndex((p) => p.id === product.id) : -1;
   const canNavigatePrev = allProducts ? currentIndex > 0 : false;
@@ -955,8 +955,8 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
   }, [emblaApi]);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 120000, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center", padding: isMobile ? "60px 12px 12px" : "clamp(16px, 4vw, 40px)", overflow: "hidden", paddingTop: isMobile ? "80px" : "clamp(16px, 4vw, 40px)" }} onClick={onClose}>
-      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", maxHeight: isMobile ? "calc(100dvh - 100px)" : "90vh", overflowY: "auto", overflowX: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", borderRadius: isMobile ? "16px" : "18px" }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 2147483647, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center", padding: isMobile ? "60px 12px 12px" : "clamp(16px, 4vw, 40px)", overflow: "hidden", paddingTop: isMobile ? "80px" : "clamp(16px, 4vw, 40px)" }} onClick={onClose}>
+      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", maxHeight: isMobile ? "calc(100dvh - 100px)" : "90vh", overflow: "hidden", overflowX: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", borderRadius: isMobile ? "16px" : "18px" }}>
         {/* Navigation Buttons */}
         {onNavigate && allProducts && allProducts.length > 1 && (
           <>
@@ -1010,7 +1010,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
             </>
           )}
         </div>
-        <div style={{ flex: "1 1 320px", padding: isMobile ? "18px" : "28px", display: "flex", flexDirection: "column", gap: "14px", justifyContent: "center" }}>
+        <div style={{ flex: "1 1 320px", padding: isMobile ? "18px" : "28px", display: "flex", flexDirection: "column", gap: "14px", justifyContent: "center", overflow: "hidden" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", margin: 0 }}>{getCategoryLabel(product.category, categoryInfo?.label || product.category, language)}</p>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(28px, 8vw, 36px)" : "clamp(32px, 4vw, 50px)", lineHeight: 1, margin: 0, color: "#1a1a1a" }}>{displayName}</h2>
           <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.8, margin: 0 }}>
@@ -1132,10 +1132,10 @@ function CategoryPreviewModal({
   }, []);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 9998, backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(4px)", display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center", padding: isMobile ? "10px" : "clamp(16px, 4vw, 40px)", overflowY: "hidden", overflowX: "hidden" }} onClick={onClose}>
-      <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", maxHeight: isMobile ? "92dvh" : "90vh", overflow: isMobile ? "auto" : "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "16px" : "20px" }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 2147483647, backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(4px)", display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center", padding: isMobile ? "10px" : "clamp(16px, 4vw, 40px)", overflow: "hidden" }} onClick={onClose}>
+    <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", maxHeight: isMobile ? "92dvh" : "90vh", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "16px" : "20px" }}>
         <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.92)", cursor: "pointer" }}>×</button>
-        <div style={{ padding: isMobile ? "18px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflowY: "auto" }}>
+        <div style={{ padding: isMobile ? "18px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflow: "hidden" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Preview kategori" : "Category preview"}
           </p>
@@ -1198,7 +1198,7 @@ function CategoryPreviewModal({
           </div>
         </div>
 
-        <div style={{ padding: isMobile ? "18px" : "28px", background: "#f2ede7", overflowY: "auto", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
+        <div style={{ padding: isMobile ? "18px" : "28px", background: "#f2ede7", overflow: "hidden", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Ringkasan isi kategori" : "Category content summary"}
           </p>
@@ -1228,7 +1228,7 @@ function CategoryPreviewModal({
                         <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#7a7a7a", whiteSpace: "nowrap" }}>{product.priceLabel}</span>
                       </div>
                       <p style={{ margin: "8px 0 0 0", fontFamily: "'Inter', sans-serif", fontSize: "13px", lineHeight: 1.6, color: "#666" }}>
-                          {truncateDescription(getProductDescription(product, language), 90) || displayTag || (language === "id" ? "Klik untuk melihat detail produk ini." : "Click to view this product detail.")}
+                        {truncateDescription(getProductDescription(product, language), 90) || displayTag || (language === "id" ? "Klik untuk melihat detail produk ini." : "Click to view this product detail.")}
                       </p>
                     </button>
                   );

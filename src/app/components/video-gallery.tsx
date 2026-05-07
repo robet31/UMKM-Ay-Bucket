@@ -497,11 +497,10 @@ export function StudioVideoSection() {
               display: "flex",
               alignItems: isMobile ? "flex-start" : "center",
               justifyContent: "center",
-              zIndex: 9999,
+              zIndex: 2147483647,
               backdropFilter: "blur(2px)",
               padding: isMobile ? "10px" : "20px",
-              overflowY: "hidden",
-              overflowX: "hidden",
+              overflow: "hidden",
             }}
           >
             <motion.div
@@ -549,7 +548,7 @@ export function StudioVideoSection() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        overflowY: "auto",
+                        overflow: "hidden",
                         padding: "8px",
                       }}
                     >
