@@ -116,6 +116,7 @@ export function Admin() {
     setSaved(true);
     setShowSuccessModal(true);
     setTimeout(() => setSaved(false), 3000);
+    setTimeout(() => setShowSuccessModal(false), 4000);
   };
 
   const handleSaveConfig = () => {
@@ -404,55 +405,42 @@ export function Admin() {
         </div>
       </div>
 
-      {/* Success Modal Overlay */}
+      {/* Success Toast Notification */}
       <AnimatePresence>
         {showSuccessModal && createPortal(
-          <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSuccessModal(false)}
-              style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(26,26,26,0.4)', backdropFilter: 'blur(4px)' }}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              style={{
-                position: 'relative',
-                backgroundColor: '#fff',
-                padding: '40px',
-                borderRadius: '24px',
-                maxWidth: '400px',
-                width: '100%',
-                textAlign: 'center',
-                boxShadow: '0 30px 60px rgba(0,0,0,0.15)',
-              }}
-            >
-              <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#f0fdf4', color: '#22c55e', fontSize: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                ✨
-              </div>
-              <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '28px', color: '#1a1a1a', marginBottom: '12px' }}>Berhasil Disimpan!</h3>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '15px', color: '#666', lineHeight: 1.6, marginBottom: '32px' }}>
-                Semua perubahan yang Anda buat telah berhasil disimpan ke database Neon. Website Anda kini sudah diperbarui.
+          <motion.div
+            initial={{ opacity: 0, y: -40, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -40, x: "-50%" }}
+            style={{
+              position: 'fixed',
+              top: '24px',
+              left: '50%',
+              zIndex: 2147483647,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              padding: '16px 28px',
+              backgroundColor: '#fff',
+              borderRadius: '16px',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)',
+              maxWidth: '460px',
+              width: 'calc(100vw - 32px)',
+              cursor: 'pointer',
+            }}
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#f0fdf4', color: '#22c55e', fontSize: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              ✅
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>Berhasil Disimpan!</p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#666', margin: 0, lineHeight: 1.4 }}>
+                Perubahan telah tersimpan. Klik untuk menutup.
               </p>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                style={{
-                  ...btnStyle,
-                  width: '100%',
-                  padding: '16px',
-                  borderRadius: '12px',
-                  fontSize: '11px',
-                  letterSpacing: '0.15em',
-                  boxShadow: '0 10px 20px rgba(26,26,26,0.15)',
-                }}
-              >
-                OKE, MENGERTI
-              </button>
-            </motion.div>
-          </div>,
+            </div>
+            <span style={{ color: '#ccc', fontSize: '18px', fontWeight: 300, flexShrink: 0 }}>×</span>
+          </motion.div>,
           document.body
         )}
       </AnimatePresence>
@@ -688,60 +676,85 @@ export function Admin() {
               )}
             </AnimatePresence>
 
-            {/* Product List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "12px 16px",
-                    border: "1px solid rgba(0,0,0,0.06)",
-                    backgroundColor: "#fff",
-                    transition: "box-shadow 0.3s ease",
-                  }}
-                >
-                  <img
-                    src={product.image}
-                    alt=""
-                    style={{ width: "48px", height: "48px", objectFit: "cover", flexShrink: 0 }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: "#1a1a1a",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {product.name}
-                    </p>
-                    <p style={{ ...mono, fontSize: "9px", color: "#999" }}>
-                      {categories.find((c) => c.key === product.category)?.label || product.category} · {product.priceLabel}
-                    </p>
+            {/* Product List — Card Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
+              {products.map((product) => {
+                const catInfo = categories.find((c) => c.key === product.category);
+                return (
+                  <div
+                    key={product.id}
+                    style={{
+                      border: "1px solid rgba(0,0,0,0.06)",
+                      backgroundColor: "#fff",
+                      borderRadius: "14px",
+                      overflow: "hidden",
+                      transition: "box-shadow 0.3s ease, transform 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  >
+                    {/* Image */}
+                    <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", backgroundColor: "#f3f0eb", overflow: "hidden" }}>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                      {/* Category badge */}
+                      <span style={{
+                        position: "absolute", top: "8px", left: "8px",
+                        padding: "4px 10px", borderRadius: "999px",
+                        backgroundColor: "rgba(0,0,0,0.6)", color: "#fff",
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: "8px",
+                        letterSpacing: "0.08em", textTransform: "uppercase",
+                      }}>
+                        {catInfo?.emoji} {catInfo?.label || product.category}
+                      </span>
+                      {/* Image count */}
+                      {(product.images?.length || 0) > 1 && (
+                        <span style={{
+                          position: "absolute", bottom: "8px", right: "8px",
+                          padding: "3px 8px", borderRadius: "6px",
+                          backgroundColor: "rgba(0,0,0,0.55)", color: "#fff",
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: "9px",
+                        }}>
+                          📷 {product.images?.length}
+                        </span>
+                      )}
+                    </div>
+                    {/* Info */}
+                    <div style={{ padding: "12px 14px" }}>
+                      <p style={{
+                        fontFamily: "'Inter', sans-serif", fontSize: "13px", fontWeight: 600,
+                        color: "#1a1a1a", margin: "0 0 4px 0",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      }}>
+                        {product.name}
+                      </p>
+                      <p style={{
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: "12px",
+                        color: "#b85c3b", fontWeight: 700, margin: "0 0 10px 0",
+                      }}>
+                        {product.priceLabel}
+                      </p>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          onClick={() => setEditingProduct(product)}
+                          style={{ ...btnOutlineStyle, padding: "7px 14px", fontSize: "9px", flex: 1, borderRadius: "8px" }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          style={{ ...btnOutlineStyle, padding: "7px 14px", fontSize: "9px", borderColor: "#d44", color: "#d44", borderRadius: "8px" }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditingProduct(product)}
-                      style={{ ...btnOutlineStyle, padding: "6px 12px", fontSize: "9px" }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      style={{ ...btnOutlineStyle, padding: "6px 12px", fontSize: "9px", borderColor: "#d44", color: "#d44" }}
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -1500,7 +1513,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
           alignItems: isMobile ? "flex-start" : "center",
           justifyContent: "center",
           padding: isMobile ? "10px" : "24px",
-          overflow: "hidden",
+          overflow: "auto",
         }}
       onClick={onCancel}
     >
@@ -1511,9 +1524,11 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
           padding: isMobile ? "18px" : "32px",
           maxWidth: "680px",
           width: "100%",
-          maxHeight: isMobile ? "92dvh" : "80vh",
-          overflow: "hidden",
+          maxHeight: isMobile ? "92dvh" : "85vh",
+          overflowY: "auto",
+          overflowX: "hidden",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+          borderRadius: "16px",
         }}
       >
         <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", fontWeight: 400, color: "#1a1a1a", marginBottom: "24px" }}>
@@ -1731,7 +1746,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
           alignItems: isMobile ? "flex-start" : "center",
           justifyContent: "center",
           padding: isMobile ? "10px" : "24px",
-          overflow: "hidden",
+          overflow: "auto",
         }}
       onClick={onCancel}
     >
@@ -1742,9 +1757,11 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
           padding: isMobile ? "18px" : "32px",
           maxWidth: "500px",
           width: "100%",
-          maxHeight: isMobile ? "92dvh" : "80vh",
-          overflow: "hidden",
+          maxHeight: isMobile ? "92dvh" : "85vh",
+          overflowY: "auto",
+          overflowX: "hidden",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+          borderRadius: "16px",
         }}
       >
         <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", fontWeight: 400, color: "#1a1a1a", marginBottom: "24px" }}>

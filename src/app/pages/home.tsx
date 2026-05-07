@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { categories, formatRupiah, getProducts, getSiteConfig, getWhatsAppOrderLink, mergeProductsByNameAndPrice, syncAllWithNeon, type Product, type ProductCategory, type Category } from "../data";
+import { categories, formatRupiah, getProducts, getSiteConfig, mergeProductsByNameAndPrice, syncAllWithNeon, type Product, type ProductCategory, type Category } from "../data";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
@@ -228,16 +228,16 @@ export function Home() {
         <div ref={heroRef} style={{ paddingTop: "clamp(40px, 6vw, 80px)", paddingBottom: "clamp(96px, 10vw, 140px)", position: "relative", zIndex: 2 }}>
           <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }} style={{ maxWidth: "620px" }}>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(249,249,247,0.8)", margin: "0 0 12px 0", fontWeight: 600 }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(249,249,247,0.8)", margin: "0 0 16px 0", fontWeight: 600 }}>
                 🌸 {language === "id" ? "Buket Bunga Premium" : "Premium Flower Bouquets"}
               </p>
-              <h1 style={{ fontFamily: "'Dancing Script', cursive", fontSize: "clamp(56px, 11vw, 120px)", fontWeight: 800, color: "#F9F9F7", letterSpacing: "-0.03em", margin: "0 0 8px 0", lineHeight: 0.88, textShadow: "3px 3px 6px rgba(0,0,0,0.18), 0 0 30px rgba(200,130,100,0.2)" }}>
+              <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(42px, 8vw, 80px)", fontWeight: 300, color: "#F9F9F7", letterSpacing: "-0.02em", margin: "0 0 8px 0", lineHeight: 1.05, textShadow: "2px 2px 4px rgba(0,0,0,0.15)" }}>
                 {heroTitleText}
               </h1>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(22px, 3.5vw, 38px)", fontWeight: 400, fontStyle: "italic", color: "#F9F9F7", margin: "0 0 18px 0", letterSpacing: "0.05em", opacity: 0.95 }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(16px, 2.5vw, 22px)", fontWeight: 400, color: "rgba(249,249,247,0.92)", margin: "0 0 20px 0", letterSpacing: "0.02em", lineHeight: 1.5 }}>
                 {heroSubtitleText}
               </p>
-              <p style={{ maxWidth: "540px", color: "rgba(249,249,247,0.92)", fontFamily: "'Inter', sans-serif", fontSize: "15px", lineHeight: 1.8, margin: "0 0 20px 0" }}>
+              <p style={{ maxWidth: "540px", color: "rgba(249,249,247,0.85)", fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.8, margin: "0 0 20px 0" }}>
                 {language === "id"
                   ? "Hadiah terbaik untuk momen spesial — dari buket bunga segar, bucket premium, hingga karangan bunga eksklusif."
                   : "The finest gifts for your special moments — from fresh bouquets, premium buckets, to exclusive flower arrangements."}
@@ -887,7 +887,13 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
             {renderPriceDisplayWithPromo(product, language)}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
-            <a href={getWhatsAppOrderLink(displayName, product.priceLabel || String(product.price || ""))} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "12px 18px", backgroundColor: "#25D366", color: "#fff", textDecoration: "none", textAlign: "center", borderRadius: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", boxShadow: "0 4px 12px rgba(37,211,102,0.3)" }}>
+            <a href={(() => {
+              const cfg = getSiteConfig();
+              const imgUrl = product.images?.[0] || product.image || "";
+              const productUrl = typeof window !== 'undefined' ? window.location.origin : '';
+              const msg = `Halo ${cfg.businessName}! 🌸\n\nSaya tertarik untuk memesan:\n\n📦 Produk: ${displayName}\n💰 Harga: ${product.priceLabel || formatRupiah(product.price)}\n${product.description ? `📝 Detail: ${product.description.substring(0, 100)}\n` : ""}${imgUrl ? `🖼️ Foto: ${imgUrl.startsWith('data:') ? '(lihat di website)' : imgUrl}\n` : ""}${productUrl ? `🌐 Website: ${productUrl}\n` : ""}\nBisa dibantu untuk proses pemesanannya? Terima kasih! 🙏`;
+              return `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+            })()} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "14px 22px", backgroundColor: "#25D366", color: "#fff", textDecoration: "none", textAlign: "center", borderRadius: "10px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", boxShadow: "0 6px 16px rgba(37,211,102,0.3)", transition: "all 0.2s ease" }}>
               💬 {language === "id" ? "Pesan via WhatsApp" : "Order via WhatsApp"}
             </a>
           </div>
