@@ -25,6 +25,7 @@ import {
   getSiteConfigWithNeon,
   syncAllWithNeon,
   setAdminCredentials,
+  cleanMapsUrl,
   type GalleryProject,
   type SiteConfig,
   type Product,
@@ -657,7 +658,7 @@ export function Admin() {
               {(config.mapsEmbedUrl || config.address) && (
                 <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(0,0,0,0.08)", marginBottom: "8px" }}>
                   <iframe
-                    src={config.mapsEmbedUrl || `https://maps.google.com/maps?q=${encodeURIComponent(config.address || "Pertokoan Pasar Senenan Bangkalan")}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    src={cleanMapsUrl(config.mapsEmbedUrl) || `https://maps.google.com/maps?q=${encodeURIComponent(config.address || "Pertokoan Pasar Senenan Bangkalan")}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                     style={{ width: "100%", height: "200px", border: 0, display: "block" }}
                     loading="lazy"
                     title="Maps Preview"

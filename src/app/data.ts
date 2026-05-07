@@ -240,9 +240,11 @@ export function getSiteConfig(): SiteConfig {
       const parsed = JSON.parse(stored) as Partial<SiteConfig>;
       const merged = { ...defaultConfig, ...parsed } as SiteConfig;
       
-      // Fix: if mapsEmbedUrl was saved as empty string, use default
+      // Fix: if mapsEmbedUrl was saved as empty string, use default, otherwise clean it
       if (!merged.mapsEmbedUrl) {
         merged.mapsEmbedUrl = defaultConfig.mapsEmbedUrl;
+      } else {
+        merged.mapsEmbedUrl = cleanMapsUrl(merged.mapsEmbedUrl);
       }
 
       // Migration: Convert comma-separated heroFallbackImage to |SEP| if it contains data URLs or multiple items
@@ -274,6 +276,19 @@ export function formatRupiah(value: number | string): string {
   const parsed = typeof value === "number" ? value : parseInt(String(value).replace(/\D/g, ""), 10);
   const amount = Number.isFinite(parsed) ? parsed : 0;
   return `Rp ${amount.toLocaleString("id-ID")}`;
+}
+
+export function cleanMapsUrl(url: string | undefined): string {
+  if (!url) return "";
+  let clean = url.trim();
+  const match = clean.match(/src="([^"]+)"/);
+  if (match && match[1]) {
+    clean = match[1];
+  }
+  if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
+    clean = "https://" + clean;
+  }
+  return clean;
 }
 
 export function saveSiteConfig(config: Partial<SiteConfig>) {
