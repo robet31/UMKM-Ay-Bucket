@@ -4,7 +4,7 @@ import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
 import { StudioVideoSection } from "../components/video-gallery";
-import { getSiteConfig, categories, getWhatsAppLink, BRAND_LOGO, getGalleryProjects, type GalleryProject } from "../data";
+import { getSiteConfig, categories, getWhatsAppLink, BRAND_LOGO, getGalleryProjects, normalizeAssetUrl, type GalleryProject } from "../data";
 import { useLanguage } from "../language";
 
 const mono = {
@@ -41,17 +41,17 @@ const gridPositions = [
 const steps = [
   { num: "01", title: "Jelajahi Katalog", titleEn: "Explore Catalog", text: "Pilih dari berbagai kategori bunga premium kami — buket satin, money bouquet, snack bouquet, fresh flower, chocolate bouquet, dan vas cantik. Setiap produk berkualitas tinggi.", textEn: "Choose from various premium flower categories — satin bouquets, money bouquets, snack bouquets, fresh flowers, chocolate bouquets, and beautiful vases. Every product is high quality." },
   { num: "02", title: "Custom Pesanan Anda", titleEn: "Customize Your Order", text: "Ingin request warna, jenis bunga, atau packaging khusus? Kami siap mewujudkan buket impian Anda dengan sentuhan personal yang sempurna.", textEn: "Want to request colors, flower types, or special packaging? We're ready to bring your dream bouquet to life with perfect personal touches." },
-  { num: "03", title: "Hubungi Kami via WhatsApp", titleEn: "Contact Us via WhatsApp", text: "Hubungi tim El Bouquet melalui WhatsApp untuk konfirmasi pesanan, detail, dan pembayaran. Kami siap membantu dengan cepat dan profesional.", textEn: "Contact the El Bouquet team via WhatsApp for order confirmation, details, and payment. We're ready to help quickly and professionally." },
+  { num: "03", title: "Hubungi Kami via WhatsApp", titleEn: "Contact Us via WhatsApp", text: "Hubungi tim Ay Bucket & Gift melalui WhatsApp untuk konfirmasi pesanan, detail, dan pembayaran. Kami siap membantu dengan cepat dan profesional.", textEn: "Contact the Ay Bucket & Gift team via WhatsApp for order confirmation, details, and payment. We're ready to help quickly and professionally." },
   { num: "04", title: "Terima Keindahan", titleEn: "Receive Beauty", text: "Setiap buket dirancang dengan penuh perhatian dan cinta. Kami mengantarkan bunga segar langsung ke alamat tujuan Anda.", textEn: "Every bouquet is designed with full attention and love. We deliver fresh flowers directly to your destination." },
 ];
 
 const catalogLinks = [
-  { label: "Snack Bouquet", url: "https://catalog-elbouket.my.canva.site/snack-bouquet" },
-  { label: "Buket Satin", url: "https://catalog-elbouket.my.canva.site/buket-satin" },
-  { label: "Vase", url: "https://catalog-elbouket.my.canva.site/vase" },
-  { label: "Money Bouquet", url: "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money" },
-  { label: "Chocolate Bouquet", url: "https://chocolate-bouquet-elbouket.my.canva.site/" },
-  { label: "Fresh Flower", url: "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe" },
+  { label: "Snack Bouquet", url: "https://catalog-aybucket.my.canva.site/snack-bouquet" },
+  { label: "Buket Satin", url: "https://catalog-aybucket.my.canva.site/buket-satin" },
+  { label: "Vase", url: "https://catalog-aybucket.my.canva.site/vase" },
+  { label: "Money Bouquet", url: "https://chocolate-bouquet-aybucket.my.canva.site/pricelist-money" },
+  { label: "Chocolate Bouquet", url: "https://chocolate-bouquet-aybucket.my.canva.site/" },
+  { label: "Fresh Flower", url: "https://chocolate-bouquet-aybucket.my.canva.site/fresh-flowe" },
 ];
 
 export function Studio() {
@@ -74,6 +74,7 @@ export function Studio() {
   }, []);
 
   const config = getSiteConfig();
+  const studioImageFallback = normalizeAssetUrl(config.heroFallbackImage);
 
   return (
     <PageTransition>
@@ -173,6 +174,27 @@ export function Studio() {
           className="grid grid-cols-1 gap-12 md:grid-cols-12"
           style={{ paddingBottom: "120px" }}
         >
+          <div className="md:col-span-10 md:col-start-2" style={{ marginBottom: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr)", gap: "18px", padding: "22px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "18px", background: "linear-gradient(135deg, rgba(255,255,255,0.82), rgba(255,248,244,0.74))", boxShadow: "0 16px 36px rgba(0,0,0,0.05)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
+                <div style={{ width: "108px", height: "108px", padding: "10px", borderRadius: "999px", background: "rgba(255,255,255,0.92)", border: "1px solid rgba(184,92,59,0.14)", boxShadow: "0 10px 24px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <img src={config.brandLogoUrl || BRAND_LOGO.logo} alt="Ay Bucket & Gift logo" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "999px", mixBlendMode: "multiply" }} />
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px, 5vw, 48px)", lineHeight: 1, color: "#1a1a1a" }}>Ay Bucket & Gift</p>
+                  <p style={{ margin: "8px 0 0 0", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a6a52" }}>
+                    Kamal · Telang · Bangkalan
+                  </p>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: "15px", lineHeight: 1.85, color: "#555", maxWidth: "780px" }}>
+                {language === "id"
+                  ? "Ay Bucket & Gift adalah florist lokal yang fokus pada rangkaian premium: buket fresh/artificial, standing akrilik, karangan bunga papan, selempang wisuda, dan gift custom. Kami mengutamakan detail, ketepatan waktu, serta kemudahan request desain agar setiap pesanan terasa personal."
+                  : "Ay Bucket & Gift is a local florist focused on premium arrangements: fresh/artificial bouquets, acrylic stands, flower boards, graduation sashes, and custom gifts. We prioritize detail, punctuality, and flexible design requests so each order feels personal."}
+              </p>
+            </div>
+          </div>
+
           <div className="md:col-span-5 md:col-start-2">
             <p style={body}>
               <strong style={{ color: "#1a1a1a" }}>{config.businessName}</strong> {language === "id" ? "adalah" : "is"}
@@ -278,10 +300,16 @@ export function Studio() {
                       }}
                     >
                       <img
-                        src={project.image}
+                        src={normalizeAssetUrl(project.image)}
                         alt={project.title}
                         className="h-full w-full transition-transform duration-[1.2s] ease-out group-hover:scale-105"
                         style={{ objectFit: "cover" }}
+                        onError={(event) => {
+                          const target = event.currentTarget;
+                          if (studioImageFallback && target.src !== studioImageFallback) {
+                            target.src = studioImageFallback;
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -327,10 +355,16 @@ export function Studio() {
                   }}
                 >
                   <img
-                    src={project.image}
+                    src={normalizeAssetUrl(project.image)}
                     alt={project.title}
                     className="h-full w-full"
                     style={{ objectFit: "cover" }}
+                    onError={(event) => {
+                      const target = event.currentTarget;
+                      if (studioImageFallback && target.src !== studioImageFallback) {
+                        target.src = studioImageFallback;
+                      }
+                    }}
                   />
                 </div>
                 <div className="mt-3">
@@ -523,7 +557,7 @@ export function Studio() {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title={language === "id" ? "Lokasi El Bouquet" : "El Bouquet Location"}
+                  title={language === "id" ? "Lokasi Ay Bucket" : "Ay Bucket Location"}
                 />
               </div>
 

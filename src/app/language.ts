@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export type Language = "id" | "en";
 
-export const LANGUAGE_KEY = "elbouquet_language";
+export const LANGUAGE_KEY = "aybucket_language";
 
 export function getLanguage(): Language {
     if (typeof window === "undefined") return "id";

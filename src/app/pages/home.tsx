@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { categories, formatRupiah, getProducts, getSiteConfig, getWhatsAppOrderLink, type Product, type ProductCategory } from "../data";
+import { categories, formatRupiah, getProducts, getSiteConfig, getWhatsAppOrderLink, mergeProductsByNameAndPrice, type Product, type ProductCategory } from "../data";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
@@ -9,22 +9,37 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import { useLanguage } from "../language";
+import { useLanguage, type Language } from "../language";
+
+// Helper to truncate description for listing view (show only first ~120 chars)
+function truncateDescription(desc: string | undefined, maxLength: number = 80): string {
+  if (!desc) return "";
+  const text = desc.trim();
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + "...";
+}
+
+// Helper to deduplicate products by normalized name + price and merge their images
+function deduplicateProducts(products: Product[]): Product[] {
+  return mergeProductsByNameAndPrice(products);
+}
 
 function useAdminSync() {
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     const handler = () => setTick((t) => t + 1);
     window.addEventListener("siteConfigChanged", handler);
     return () => window.removeEventListener("siteConfigChanged", handler);
   }, []);
+  return tick;
 }
 
 export function Home() {
-  useAdminSync();
+  const syncTick = useAdminSync();
   const [language] = useLanguage();
-  const config = getSiteConfig();
-  const products = getProducts();
+  const config = useMemo(() => getSiteConfig(), [syncTick]);
+  const rawProducts = useMemo(() => getProducts(), [syncTick]);
+  const products = useMemo(() => deduplicateProducts(rawProducts), [rawProducts]);
 
   const [activeCategory, setActiveCategory] = useState<ProductCategory | "all">("all");
   const [showAll, setShowAll] = useState(false);
@@ -63,17 +78,38 @@ export function Home() {
   const activeInfo = activeCategory !== "all" ? categories.find((c) => c.key === activeCategory) : null;
   const selectedCategoryInfo = selectedCategory ? categories.find((c) => c.key === selectedCategory) ?? null : null;
   const selectedCategoryProducts = selectedCategory ? products.filter((p) => p.category === selectedCategory) : [];
+
+  const categoriesWithProducts = useMemo(() => {
+    return categories
+      .map((category) => ({
+        ...category,
+        count: products.filter((product) => product.category === category.key).length,
+      }))
+      .filter((category) => category.count > 0);
+  }, [products]);
+
   const polaroidCards = useMemo(() => {
-    return displayedProducts.slice(0, 6).map((product, index) => {
+    return categoriesWithProducts.map((category, index) => {
+      const product = products.find((item) => item.category === category.key);
+      if (!product) return null;
+
       const seed = product.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), index * 31);
       const rotate = ((seed % 13) - 6) * 0.7;
       const x = ((seed % 9) - 4) * 2;
       const y = ((seed % 7) - 3) * 2;
       const delay = (seed % 5) * 0.15;
 
-      return { product, index, rotate, x, y, delay };
+      return { product, category, index, rotate, x, y, delay };
     });
-  }, [displayedProducts]);
+  }, [categoriesWithProducts, products]).filter(Boolean) as Array<{
+    product: Product;
+    category: { key: ProductCategory; label: string; emoji: string; description: string; count: number };
+    index: number;
+    rotate: number;
+    x: number;
+    y: number;
+    delay: number;
+  }>;
 
   const getCategoryAccent = (category: ProductCategory) => {
     const accentMap: Record<ProductCategory, string> = {
@@ -84,24 +120,45 @@ export function Home() {
       "fresh-flower": "#c05d5d",
       "artificial-flower": "#4f8f7a",
       "catalog-home": "#b85c3b",
+      "accessories": "#8a6a52",
+      "buckets": "#b85c3b",
+      "wreaths": "#7a8f4f",
+      "packaging": "#6f6f8d",
+      "ribbons": "#b66aa0",
+      "sewa": "#5a8fa6",
     };
-    return accentMap[category];
+    return accentMap[category] || "#b85c3b";
   };
 
-  const heroFrames = products.length > 0
-    ? products.slice(0, 6)
-    : [{
+  const heroFrames = (() => {
+    const adminHero: Product = {
       id: "hero-fallback",
-      name: config.heroTitle || config.businessName || "El Bouquet",
+      name: config.heroTitle || config.businessName || "Ay Bucket",
       category: "catalog-home" as ProductCategory,
       description: config.heroSubtitle || config.tagline || (language === "id" ? "Katalog polaroid yang bergerak mengikuti scroll." : "Polaroid catalog that moves with scroll."),
-      image: config.heroFallbackImage || "/assets/catalog-home-rp150000-item-02.jpg",
-      images: [config.heroFallbackImage || "/assets/catalog-home-rp150000-item-02.jpg"],
-      price: "",
+      image: config.heroFallbackImage,
+      images: [config.heroFallbackImage],
+      price: 0,
       priceLabel: language === "id" ? "Katalog" : "Catalog",
       tag: "hero",
       variant: "hero",
-    } as Product];
+    };
+
+    const validProducts = products.filter((item) => item.image);
+    if (validProducts.length === 0) return [adminHero];
+
+    return [adminHero, ...validProducts.slice(0, 5)];
+  })();
+
+  const heroTitleText =
+    language === "en" && (config.heroTitle || "") === "Buket Bunga Premium\nUntuk Setiap Momen"
+      ? "Premium Flower Bouquets\nFor Every Moment"
+      : config.heroTitle || (language === "id" ? "Koleksi Segar Pilihan" : "Curated Fresh Collection");
+
+  const heroSubtitleText =
+    language === "en" && (config.heroSubtitle || "") === "Rangkaian bunga segar pilihan, snack bouquet unik, money bouquet eksklusif, dan vas cantik. Dibuat dengan perhatian penuh untuk moment spesial Anda."
+      ? "Selected fresh arrangements, unique snack bouquets, exclusive money bouquets, and beautiful vases. Crafted with full attention for your special moments."
+      : config.heroSubtitle || (language === "id" ? "Rangkaian segar, snack unik, money bouquet eksklusif" : "Fresh arrangements, unique snacks, exclusive money bouquets");
   const heroCount = heroFrames.length;
   const currentHero = heroFrames[heroIndex % heroCount];
   const previousHero = heroFrames[(heroIndex - 1 + heroCount) % heroCount];
@@ -121,16 +178,18 @@ export function Home() {
                 🌸 {language === "id" ? "Buket Bunga Premium" : "Premium Flower Bouquets"}
               </p>
               <h1 style={{ fontFamily: "'Dancing Script', cursive", fontSize: "clamp(56px, 11vw, 120px)", fontWeight: 800, color: "#F9F9F7", letterSpacing: "-0.03em", margin: "0 0 8px 0", lineHeight: 0.88, textShadow: "3px 3px 6px rgba(0,0,0,0.18), 0 0 30px rgba(200,130,100,0.2)" }}>
-                {config.heroTitle || "Koleksi Segar Pilihan"}
+                {heroTitleText}
               </h1>
               <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(22px, 3.5vw, 38px)", fontWeight: 400, fontStyle: "italic", color: "#F9F9F7", margin: "0 0 18px 0", letterSpacing: "0.05em", opacity: 0.95 }}>
-                {config.heroSubtitle || (language === "id" ? "Rangkaian segar, snack unik, money bouquet eksklusif" : "Fresh arrangements, unique snacks, exclusive money bouquets")}
+                {heroSubtitleText}
               </p>
               <p style={{ maxWidth: "540px", color: "rgba(249,249,247,0.92)", fontFamily: "'Inter', sans-serif", fontSize: "15px", lineHeight: 1.8, margin: "0 0 20px 0" }}>
-                {config.heroSubtitle || (language === "id" ? "Scroll untuk melihat setiap frame polaroid unik. Satu polaroid = satu koleksi pilihan. Dibuat dengan perhatian penuh untuk moment spesial Anda." : "Scroll to see each unique polaroid frame. One polaroid = one curated collection. Made with full care for your special moments.")}
+                {language === "id"
+                  ? "Scroll ke bawah untuk menemukan koleksi pilihan terbaik. Setiap hadiah dirancang dengan penuh cinta untuk membuat momen Anda spesial."
+                  : "Scroll down to discover our curated collections. Each gift is crafted with love to make your moments truly special."}
               </p>
 
-              <div style={{ display: "flex", gap: "16px", marginTop: "28px", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: "16px", marginTop: "28px", alignItems: "center", flexWrap: "wrap" }}>
                 <motion.button
                   onClick={() => document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' })}
                   whileHover={{ scale: 1.06, boxShadow: "0 16px 40px rgba(249,249,247,0.3)" }}
@@ -138,6 +197,67 @@ export function Home() {
                   style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", padding: "16px 40px", backgroundColor: "#F9F9F7", color: heroAccent, border: "none", cursor: "pointer", transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)", fontWeight: 800, borderRadius: "12px", boxShadow: "0 12px 30px rgba(0,0,0,0.2)" }}
                 >
                   ↓ {language === "id" ? "Scroll untuk Jelajahi" : "Scroll to Explore"}
+                </motion.button>
+
+                <motion.button
+                  onClick={() => {
+                    const randomIdx = Math.floor(Math.random() * heroFrames.length);
+                    setHeroIndex(randomIdx);
+                  }}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
+                  title={language === "id" ? "Tampilkan gambar acak" : "Show random image"}
+                >
+                  🎲 {language === "id" ? "Acak" : "Random"}
+                </motion.button>
+
+                <motion.button
+                  onClick={() => {
+                    const bucketProducts = heroFrames.filter((p) => p.category === "buckets");
+                    if (bucketProducts.length > 0) {
+                      const idx = heroFrames.indexOf(bucketProducts[0]);
+                      setHeroIndex(idx);
+                    }
+                  }}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
+                  title={language === "id" ? "Tampilkan kategori bucket" : "Show bucket category"}
+                >
+                  🪣 {language === "id" ? "Bucket" : "Bucket"}
+                </motion.button>
+
+                <motion.button
+                  onClick={() => {
+                    const standingProducts = products.filter((p) => /standing|akrilik/i.test(p.name));
+                    if (standingProducts.length > 0) {
+                      const idx = heroFrames.indexOf(standingProducts[0] as any);
+                      if (idx >= 0) setHeroIndex(idx);
+                    }
+                  }}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
+                  title={language === "id" ? "Tampilkan standing akrilik" : "Show standing display"}
+                >
+                  🎭 {language === "id" ? "Standing" : "Standing"}
+                </motion.button>
+
+                <motion.button
+                  onClick={() => {
+                    const karanganProducts = products.filter((p) => /karangan|wreath/i.test(p.name));
+                    if (karanganProducts.length > 0) {
+                      const idx = heroFrames.indexOf(karanganProducts[0] as any);
+                      if (idx >= 0) setHeroIndex(idx);
+                    }
+                  }}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
+                  title={language === "id" ? "Tampilkan karangan bunga" : "Show flower arrangement"}
+                >
+                  💐 {language === "id" ? "Karangan Bunga" : "Arrangements"}
                 </motion.button>
               </div>
             </motion.div>
@@ -149,10 +269,14 @@ export function Home() {
               <motion.div aria-hidden initial={{ opacity: 0, x: -18, y: 22, rotateZ: -11 }} animate={{ opacity: 0.34, x: -18, y: 22, rotateZ: -11, scale: [1, 1.02, 1] }} transition={{ duration: 1, delay: 0.25, scale: { duration: 4, repeat: Infinity, ease: "easeInOut" } }} style={{ position: "absolute", left: "3%", top: "16%", width: "min(42vw, 230px)", aspectRatio: "4/5", background: "rgba(255,255,255,0.16)", borderRadius: "8px", filter: "blur(0.3px)", boxShadow: "0 20px 30px rgba(0,0,0,0.12)", pointerEvents: "none" }} />
               <motion.div aria-hidden initial={{ opacity: 0, x: 18, y: 10, rotateZ: 10 }} animate={{ opacity: 0.24, x: 18, y: 10, rotateZ: 10, scale: [1, 1.01, 1] }} transition={{ duration: 1, delay: 0.35, scale: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.3 } }} style={{ position: "absolute", right: "1%", bottom: "12%", width: "min(40vw, 220px)", aspectRatio: "4/5", background: "rgba(255,255,255,0.12)", borderRadius: "8px", boxShadow: "0 16px 26px rgba(0,0,0,0.10)", pointerEvents: "none" }} />
 
-              <motion.div aria-hidden animate={{ y: [0, -12, 0], opacity: [0.5, 0.9, 0.5] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} style={{ position: "absolute", top: "15%", right: "8%", width: "12px", height: "12px", borderRadius: "999px", background: "rgba(255,255,255,0.75)", boxShadow: "0 0 24px rgba(255,255,255,0.9), 0 0 48px rgba(255,150,100,0.3)" }} />
+              {activeInfo ? (
+                <>
+                  {activeInfo.emoji} {getCategoryLabel(activeInfo.key, activeInfo.label, language)}
+                </>
+              ) : null}
               <motion.div aria-hidden animate={{ y: [0, 10, 0], opacity: [0.3, 0.65, 0.3], scale: [0.8, 1.1, 0.8] }} transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }} style={{ position: "absolute", left: "10%", bottom: "12%", width: "16px", height: "16px", borderRadius: "999px", background: "rgba(255,255,255,0.5)", boxShadow: "0 0 20px rgba(255,255,255,0.6)" }} />
               <motion.div aria-hidden animate={{ y: [0, -8, 0], opacity: [0.4, 0.7, 0.4] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} style={{ position: "absolute", top: "35%", right: "18%", width: "8px", height: "8px", borderRadius: "999px", background: "rgba(255,255,255,0.6)", boxShadow: "0 0 16px rgba(255,200,150,0.5)" }} />
-
+              {activeInfo ? getCategoryDescription(activeInfo.key, activeInfo.description, language) : null}
               <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <motion.div
                   aria-hidden
@@ -212,8 +336,55 @@ export function Home() {
             </p>
           </div>
 
-          <div style={{ marginBottom: "10px" }}>
-            {/* Category list removed — previews now open from the polaroid frames below */}
+          <div style={{ marginBottom: "12px", display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory("all");
+                setShowAll(false);
+              }}
+              style={{
+                border: `1px solid ${activeCategory === "all" ? "#1a1a1a" : "rgba(0,0,0,0.12)"}`,
+                background: activeCategory === "all" ? "#1a1a1a" : "#fff",
+                color: activeCategory === "all" ? "#fff" : "#666",
+                borderRadius: "999px",
+                padding: "8px 14px",
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "10px",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              {language === "id" ? "Semua" : "All"} ({products.length})
+            </button>
+            {categoriesWithProducts.map((category) => {
+              const isActive = activeCategory === category.key;
+              return (
+                <button
+                  key={category.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory(category.key);
+                    setShowAll(false);
+                  }}
+                  style={{
+                    border: `1px solid ${isActive ? getCategoryAccent(category.key) : "rgba(0,0,0,0.12)"}`,
+                    background: isActive ? getCategoryAccent(category.key) : "#fff",
+                    color: isActive ? "#fff" : "#666",
+                    borderRadius: "999px",
+                    padding: "8px 14px",
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: "10px",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                  }}
+                >
+                  {getCategoryLabel(category.key, category.label, language)} ({category.count})
+                </button>
+              );
+            })}
           </div>
 
           {activeInfo && (
@@ -243,13 +414,32 @@ export function Home() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 260px))", justifyContent: "center", justifyItems: "stretch", gap: 18 }}>
             {displayedProducts && displayedProducts.length > 0 ? (
-              displayedProducts.map((p) => (
-                <div key={p.id} onClick={() => setSelectedProduct(p)} style={{ cursor: "pointer" }}>
-                  <ProductCard product={p} onClick={() => setSelectedProduct(p)} />
-                </div>
-              ))
+              displayedProducts.map((p, idx) => {
+                // Calculate if product is on the last row with odd count
+                const itemsPerRow = Math.max(1, Math.floor((typeof window !== "undefined" ? window.innerWidth : 1200) / 280));
+                const totalRows = Math.ceil(displayedProducts.length / itemsPerRow);
+                const currentRow = Math.floor(idx / itemsPerRow) + 1;
+                const isLastRow = currentRow === totalRows;
+                const itemsInLastRow = displayedProducts.length % itemsPerRow || itemsPerRow;
+                const shouldCenter = isLastRow && itemsInLastRow % 2 === 1;
+                
+                return (
+                  <div 
+                    key={p.id} 
+                    onClick={() => setSelectedProduct(p)} 
+                    style={{ 
+                      cursor: "pointer",
+                      ...(shouldCenter && idx === displayedProducts.length - 1 
+                        ? { gridColumn: `${Math.floor(itemsPerRow / 2) + 1} / span 1`, justifySelf: "center" }
+                        : {})
+                    }}
+                  >
+                    <ProductCard product={p} onClick={() => setSelectedProduct(p)} />
+                  </div>
+                );
+              })
             ) : (
               <div style={{ color: "#999", fontFamily: "'Inter', sans-serif" }}>{language === "id" ? "Tidak ada produk untuk ditampilkan." : "No products to display."}</div>
             )}
@@ -270,9 +460,9 @@ export function Home() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "22px", alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 260px))", justifyContent: "center", justifyItems: "stretch", gap: "22px", alignItems: "start" }}>
             {polaroidCards.length > 0 ? (
-              polaroidCards.map(({ product: p, index, rotate, x, y, delay }) => (
+              polaroidCards.map(({ product: p, category, index, rotate, x, y, delay }) => (
                 <motion.button
                   key={p.id}
                   type="button"
@@ -324,6 +514,25 @@ export function Home() {
                   />
                   <div style={{ position: "relative", zIndex: 2 }}>
                     <PolaroidCard product={p} compact={false} />
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "12px",
+                        top: "12px",
+                        borderRadius: "999px",
+                        padding: "4px 10px",
+                        background: "rgba(255,255,255,0.92)",
+                        color: "#1a1a1a",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: "9px",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      {category.emoji} {getCategoryLabel(category.key, category.label, language)}
+                    </div>
                     <div style={{ position: "absolute", top: "12px", right: "12px", width: "28px", height: "28px", borderRadius: "999px", background: "rgba(255,255,255,0.9)", border: "1px solid rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: getCategoryAccent(p.category), boxShadow: "0 8px 18px rgba(0,0,0,0.08)", pointerEvents: "none" }}>
                       ↗
                     </div>
@@ -338,7 +547,15 @@ export function Home() {
       </div>
 
       <AnimatePresence>
-        {selectedProduct && <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+        {selectedProduct && (
+          <ProductDetailModal 
+            key={selectedProduct.id} 
+            product={selectedProduct} 
+            allProducts={displayedProducts}
+            onClose={() => setSelectedProduct(null)}
+            onNavigate={setSelectedProduct}
+          />
+        )}
       </AnimatePresence>
       <AnimatePresence>
         {selectedCategoryInfo && (
@@ -359,7 +576,9 @@ export function Home() {
 }
 
 function PolaroidCard({ product, accent, compact = false }: { product: Product; accent?: string; compact?: boolean }) {
+  const [language] = useLanguage();
   const frameAccent = accent || "#b85c3b";
+  const displayName = getProductDisplayName(product, language);
 
   return (
     <div
@@ -384,7 +603,9 @@ function PolaroidCard({ product, accent, compact = false }: { product: Product; 
       >
         <img
           src={(product.images && product.images[0]) || product.image}
-          alt={product.name}
+          alt={displayName}
+          loading="lazy"
+          decoding="async"
           style={{
             width: "100%",
             height: "100%",
@@ -392,7 +613,7 @@ function PolaroidCard({ product, accent, compact = false }: { product: Product; 
             display: "block",
           }}
           onError={(e) => {
-            e.currentTarget.src = `https://placehold.co/800x1000/f3f0eb/1a1a1a?text=${encodeURIComponent(product.name)}`;
+            e.currentTarget.src = `https://placehold.co/800x1000/f3f0eb/1a1a1a?text=${encodeURIComponent(displayName)}`;
           }}
         />
         <div
@@ -415,7 +636,7 @@ function PolaroidCard({ product, accent, compact = false }: { product: Product; 
             lineHeight: 1.25,
           }}
         >
-          {product.name}
+          {displayName}
         </p>
         <p
           style={{
@@ -428,7 +649,7 @@ function PolaroidCard({ product, accent, compact = false }: { product: Product; 
             lineHeight: 1.5,
           }}
         >
-          {compact ? "Preview frame" : product.priceLabel || "Polaroid frame"}
+          {compact ? (language === "id" ? "Pratinjau frame" : "Preview frame") : product.priceLabel || (language === "id" ? "Frame polaroid" : "Polaroid frame")}
         </p>
       </div>
     </div>
@@ -436,6 +657,15 @@ function PolaroidCard({ product, accent, compact = false }: { product: Product; 
 }
 
 function ProductCard({ product, onClick }: { product: Product; onClick: () => void }) {
+  const [language] = useLanguage();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const displayName = getProductDisplayName(product, language);
+  const description = getProductDescription(product, language);
+  const priceLabel = getProductPriceLabel(product, language);
+  const images = product.images && product.images.length > 0 ? product.images : product.image ? [product.image] : [];
+  const hasMultipleImages = images.length > 1;
+  const currentImage = images[currentImageIndex] || product.image;
+  
   const accent = {
     "buket-satin": "#d48a6a",
     "snack-bouquet": "#c98b3f",
@@ -444,7 +674,23 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
     "fresh-flower": "#c05d5d",
     "artificial-flower": "#4f8f7a",
     "catalog-home": "#b85c3b",
+    "accessories": "#8a6a52",
+    "buckets": "#b85c3b",
+    "wreaths": "#7a8f4f",
+    "packaging": "#6f6f8d",
+    "ribbons": "#b66aa0",
+    "sewa": "#5a8fa6",
   }[product.category] || "#999";
+
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((i) => (i - 1 + images.length) % images.length);
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((i) => (i + 1) % images.length);
+  };
 
   return (
     <button
@@ -467,14 +713,18 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
       >
         <div
           style={{
+            position: "relative",
             aspectRatio: "4/5",
             overflow: "hidden",
             backgroundColor: "#ebebe9",
+            borderRadius: "2px",
           }}
         >
           <img
-            src={(product.images && product.images[0]) || product.image}
-            alt={product.name}
+            src={currentImage}
+            alt={displayName}
+            loading="lazy"
+            decoding="async"
             style={{
               width: "100%",
               height: "100%",
@@ -482,9 +732,106 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
               display: "block",
             }}
             onError={(e) => {
-              e.currentTarget.src = `https://placehold.co/800x1000/ebebe9/1a1a1a?text=${encodeURIComponent(product.name)}`;
+              e.currentTarget.src = `https://placehold.co/800x1000/ebebe9/1a1a1a?text=${encodeURIComponent(displayName)}`;
             }}
           />
+          {/* Image carousel controls */}
+          {hasMultipleImages && (
+            <>
+              <button
+                type="button"
+                onClick={handlePrevImage}
+                aria-label={language === "id" ? "Gambar sebelumnya" : "Previous image"}
+                style={{
+                  position: "absolute",
+                  left: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "999px",
+                  border: "none",
+                  background: "rgba(255,255,255,0.85)",
+                  color: "#1a1a1a",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "18px",
+                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                  opacity: 0.8,
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.95)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = "0.8";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.85)";
+                }}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={handleNextImage}
+                aria-label={language === "id" ? "Gambar selanjutnya" : "Next image"}
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "999px",
+                  border: "none",
+                  background: "rgba(255,255,255,0.85)",
+                  color: "#1a1a1a",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "18px",
+                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                  opacity: 0.8,
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.95)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = "0.8";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.85)";
+                }}
+              >
+                ›
+              </button>
+              {/* Image counter */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "8px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "4px 8px",
+                  borderRadius: "999px",
+                  backgroundColor: "rgba(0,0,0,0.4)",
+                  color: "#fff",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "8px",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {currentImageIndex + 1}/{images.length}
+              </div>
+            </>
+          )}
         </div>
         <div style={{ paddingRight: "6px" }}>
           <p
@@ -497,7 +844,7 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
               margin: "0 0 6px 0",
             }}
           >
-            {product.category}
+            {getCategoryLabel(product.category, product.category, language)}
           </p>
           <div
             style={{
@@ -518,20 +865,11 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
                 flex: "1 1 auto",
               }}
             >
-              {product.name}
+              {displayName}
             </h3>
-            <p
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "11px",
-                fontWeight: 600,
-                color: accent,
-                margin: 0,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {product.priceLabel}
-            </p>
+            <div style={{ flex: "0 1 auto" }}>
+              {renderPriceDisplay(product, language)}
+            </div>
           </div>
           <p
             style={{
@@ -539,9 +877,15 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
               fontSize: "14px",
               margin: "6px 0 0 0",
               color: "#555",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
             }}
+            title={product.description}
           >
-            Hadiah premium untuk momen istimewa.
+            {truncateDescription(description, 100) || (language === "id" ? "Hadiah premium untuk momen istimewa." : "Premium gifts for special moments.")}
           </p>
         </div>
       </div>
@@ -549,11 +893,29 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
   );
 }
 
-function ProductDetailModal({ product, onClose }: { product: Product; onClose: () => void }) {
+function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { product: Product; onClose: () => void; allProducts?: Product[]; onNavigate?: (p: Product) => void }) {
+  const [language] = useLanguage();
+  const displayName = getProductDisplayName(product, language);
+  const description = getProductDescription(product, language);
+  const priceLabel = getProductPriceLabel(product, language);
   const images = product.images && product.images.length > 0 ? product.images : product.image ? [product.image] : [];
-  const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 3000, stopOnInteraction: false })]);
+  const carouselImages = images.length > 0 ? images : [`https://placehold.co/600x800/ebebe9/1a1a1a?text=${encodeURIComponent(displayName)}`];
+  const autoplayRef = useRef(Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true }));
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: carouselImages.length > 1 },
+    carouselImages.length > 1 ? [autoplayRef.current] : [],
+  );
   const categoryInfo = categories.find((cat) => cat.key === product.category);
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  
+  // Product navigation
+  const currentIndex = allProducts ? allProducts.findIndex((p) => p.id === product.id) : -1;
+  const canNavigatePrev = allProducts ? currentIndex > 0 : false;
+  const canNavigateNext = allProducts ? currentIndex < allProducts.length - 1 : false;
+  const prevProduct = canNavigatePrev && allProducts ? allProducts[currentIndex - 1] : null;
+  const nextProduct = canNavigateNext && allProducts ? allProducts[currentIndex + 1] : null;
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -567,35 +929,95 @@ function ProductDetailModal({ product, onClose }: { product: Product; onClose: (
     return () => { document.body.style.overflow = ""; };
   }, []);
 
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const updateControls = () => {
+      setCanScrollPrev(emblaApi.canScrollPrev());
+      setCanScrollNext(emblaApi.canScrollNext());
+    };
+
+    updateControls();
+    emblaApi.on("select", updateControls);
+    emblaApi.on("reInit", updateControls);
+    return () => {
+      emblaApi.off("select", updateControls);
+      emblaApi.off("reInit", updateControls);
+    };
+  }, [emblaApi]);
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 9999, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center", padding: isMobile ? "12px" : "clamp(16px, 4vw, 40px)", overflowY: "auto" }} onClick={onClose}>
-      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", maxHeight: isMobile ? "92dvh" : "90vh", overflowY: "auto", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", borderRadius: isMobile ? "16px" : "18px" }}>
-        <button onClick={onClose} aria-label="Close" style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: "pointer" }}>×</button>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 120000, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center", padding: isMobile ? "60px 12px 12px" : "clamp(16px, 4vw, 40px)", overflow: "hidden", paddingTop: isMobile ? "80px" : "clamp(16px, 4vw, 40px)" }} onClick={onClose}>
+      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", maxHeight: isMobile ? "calc(100dvh - 100px)" : "90vh", overflowY: "auto", overflowX: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", borderRadius: isMobile ? "16px" : "18px" }}>
+        {/* Navigation Buttons */}
+        {onNavigate && allProducts && allProducts.length > 1 && (
+          <>
+            <button
+              onClick={() => prevProduct && onNavigate(prevProduct)}
+              disabled={!canNavigatePrev}
+              aria-label={language === "id" ? "Produk sebelumnya" : "Previous product"}
+              style={{ position: "absolute", top: "14px", left: "14px", zIndex: 12, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: canNavigatePrev ? "pointer" : "not-allowed", fontSize: "20px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", opacity: canNavigatePrev ? 1 : 0.4 }}
+            >
+              ‹
+            </button>
+            <button
+              onClick={() => nextProduct && onNavigate(nextProduct)}
+              disabled={!canNavigateNext}
+              aria-label={language === "id" ? "Produk selanjutnya" : "Next product"}
+              style={{ position: "absolute", top: "14px", left: "58px", zIndex: 12, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: canNavigateNext ? "pointer" : "not-allowed", fontSize: "20px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", opacity: canNavigateNext ? 1 : 0.4 }}
+            >
+              ›
+            </button>
+          </>
+        )}
+        <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "14px", right: "14px", zIndex: 12, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: "pointer", fontSize: "20px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         <div style={{ flex: isMobile ? "0 0 auto" : "1 1 400px", minHeight: isMobile ? "220px" : "300px", aspectRatio: isMobile ? "4 / 3" : undefined, position: "relative", backgroundColor: "#ebebe9", overflow: "hidden" }}>
           <div className="embla" ref={emblaRef} style={{ width: "100%", height: "100%" }}>
             <div className="embla__container" style={{ display: "flex", width: "100%", height: "100%" }}>
-              {images.map((img, index) => (
+              {carouselImages.map((img, index) => (
                 <div key={index} className="embla__slide" style={{ flex: "0 0 100%", height: "100%", minWidth: 0, position: "relative" }}>
-                  <img src={img} alt={`${product.name} ${index + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={(e) => { e.currentTarget.src = `https://placehold.co/600x800/ebebe9/1a1a1a?text=${encodeURIComponent(product.name)}`; }} />
+                  <img src={img} alt={`${displayName} ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={(e) => { e.currentTarget.src = `https://placehold.co/600x800/ebebe9/1a1a1a?text=${encodeURIComponent(displayName)}`; }} />
                 </div>
               ))}
             </div>
           </div>
+          {carouselImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => emblaApi?.scrollPrev()}
+                aria-label={language === "id" ? "Gambar sebelumnya" : "Previous image"}
+                disabled={!canScrollPrev}
+                style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", width: "42px", height: "42px", borderRadius: "999px", border: "1px solid rgba(0,0,0,0.08)", background: "rgba(255,255,255,0.88)", color: "#1a1a1a", cursor: canScrollPrev ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", boxShadow: "0 10px 24px rgba(0,0,0,0.12)", opacity: canScrollPrev ? 1 : 0.35 }}>
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={() => emblaApi?.scrollNext()}
+                aria-label={language === "id" ? "Gambar selanjutnya" : "Next image"}
+                disabled={!canScrollNext}
+                style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", width: "42px", height: "42px", borderRadius: "999px", border: "1px solid rgba(0,0,0,0.08)", background: "rgba(255,255,255,0.88)", color: "#1a1a1a", cursor: canScrollNext ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", boxShadow: "0 10px 24px rgba(0,0,0,0.12)", opacity: canScrollNext ? 1 : 0.35 }}>
+                ›
+              </button>
+            </>
+          )}
         </div>
         <div style={{ flex: "1 1 320px", padding: isMobile ? "18px" : "28px", display: "flex", flexDirection: "column", gap: "14px", justifyContent: "center" }}>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", margin: 0 }}>{categoryInfo?.label || product.category}</p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(28px, 8vw, 36px)" : "clamp(32px, 4vw, 50px)", lineHeight: 1, margin: 0, color: "#1a1a1a" }}>{product.name}</h2>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", margin: 0 }}>{getCategoryLabel(product.category, categoryInfo?.label || product.category, language)}</p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(28px, 8vw, 36px)" : "clamp(32px, 4vw, 50px)", lineHeight: 1, margin: 0, color: "#1a1a1a" }}>{displayName}</h2>
           <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.8, margin: 0 }}>
-            {product.description || categoryInfo?.description || "Detail produk ini tersedia di katalog lengkap dan bisa dibuka dari tombol di bawah."}
+            {description || getCategoryDescription(product.category, categoryInfo?.description || "", language) || (language === "id" ? "Detail produk ini tersedia di katalog lengkap dan bisa dibuka dari tombol di bawah." : "This product detail is available in the full catalog and can be opened using the button below.")}
           </p>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "#1a1a1a", margin: 0 }}>{product.priceLabel || formatRupiah(product.price || 0)}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {renderPriceDisplay(product, language)}
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
             {categoryInfo?.canvaLink && (
               <a href={categoryInfo.canvaLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "12px 18px", backgroundColor: "transparent", color: "#1a1a1a", border: "1px solid rgba(0,0,0,0.14)", textDecoration: "none", textAlign: "center", borderRadius: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                Menuju Katalog
+                {language === "id" ? "Menuju Katalog" : "Open Catalog"}
               </a>
             )}
-            <a href={getWhatsAppOrderLink(product.name, product.priceLabel || String(product.price || ""))} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "12px 18px", backgroundColor: "#1a1a1a", color: "#fff", textDecoration: "none", textAlign: "center", borderRadius: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Pesan via WhatsApp</a>
+            <a href={getWhatsAppOrderLink(displayName, product.priceLabel || String(product.price || ""))} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "12px 18px", backgroundColor: "#1a1a1a", color: "#fff", textDecoration: "none", textAlign: "center", borderRadius: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase" }}>{language === "id" ? "Pesan via WhatsApp" : "Order via WhatsApp"}</a>
           </div>
         </div>
       </motion.div>
@@ -646,7 +1068,7 @@ function CollectionCategoryCard({
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
             <span style={{ fontSize: "18px" }}>{emoji}</span>
             <p style={{ margin: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", color: accent, fontWeight: 700 }}>
-              {count} produk
+              {count} {"produk"}
             </p>
           </div>
           <h3 style={{ margin: "0 0 8px 0", fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", lineHeight: 1, fontWeight: 600 }}>
@@ -677,6 +1099,7 @@ function CategoryPreviewModal({
   onClose: () => void;
   onSelectProduct: (product: Product) => void;
 }) {
+  const [language] = useLanguage();
   const previewProducts = products.slice(0, 6);
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 900 : false));
 
@@ -695,99 +1118,473 @@ function CategoryPreviewModal({
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 9998, backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(4px)", display: "flex", alignItems: isMobile ? "flex-start" : "center", justifyContent: "center", padding: isMobile ? "10px" : "clamp(16px, 4vw, 40px)", overflowY: "auto" }} onClick={onClose}>
       <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", maxHeight: isMobile ? "92dvh" : "90vh", overflow: isMobile ? "auto" : "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "16px" : "20px" }}>
-        <button onClick={onClose} aria-label="Close" style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.92)", cursor: "pointer" }}>×</button>
+        <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.92)", cursor: "pointer" }}>×</button>
         <div style={{ padding: isMobile ? "18px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflowY: "auto" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
-            Preview kategori
+            {language === "id" ? "Preview kategori" : "Category preview"}
           </p>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(28px, 8vw, 38px)" : "clamp(32px, 4vw, 52px)", lineHeight: 1, margin: "10px 0 12px 0", color: "#1a1a1a" }}>
-            {category.emoji} {category.label}
+            {category.emoji} {getCategoryLabel(category.key, category.label, language)}
           </h2>
           <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.8, margin: 0 }}>
-            {category.description}
+            {getCategoryDescription(category.key, category.description, language)}
           </p>
           {category.noted && <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "#8a6d3b", margin: "14px 0 0 0", lineHeight: 1.6 }}>💡 {category.noted}</p>}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "22px" }}>
             <div style={{ padding: "10px 14px", borderRadius: "999px", background: "rgba(0,0,0,0.05)", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "#666" }}>
-              {products.length} produk tersedia
+              {products.length} {language === "id" ? "produk tersedia" : "products available"}
             </div>
             {category.canvaLink && (
               <a href={category.canvaLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: "999px", background: "#1a1a1a", color: "#fff", textDecoration: "none", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                Menuju katalog
+                {language === "id" ? "Menuju katalog" : "Open catalog"}
               </a>
             )}
           </div>
 
           <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? "120px" : "140px"}, 1fr))`, gap: "14px" }}>
             {previewProducts.map((product) => (
-              <button
-                key={product.id}
-                type="button"
-                onClick={() => onSelectProduct(product)}
-                style={{
-                  border: "1px solid rgba(0,0,0,0.08)",
-                  background: "#fff",
-                  borderRadius: "16px",
-                  padding: "10px",
-                  textAlign: "left",
-                  cursor: "pointer",
-                  boxShadow: "0 10px 24px rgba(0,0,0,0.05)",
-                }}
-              >
-                <div style={{ aspectRatio: "4/5", overflow: "hidden", borderRadius: "12px", background: "#efefec", marginBottom: "10px" }}>
-                  <img
-                    src={(product.images && product.images[0]) || product.image}
-                    alt={product.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    onError={(e) => {
-                      e.currentTarget.src = `https://placehold.co/600x800/efefec/1a1a1a?text=${encodeURIComponent(product.name)}`;
+              (() => {
+                const previewName = getProductDisplayName(product, language);
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => onSelectProduct(product)}
+                    style={{
+                      border: "1px solid rgba(0,0,0,0.08)",
+                      background: "#fff",
+                      borderRadius: "16px",
+                      padding: "10px",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      boxShadow: "0 10px 24px rgba(0,0,0,0.05)",
                     }}
-                  />
-                </div>
-                <p style={{ margin: "0 0 4px 0", fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", lineHeight: 1.1, color: "#1a1a1a" }}>{product.name}</p>
-                <p style={{ margin: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "#7a7a7a" }}>{product.priceLabel}</p>
-              </button>
+                  >
+                    <div style={{ aspectRatio: "4/5", overflow: "hidden", borderRadius: "12px", background: "#efefec", marginBottom: "10px" }}>
+                      <img
+                        src={(product.images && product.images[0]) || product.image}
+                        alt={previewName}
+                        loading="lazy"
+                        decoding="async"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        onError={(e) => {
+                          e.currentTarget.src = `https://placehold.co/600x800/efefec/1a1a1a?text=${encodeURIComponent(previewName)}`;
+                        }}
+                      />
+                    </div>
+                    <p style={{ margin: "0 0 4px 0", fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", lineHeight: 1.1, color: "#1a1a1a" }}>{previewName}</p>
+                    <p style={{ margin: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "#7a7a7a" }}>{product.priceLabel}</p>
+                  </button>
+                );
+              })()
             ))}
           </div>
         </div>
 
         <div style={{ padding: isMobile ? "18px" : "28px", background: "#f2ede7", overflowY: "auto", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
-            Ringkasan isi kategori
+            {language === "id" ? "Ringkasan isi kategori" : "Category content summary"}
           </p>
           <div style={{ marginTop: "14px", display: "grid", gap: "12px" }}>
             {products.length > 0 ? (
               products.map((product) => (
-                <button
-                  key={product.id}
-                  type="button"
-                  onClick={() => onSelectProduct(product)}
-                  style={{
-                    border: "none",
-                    background: "rgba(255,255,255,0.82)",
-                    borderRadius: "14px",
-                    padding: "12px 14px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "baseline" }}>
-                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "18px" : "20px", color: "#1a1a1a", lineHeight: 1.1 }}>{product.name}</span>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#7a7a7a", whiteSpace: "nowrap" }}>{product.priceLabel}</span>
-                  </div>
-                  <p style={{ margin: "8px 0 0 0", fontFamily: "'Inter', sans-serif", fontSize: "13px", lineHeight: 1.6, color: "#666" }}>
-                    {product.tag || "Klik untuk melihat detail produk ini."}
-                  </p>
-                </button>
+                (() => {
+                  const displayName = getProductDisplayName(product, language);
+                  const displayTag = getProductTag(product.tag, language);
+                  return (
+                    <button
+                      key={product.id}
+                      type="button"
+                      onClick={() => onSelectProduct(product)}
+                      style={{
+                        border: "none",
+                        background: "rgba(255,255,255,0.82)",
+                        borderRadius: "14px",
+                        padding: "12px 14px",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        boxShadow: "0 8px 20px rgba(0,0,0,0.04)",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "baseline" }}>
+                        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "18px" : "20px", color: "#1a1a1a", lineHeight: 1.1 }}>{displayName}</span>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", color: "#7a7a7a", whiteSpace: "nowrap" }}>{product.priceLabel}</span>
+                      </div>
+                      <p style={{ margin: "8px 0 0 0", fontFamily: "'Inter', sans-serif", fontSize: "13px", lineHeight: 1.6, color: "#666" }}>
+                          {truncateDescription(getProductDescription(product, language), 90) || displayTag || (language === "id" ? "Klik untuk melihat detail produk ini." : "Click to view this product detail.")}
+                      </p>
+                    </button>
+                  );
+                })()
               ))
             ) : (
-              <div style={{ color: "#777", fontFamily: "'Inter', sans-serif" }}>Belum ada produk di kategori ini.</div>
+              <div style={{ color: "#777", fontFamily: "'Inter', sans-serif" }}>{language === "id" ? "Belum ada produk di kategori ini." : "No products in this category yet."}</div>
             )}
           </div>
         </div>
       </motion.div>
     </motion.div>
   );
+}
+
+const CATEGORY_LABEL_EN: Record<string, string> = {
+  "buket-satin": "Satin Bouquet",
+  "snack-bouquet": "Snack Bouquet",
+  "money-bouquet": "Money Bouquet",
+  "chocolate-bouquet": "Chocolate Bouquet",
+  "fresh-flower": "Fresh Flower",
+  "artificial-flower": "Artificial Flower",
+  "catalog-home": "Premium Packages",
+  "accessories": "Accessories",
+  "buckets": "Buckets",
+  "wreaths": "Wreaths",
+  "packaging": "Packaging",
+  "ribbons": "Ribbons & Sashes",
+};
+
+const CATEGORY_DESCRIPTION_EN: Record<string, string> = {
+  "buket-satin": "High-quality satin bouquets with curated blooms. Perfect for your special moments.",
+  "snack-bouquet": "A unique blend of flowers and premium snacks. A memorable and functional gift.",
+  "money-bouquet": "Elegant money bouquets for special occasions. Practical and meaningful.",
+  "chocolate-bouquet": "Flowers paired with premium chocolate. Ideal for special gifting.",
+  "fresh-flower": "Selected fresh flower arrangements with beautiful color combinations.",
+  "artificial-flower": "Premium artificial flower arrangements that are elegant and long-lasting.",
+  "catalog-home": "Premium packages for special events and custom needs.",
+  "accessories": "Supporting accessories with elegant finishing for personalized gifts.",
+  "buckets": "Medium to large bouquet collections with premium styling.",
+  "wreaths": "Formal flower board arrangements for ceremonies and events.",
+  "packaging": "Premium packaging add-ons to elevate gift presentation.",
+  "ribbons": "Decorative sashes and ribbons tailored to event themes.",
+};
+
+const PRODUCT_NAME_EN: Record<string, string> = {
+  "Akrilik Frame Mini": "Mini Acrylic Frame",
+  "Sewa Per Jam Standing Akrilik Bulat": "Round Acrylic Stand Rental",
+  "Bucket Aesthetic": "Aesthetic Bouquet",
+  "Bucket Bunga Gradoll (Graduation Doll) Big Mesh": "Graduation Doll Bouquet (Big Mesh)",
+  "Bunga Mawar Palsu": "Premium Artificial Rose Bouquet",
+  "Bunga White Sedap": "White Sedap Flower Bouquet",
+  "Frame Birthday Edelweis": "Edelweis Birthday Frame",
+  "Mawar Candy (Bunga Asli)": "Candy Rose (Fresh Flower)",
+  "Karangan Bunga": "Flower Board Arrangement",
+  "Packing Luxury Elegant": "Luxury Elegant Packaging",
+  "Selempang Wisuda 3 Titik": "3-Point Graduation Sash",
+};
+
+const PRODUCT_TAG_EN: Record<string, string> = {
+  "Favorit Kami": "Our Favorite",
+  "Populer": "Popular",
+  "Eksklusif": "Exclusive",
+  "Terlaris": "Best Seller",
+};
+
+function renderPriceDisplay(product: Product, language: Language) {
+  if (!product.isPromo || !product.originalPrice || product.originalPrice <= product.price) {
+    return (
+      <p style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: "11px",
+        fontWeight: 600,
+        color: "#b85c3b",
+        margin: 0,
+        whiteSpace: "nowrap",
+      }}>
+        {getProductPriceLabel(product, language)}
+      </p>
+    );
+  }
+
+  // Display promo with original price strikethrough
+  const originalLabel = formatRupiah(product.originalPrice);
+  const currentLabel = getProductPriceLabel(product, language);
+  const discountPercent = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "10px",
+          color: "#aaa",
+          textDecoration: "line-through",
+          fontWeight: 500,
+        }}>
+          {originalLabel}
+        </span>
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "10px",
+          backgroundColor: "#ff4444",
+          color: "#fff",
+          padding: "2px 6px",
+          borderRadius: "4px",
+          fontWeight: 700,
+          whiteSpace: "nowrap",
+        }}>
+          -{discountPercent}%
+        </span>
+      </div>
+      <p style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: "12px",
+        fontWeight: 700,
+        color: "#d17047",
+        margin: 0,
+        whiteSpace: "nowrap",
+      }}>
+        {currentLabel}
+      </p>
+    </div>
+  );
+}
+
+function getProductPriceLabel(product: Product, language: Language) {
+  if (language === "id") return product.priceLabel || formatRupiah(product.price || 0);
+  const amount = Number.isFinite(product.price) ? product.price : parseInt(String(product.priceLabel || "").replace(/\D/g, ""), 10) || 0;
+  return `Rp ${amount.toLocaleString("en-US")}`;
+}
+
+function getProductDescription(product: Product, language: Language) {
+  const productName = getProductDisplayName(product, language);
+  const base = (product.description || "").trim();
+  const localizedBase = language === "en"
+    ? translateBaseDescription(base, product)
+    : looksMostlyEnglish(base)
+      ? ""
+      : base;
+  const detail = getProductDetailSentence(product, language);
+  const intro = language === "id"
+    ? getProductIntroId(product)
+    : getProductIntroEn(product);
+
+  return [localizedBase || intro, detail]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .replace(new RegExp(`^${escapeRegExp(productName)}\s*`, "i"), productName + " ");
+}
+
+function translateBaseDescription(description: string, product: Product) {
+  if (!description) return "";
+
+  const productName = getProductDisplayName(product, "en" as Language);
+  const replacements: Array<[RegExp, string]> = [
+    [/Aksesori custom yang rapi dan estetik untuk hadiah personal\./gi, "A neat, aesthetic custom accessory for personal gifts."],
+    [/Rangkaian bunga artificial premium yang awet dan tetap menawan\./gi, "A premium artificial flower arrangement that stays beautiful for a long time."],
+    [/Rangkaian bunga segar pilihan dengan nuansa mewah\./gi, "A curated fresh flower arrangement with a luxurious feel."],
+    [/Rangkaian bucket premium dengan komposisi yang elegan\./gi, "A premium bouquet arrangement with an elegant composition."],
+    [/Kemasan premium untuk meningkatkan kesan hadiah\./gi, "Premium packaging that elevates the gift presentation."],
+    [/Selempang dan pita dekoratif untuk melengkapi momen spesial\./gi, "Decorative sash and ribbon pieces that complete special moments."],
+    [/Produk unggulan untuk momen hadiah yang berkesan\./gi, "A featured product for memorable gifting moments."],
+    [/Bunga artificial premium yang awet dan tetap menawan\./gi, "Premium artificial flowers that remain beautiful for a long time."],
+    [/Bunga segar pilihan dengan nuansa mewah\./gi, "Selected fresh flowers with a luxurious feel."],
+    [/dirangkai dengan perhatian pada detail\./gi, "is arranged with close attention to detail."],
+    [/Cocok untuk hadiah jangka panjang\./gi, "Ideal for long-lasting gifting."],
+    [/Dirangkai rapi agar tampil cantik saat diberikan\./gi, "Neatly arranged so it looks beautiful when gifted."],
+    [/Bisa request warna, tema, dan ucapan sesuai momen\./gi, "You can request colors, themes, and messages to match the occasion."],
+    [/bisa request tulisan & warna bunga bisa diambil dikirim kurir ay jek/gi, "You can request wording and flower colors, with pickup or courier delivery available."],
+    [/bisa request warna, foto & tulisan\./gi, "You can request colors, photos, and wording."],
+    [/bisa request tulisan \+ 2 foto\./gi, "You can request wording plus two photos."],
+    [/isi 7 tangkai mekar \+ tambahan kain salju 20\.000 \(120\.000\)\./gi, "contains 7 blooming stems plus an optional snow-fabric add-on."]
+  ];
+
+  let translated = description;
+  for (const [pattern, replacement] of replacements) {
+    translated = translated.replace(pattern, replacement);
+  }
+
+  if (/standing akrilik/i.test(product.name)) {
+    translated = translated.replace(/harga sewa per 24jam/gi, "24-hour rental price");
+    translated = translated.replace(/bisa untuk segala acara/gi, "suitable for all kinds of events");
+  }
+
+  if (productName && translated && !translated.includes(productName)) {
+    translated = `${productName} — ${translated}`;
+  }
+
+  return translated.replace(/\s+/g, " ").trim();
+}
+
+function getProductIntroId(product: Product) {
+  const name = product.name;
+
+  if (/standing akrilik/i.test(name)) {
+    return `${name} adalah pilihan display premium yang cocok untuk acara wisuda, ucapan, maupun dekorasi meja. Detail tulisan dan warna bunga bisa disesuaikan supaya tampil lebih personal.`;
+  }
+
+  if (/akrilik frame mini|frame birthday/i.test(name)) {
+    return `${name} dirancang dengan tampilan clean dan estetik untuk hadiah personal. Ukuran frame, foto, dan tulisan bisa disesuaikan agar lebih berkesan.`;
+  }
+
+  if (/karangan bunga/i.test(name)) {
+    return `${name} dibuat sebagai papan ucapan formal yang cocok untuk duka cita, opening, kelulusan, dan perayaan penting lainnya. Komposisi, tulisan, dan jumlah titik bisa disesuaikan.`;
+  }
+
+  if (/buket skripsi/i.test(name)) {
+    return `${name} dirangkai khusus untuk momen wisuda dan sidang. Isian glitter, warna pita, dan pesan ucapan dapat dibuat sesuai permintaan.`;
+  }
+
+  if (/bunga white sedap/i.test(name)) {
+    return `${name} menonjolkan kesan mewah dan segar dengan komposisi bunga asli yang rapi. Cocok untuk hadiah elegan dan acara spesial.`;
+  }
+
+  if (/mawar candy|bunga mawar medium|bunga mawar palsu|peony|rose gonie/i.test(name)) {
+    return `${name} menghadirkan rangkaian yang manis, rapi, dan mudah disesuaikan dengan tema hadiah. Pilihan ini pas untuk momen ulang tahun, wisuda, dan kejutan spesial.`;
+  }
+
+  if (/packing/i.test(name)) {
+    return `${name} memberi finishing premium dengan box, kertas, dan pita organza. Cocok untuk membuat hadiah terlihat lebih mewah saat diterima.`;
+  }
+
+  if (/selempang/i.test(name)) {
+    return `${name} dibuat sebagai pelengkap momen wisuda atau perayaan. Desain bisa mengikuti tema acara agar hasilnya serasi dan rapi.`;
+  }
+
+  if (/donat buket/i.test(name)) {
+    return `${name} berisi donat bomboloni dengan tampilan manis dan warna glaze yang menarik. Cocok untuk hadiah yang unik dan mengenyangkan.`;
+  }
+
+  if (/bucket|buket/i.test(name)) {
+    return `${name} dirangkai dengan komposisi premium dan kesan estetik. Pilihan ini cocok untuk hadiah yang ingin terlihat mewah sekaligus hangat.`;
+  }
+
+  return `${name} dirancang dengan perhatian pada detail agar cocok untuk momen hadiah yang berkesan.`;
+}
+
+function getProductIntroEn(product: Product) {
+  const name = getProductDisplayName(product, "en" as Language);
+
+  if (/standing akrilik/i.test(product.name)) {
+    return `${name} is a premium display piece that works well for graduations, messages, and tabletop decoration. Text and floral colors can be customized for a more personal touch.`;
+  }
+
+  if (/akrilik frame mini|frame birthday/i.test(product.name)) {
+    return `${name} is styled with a clean, elegant look for personal gifting. The frame size, photo, and wording can be customized to make it more memorable.`;
+  }
+
+  if (/karangan bunga/i.test(product.name)) {
+    return `${name} is designed as a formal flower board for condolences, openings, graduations, and other important events. The composition, wording, and point count can be tailored.`;
+  }
+
+  if (/buket skripsi/i.test(product.name)) {
+    return `${name} is made for graduation and thesis-defense moments. The glitter filling, ribbon color, and message can all be customized.`;
+  }
+
+  if (/bunga white sedap/i.test(product.name)) {
+    return `${name} gives a refined, fresh look through a neatly arranged composition of real flowers. It is ideal for elegant gifting and special occasions.`;
+  }
+
+  if (/mawar candy|bunga mawar medium|bunga mawar palsu|peony|rose gonie/i.test(product.name)) {
+    return `${name} offers a sweet, polished arrangement that is easy to match with your gift theme. It is a great choice for birthdays, graduations, and surprise deliveries.`;
+  }
+
+  if (/packing/i.test(product.name)) {
+    return `${name} adds a premium finishing touch with a box, wrapping paper, and organza ribbon. It helps the gift feel more luxurious the moment it is received.`;
+  }
+
+  if (/selempang/i.test(product.name)) {
+    return `${name} complements graduation and celebration moments. The design can follow the event theme so the result feels coordinated and neat.`;
+  }
+
+  if (/donat buket/i.test(product.name)) {
+    return `${name} features bomboloni donuts with a sweet, eye-catching glaze finish. It is a fun and filling gift option for special moments.`;
+  }
+
+  if (/bucket|buket/i.test(product.name)) {
+    return `${name} is arranged with a premium composition and an elegant visual feel. It is suitable when you want a gift that feels both warm and luxurious.`;
+  }
+
+  return `${name} is crafted with careful detail so it fits beautifully into memorable gifting moments.`;
+}
+
+function getProductDetailSentence(product: Product, language: Language) {
+  const name = getProductDisplayName(product, language);
+
+  if (language === "id") {
+    if (/standing akrilik bulat|standing akrilik dome|sewa standing akrilik/i.test(product.name)) {
+      return "Produk ini cocok untuk sewa harian, display acara, dan kebutuhan papan ucapan yang ingin tampil bersih serta premium.";
+    }
+    if (/akrilik frame mini|frame birthday/i.test(product.name)) {
+      return "Detail tambahan seperti foto, teks, dan warna bisa disesuaikan agar hasil akhir terasa benar-benar personal.";
+    }
+    if (/karangan bunga/i.test(product.name)) {
+      return "Setiap papan dapat menyesuaikan ucapan, ukuran, dan komposisi sesuai kebutuhan acara.";
+    }
+    if (/buket skripsi/i.test(product.name)) {
+      return "Pilihan ini sangat pas untuk momen kelulusan, sidang, dan hadiah apresiasi yang berkesan.";
+    }
+    if (/bunga white sedap/i.test(product.name)) {
+      return "Aroma dan tampilannya memberi kesan bersih, lembut, dan sangat cocok untuk hadiah yang lebih formal.";
+    }
+    if (/packing/i.test(product.name)) {
+      return "Finishing ini membantu rangkaian utama tampil lebih mewah saat diantar ke penerima.";
+    }
+    if (/selempang/i.test(product.name)) {
+      return "Cocok untuk wisuda, foto wisudawan, dan kebutuhan acara yang memerlukan aksen dekoratif.";
+    }
+    if (/donat buket/i.test(product.name)) {
+      return "Hadiah ini unik karena memadukan tampilan manis dengan isi yang bisa langsung dinikmati.";
+    }
+    return `${name} dibuat agar mudah disesuaikan dengan tema acara dan kebutuhan hadiah.`;
+  }
+
+  if (/standing akrilik bulat|standing akrilik dome|sewa standing akrilik/i.test(product.name)) {
+    return "Ideal for daily rental, event displays, and message boards that should feel clean and premium.";
+  }
+  if (/akrilik frame mini|frame birthday/i.test(product.name)) {
+    return "Extra details such as photos, wording, and colors can be adjusted so the final result feels truly personal.";
+  }
+  if (/karangan bunga/i.test(product.name)) {
+    return "Each board can be adapted in wording, size, and composition to suit the event needs.";
+  }
+  if (/buket skripsi/i.test(product.name)) {
+    return "This option is especially suitable for graduation, thesis defense, and appreciation gifts with meaning.";
+  }
+  if (/bunga white sedap/i.test(product.name)) {
+    return "Its fragrance and appearance create a clean, soft, and formal impression.";
+  }
+  if (/packing/i.test(product.name)) {
+    return "This finishing helps the main arrangement look more luxurious when it is delivered.";
+  }
+  if (/selempang/i.test(product.name)) {
+    return "It is suitable for graduation photos, ceremonies, and any event that needs a decorative accent.";
+  }
+  if (/donat buket/i.test(product.name)) {
+    return "A unique gift that combines a sweet visual presentation with something enjoyable to eat.";
+  }
+
+  return `${name} is designed so it can be adapted to the event theme and gifting need.`;
+}
+
+function escapeRegExp(value: string) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getCategoryLabel(categoryKey: string, fallbackLabel: string, language: Language) {
+  if (language === "id") return fallbackLabel;
+  return CATEGORY_LABEL_EN[categoryKey] || fallbackLabel;
+}
+
+function getCategoryDescription(categoryKey: string, fallbackDescription: string, language: Language) {
+  if (language === "id") return fallbackDescription;
+  return CATEGORY_DESCRIPTION_EN[categoryKey] || fallbackDescription;
+}
+
+function getProductDisplayName(product: Product, language: Language) {
+  if (language === "id") return product.name;
+  return PRODUCT_NAME_EN[product.name] || product.name;
+}
+
+function getProductTag(tag: string | undefined, language: Language) {
+  if (!tag) return "";
+  if (language === "id") return tag;
+  return PRODUCT_TAG_EN[tag] || tag;
+}
+
+function looksMostlyEnglish(value: string) {
+  if (!value) return false;
+  const englishHint = /\b(premium|fresh|flower|arrangement|custom|gift|daily|delivery|chat|admin|perfect|elegant|luxury|special|bouquet)\b/i;
+  const indonesianHint = /\b(dengan|untuk|dan|yang|bisa|harga|sewa|warna|bunga|hadiah|pilihan|hari|acara|katalog)\b/i;
+  return englishHint.test(value) && !indonesianHint.test(value);
 }

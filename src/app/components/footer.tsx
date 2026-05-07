@@ -14,6 +14,7 @@ export function Footer() {
   }, []);
 
   const config = getSiteConfig();
+  const brandDisplayName = "Ay Bucket & Gift";
 
   return (
     <footer
@@ -30,6 +31,23 @@ export function Footer() {
           gap: "40px",
         }}
       >
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr)", gap: "14px", padding: "18px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "14px", background: "rgba(255,255,255,0.7)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <img src={config.brandLogoUrl || BRAND_LOGO.logo} alt={`${brandDisplayName} logo`} style={{ width: "56px", height: "56px", objectFit: "contain", borderRadius: "999px", mixBlendMode: "multiply" }} />
+            <div>
+              <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: "30px", lineHeight: 1, color: "#1a1a1a" }}>{brandDisplayName}</p>
+              <p style={{ margin: "4px 0 0 0", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a6a52" }}>
+                Florist Kamal · Telang · Bangkalan
+              </p>
+            </div>
+          </div>
+          <p style={{ margin: 0, fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.8, color: "#555" }}>
+            {language === "id"
+              ? "Kami merangkai buket, standing akrilik, karangan bunga, selempang wisuda, hingga gift custom dengan pendekatan personal. Setiap pesanan disiapkan rapi, cepat, dan bisa menyesuaikan tema acara Anda."
+              : "We craft bouquets, acrylic stands, flower boards, graduation sashes, and custom gifts with a personal approach. Every order is prepared neatly, quickly, and tailored to your event theme."}
+          </p>
+        </div>
+
         {/* Top: WhatsApp CTA */}
         <div>
           <a
@@ -140,16 +158,16 @@ export function Footer() {
           }}
         >
           <div>
-            <span style={{ color: "#bbb", display: "block", marginBottom: "4px" }}>Alamat</span>
+            <span style={{ color: "#bbb", display: "block", marginBottom: "4px" }}>{language === "id" ? "Alamat" : "Address"}</span>
             <span style={{ color: "#666" }}>{config.address}</span>
           </div>
           <div>
-            <span style={{ color: "#bbb", display: "block", marginBottom: "4px" }}>Sosial Media</span>
+            <span style={{ color: "#bbb", display: "block", marginBottom: "4px" }}>{language === "id" ? "Sosial Media" : "Social Media"}</span>
             <span style={{ color: "#666", display: "block" }}>IG: {config.instagram}</span>
             <span style={{ color: "#666", display: "block" }}>TikTok: {config.tiktok}</span>
           </div>
           <div>
-            <span style={{ color: "#ccc" }}>&copy; {config.businessName} {config.year}. All rights reserved.</span>
+            <span style={{ color: "#ccc" }}>&copy; {brandDisplayName} {config.year}. All rights reserved.</span>
             <span style={{ color: "#666", display: "block", marginTop: "4px" }}>{BRAND_LOGO.location}</span>
           </div>
         </div>

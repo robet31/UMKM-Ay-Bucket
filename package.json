@@ -8,6 +8,7 @@
     "dev": "vite",
     "test": "vitest run",
     "import-assets": "node ./scripts/import-assets.js \"ASSETS-AY BUCKET\"",
+    "process-logo": "node ./scripts/process-logo.cjs",
     "hf:preview": "npx hyperframes preview public/hyperframes/portfolio-composition",
     "hf:render": "npx hyperframes render public/hyperframes/portfolio-composition --out dist/hf-render"
   },
@@ -78,7 +79,8 @@
     "jsdom": "^29.1.0",
     "tailwindcss": "4.1.12",
     "vite": "^6.4.2",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "sharp": "^0.32.0"
   },
   "peerDependencies": {
     "react": "18.3.1",

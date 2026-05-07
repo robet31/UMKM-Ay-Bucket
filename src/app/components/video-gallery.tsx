@@ -97,6 +97,9 @@ function VideoCard({ video, index, onSelect }: { video: VideoItem; index: number
               display: "block",
               transform: "scale(1.01)",
             }}
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
           />
         ) : (
           <div

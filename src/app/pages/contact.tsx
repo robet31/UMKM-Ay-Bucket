@@ -217,7 +217,7 @@ export function Contact() {
                 }}
               >
                 <iframe
-                  title="El Bouquet Location"
+                  title="Ay Bucket Location"
                   src={config.mapsEmbedUrl || `https://www.google.com/maps?q=${encodeURIComponent(config.address || "Pertokoan Pasar Senenan, Bangkalan")}&output=embed`}
                   className="map-iframe-hover"
                   style={{ width: "100%", height: 420, border: 0, display: "block" }}
@@ -282,8 +282,8 @@ export function Contact() {
             </p>
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", lineHeight: 1.6, color: "#777", marginBottom: "18px" }}>
               {language === "id"
-                ? "Dengarkan pengalaman pelanggan kami yang puas dengan produk dan layanan El Bouquet. Testimoni mereka adalah bukti komitmen kami terhadap kualitas."
-                : "Hear from our satisfied customers about their experience with El Bouquet products and service. Their testimonials speak to our commitment to quality."}
+                ? "Dengarkan pengalaman pelanggan kami yang puas dengan produk dan layanan Ay Bucket. Testimoni mereka adalah bukti komitmen kami terhadap kualitas."
+                : "Hear from our satisfied customers about their experience with Ay Bucket products and service. Their testimonials speak to our commitment to quality."}
             </p>
             <div style={{ position: "relative", overflow: "hidden", padding: "16px 0", width: "100%" }}>
               <style>{`
@@ -333,7 +333,7 @@ export function Contact() {
                 : "Contact us now on WhatsApp"}
             </p>
             <a
-              href={getWhatsAppLink("Halo El Bouquet! Saya ingin bertanya tentang produk dan pemesanan bunga 🌸")}
+              href={getWhatsAppLink("Halo Ay Bucket! Saya ingin bertanya tentang produk dan pemesanan bunga 🌸")}
               target="_blank"
               rel="noopener noreferrer"
               style={{

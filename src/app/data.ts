@@ -1,8 +1,12 @@
 // ==========================================
-// EL BOUQUET - KATALOG TERBARU 2026
-// Instagram: @elbouket
+// AY BUCKET - KATALOG TERBARU 2026
+// Instagram: @aybuket
 // Premium Flower & Gift Arrangements
 // ==========================================
+
+
+import { generatedInitialProducts } from "./generated_products";
+import { ALL_ASSET_PATHS } from "./asset_index";
 
 // ---- BRANDING & LOGO ----
 export const BRAND_LOGO = {
@@ -11,15 +15,127 @@ export const BRAND_LOGO = {
   whatsapp: "6282257827867",
   location: "Pertokoan pasar senenan Bangkalan",
   instagram: "@aybuket",
-  // Path to the logo file. Place `5.jpg` (or a processed/transparent version)
-  // into `public/assets/ay-logo-5.jpg` to have it served at runtime.
-  logo: "/assets/ay-logo-5.jpg",
-  canvaCatalog: "https://catalog-elbouket.my.canva.site/",
-  canvaChocolate: "https://chocolate-bouquet-elbouket.my.canva.site/"
+  logo: "/assets/ay-logo-5.png",
+  canvaCatalog: "https://catalog-aybucket.my.canva.site/",
+  canvaChocolate: "https://chocolate-bouquet-aybucket.my.canva.site/"
 };
 
+export function normalizeAssetUrl(url?: string): string {
+  if (!url) return "";
+
+  let normalized = String(url).trim().replace(/\\/g, "/");
+
+  try {
+    normalized = decodeURIComponent(normalized);
+  } catch { }
+
+  if (normalized.startsWith("/assets/")) {
+    normalized = normalized.replace(/Rp /g, "Rp\u00A0");
+  }
+
+  // Ensure the URL is safe for use in <img src=> by encoding spaces and
+  // other characters while preserving the path structure. Use `encodeURI`
+  // so that slashes are not encoded.
+  try {
+    return encodeURI(normalized);
+  } catch {
+    return normalized;
+  }
+}
+function migrateLegacyAssetUrl(url?: string): string {
+  const normalized = normalizeAssetUrl(url);
+  if (!normalized) return "";
+
+  const legacyMap: Record<string, string> = {
+    "/assets/buket-satin-rp20000-item-01.jpg": "/assets/Buket Bunga Asli Premium - Rp\u00A0350.000,00.png",
+    "/assets/money-bouquet-rp50000-item-01.jpg": "/assets/Mawar Candy (Bunga Asli) - Rp\u00A0170.000,00.png",
+    "/assets/snack-bouquet-rp35000-item-01.jpg": "/assets/Donat buket tart - Rp\u00A0100.000,00 - isi 7 donat bomboloni isi coklat topping glaze, bisa request warna. silahkan chat admin.png",
+    "/assets/catalog-home-rp150000-item-02.jpg": "/assets/Akrilik frame mini - Rp\u00A095.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan.png",
+  };
+
+  return legacyMap[normalized] || normalized;
+}
+
+function normalizeForMatching(value: string): string {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\u00a0/g, " ")
+    .replace(/%[0-9a-f]{2}/gi, " ")
+    .replace(/[()\[\]{}.,:+\-_/\\]/g, " ")
+    .replace(/\brp\b/g, " ")
+    .replace(/\d+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const MATCH_STOP_WORDS = new Set([
+  "rp", "dan", "untuk", "bisa", "yang", "dengan", "big", "small", "premium", "ukuran", "harga", "sewa", "jam", "hari", "item", "promo", "bunga", "bucket", "buket"
+]);
+
+function extractMatchKeywords(value: string): string[] {
+  return normalizeForMatching(value)
+    .split(" ")
+    .filter((word) => word.length >= 3 && !MATCH_STOP_WORDS.has(word));
+}
+
+function scoreAssetForProduct(productName: string, assetPath: string): number {
+  const keywords = extractMatchKeywords(productName);
+  if (keywords.length === 0) return 0;
+
+  const assetName = normalizeForMatching(assetPath.split("/").pop() || assetPath);
+  let score = 0;
+  for (const keyword of keywords) {
+    if (assetName.includes(keyword)) score += 1;
+  }
+
+  if (/karangan bunga/i.test(productName) && assetName.includes("karangan") && assetName.includes("bunga")) {
+    score += 2;
+  }
+  if (/standing akrilik/i.test(productName) && assetName.includes("akrilik")) {
+    score += 1;
+  }
+  if (/selempang/i.test(productName) && assetName.includes("selempang")) {
+    score += 2;
+  }
+
+  return score;
+}
+
+function findRelatedAssetPaths(productName: string): string[] {
+  const keywords = extractMatchKeywords(productName);
+  const minScore = keywords.length >= 4 ? 2 : 1;
+
+  return ALL_ASSET_PATHS
+    .map((assetPath) => ({
+      assetPath,
+      score: scoreAssetForProduct(productName, assetPath),
+    }))
+    .filter((entry) => entry.score >= minScore)
+    .sort((a, b) => b.score - a.score || a.assetPath.length - b.assetPath.length)
+    .map((entry) => migrateLegacyAssetUrl(entry.assetPath))
+    .slice(0, 18);
+}
+
+function enrichProductWithMatchedAssets(product: Product): Product {
+  const existingImages = (product.images || (product.image ? [product.image] : []))
+    .filter(Boolean)
+    .map((item) => migrateLegacyAssetUrl(item));
+  const matchedAssets = findRelatedAssetPaths(product.name);
+  const mergedImages = Array.from(new Set([...existingImages, ...matchedAssets]));
+
+  return {
+    ...product,
+    image: mergedImages[0] || migrateLegacyAssetUrl(product.image) || "",
+    images: mergedImages,
+  };
+}
+
+function enrichProductsWithMatchedAssets(products: Product[]): Product[] {
+  return products.map((product) => enrichProductWithMatchedAssets(product));
+}
+
 // ---- Admin Config Store (localStorage-based) ----
-const ADMIN_STORAGE_KEY = "elbouquet_admin_v1";
+const ADMIN_STORAGE_KEY = "aybucket_admin_v1";
 
 export interface SiteConfig {
   businessName: string;
@@ -35,6 +151,7 @@ export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
   heroFallbackImage: string;
+  brandLogoUrl: string;
   mapsEmbedUrl: string;
   adminUsername?: string;
   adminPassword?: string;
@@ -47,7 +164,7 @@ const defaultConfig: SiteConfig = {
   address: "",
   whatsappNumber: "",
   whatsappDisplay: "",
-  instagram: "@elbouket",
+  instagram: "@aybuket",
   tiktok: "",
   navLinks: [
     { to: "/", label: "Katalog" },
@@ -57,7 +174,8 @@ const defaultConfig: SiteConfig = {
   footerText: "",
   heroTitle: "Buket Bunga Premium\nUntuk Setiap Momen",
   heroSubtitle: "Rangkaian bunga segar pilihan, snack bouquet unik, money bouquet eksklusif, dan vas cantik. Dibuat dengan perhatian penuh untuk moment spesial Anda.",
-  heroFallbackImage: "/assets/catalog-home-rp150000-item-02.jpg",
+  heroFallbackImage: "/assets/Akrilik frame mini - Rp\u00A095.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan.png",
+  brandLogoUrl: "/assets/ay-logo-5.png",
   mapsEmbedUrl: "",
   adminUsername: "admin",
   adminPassword: "admin123",
@@ -69,8 +187,10 @@ export function getSiteConfig(): SiteConfig {
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<SiteConfig>;
       const merged = { ...defaultConfig, ...parsed } as SiteConfig;
+      merged.heroFallbackImage = migrateLegacyAssetUrl(merged.heroFallbackImage);
+      merged.brandLogoUrl = migrateLegacyAssetUrl(merged.brandLogoUrl || defaultConfig.brandLogoUrl);
       if (!merged.adminUsername) merged.adminUsername = "admin";
-      if (!merged.adminPassword || merged.adminPassword === "elbouquet") merged.adminPassword = "admin123";
+      if (!merged.adminPassword || merged.adminPassword === "aybucket") merged.adminPassword = "admin123";
       return merged;
     }
   } catch { }
@@ -86,7 +206,12 @@ export function formatRupiah(value: number | string): string {
 export function saveSiteConfig(config: Partial<SiteConfig>) {
   try {
     const current = getSiteConfig();
-    const merged = { ...current, ...config };
+    const merged = {
+      ...current,
+      ...config,
+      heroFallbackImage: migrateLegacyAssetUrl(config.heroFallbackImage ?? current.heroFallbackImage),
+      brandLogoUrl: migrateLegacyAssetUrl(config.brandLogoUrl ?? current.brandLogoUrl ?? defaultConfig.brandLogoUrl),
+    };
     localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
     window.dispatchEvent(new Event("siteConfigChanged"));
   } catch { }
@@ -98,8 +223,8 @@ export function resetSiteConfig() {
 }
 
 // Products stored in localStorage
-const PRODUCTS_STORAGE_KEY = "elbouquet_products_v1";
-const CATEGORIES_STORAGE_KEY = "elbouquet_categories_v1";
+const PRODUCTS_STORAGE_KEY = "aybucket_products_v1";
+const CATEGORIES_STORAGE_KEY = "aybucket_categories_v1";
 
 // Legacy compat
 export const WHATSAPP_NUMBER = "";
@@ -123,7 +248,14 @@ export type ProductCategory =
   | "chocolate-bouquet"
   | "fresh-flower"
   | "artificial-flower"
-  | "catalog-home";
+  | "catalog-home"
+  | "accessories"
+  | "buckets"
+  | "wreaths"
+  | "packaging"
+  | "ribbons"
+  | "sewa";
+  
 
 export interface Category {
   key: ProductCategory;
@@ -145,6 +277,9 @@ export interface Product {
   images?: string[];
   tag?: string;
   variant?: string;
+  isPromo?: boolean;
+  originalPrice?: number;
+  promoLabel?: string;
 }
 
 export function normalizeProductRecord(product: any): Product {
@@ -156,16 +291,16 @@ export function normalizeProductRecord(product: any): Product {
     : formatRupiah(numericPrice);
 
   const images = Array.isArray(product?.images)
-    ? product.images.filter(Boolean)
+    ? product.images.filter(Boolean).map((item: string) => migrateLegacyAssetUrl(item))
     : product?.image
-      ? [product.image]
+      ? [migrateLegacyAssetUrl(product.image)]
       : [];
 
   return {
     ...product,
     price: numericPrice,
     priceLabel: normalizedLabel,
-    image: product?.image || images[0] || "",
+    image: migrateLegacyAssetUrl(product?.image) || images[0] || "",
     images,
   } as Product;
 }
@@ -174,56 +309,117 @@ export function normalizeStoredProducts(stored: any[]): Product[] {
   return stored.map((product) => normalizeProductRecord(product));
 }
 
+function toMergeableName(name: string | undefined): string {
+  return String(name || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function toMergeablePrice(product: Partial<Product>): number {
+  if (typeof product.price === "number" && Number.isFinite(product.price)) return product.price;
+  return parseInt(String(product.priceLabel || "").replace(/\D/g, ""), 10) || 0;
+}
+
+function getMergeKey(product: Partial<Product>): string {
+  return `${toMergeableName(product.name)}::${toMergeablePrice(product)}`;
+}
+
+export function mergeProductsByNameAndPrice(products: Product[]): Product[] {
+  const map = new Map<string, Product>();
+
+  for (const product of products) {
+    const key = getMergeKey(product);
+    const incomingImages = (product.images || (product.image ? [product.image] : []))
+      .filter(Boolean)
+      .map((item) => migrateLegacyAssetUrl(item));
+
+    if (!map.has(key)) {
+      map.set(key, {
+        ...product,
+        image: migrateLegacyAssetUrl(product.image) || incomingImages[0] || "",
+        images: Array.from(new Set(incomingImages)),
+      });
+      continue;
+    }
+
+    const existing = map.get(key)!;
+    const existingImages = (existing.images || (existing.image ? [existing.image] : []))
+      .filter(Boolean)
+      .map((item) => migrateLegacyAssetUrl(item));
+
+    const mergedImages = Array.from(new Set([...existingImages, ...incomingImages]));
+    existing.images = mergedImages;
+    existing.image = mergedImages[0] || existing.image || product.image;
+
+    if ((!existing.description || existing.description.length < (product.description || "").length) && product.description) {
+      existing.description = product.description;
+    }
+    if (!existing.tag && product.tag) existing.tag = product.tag;
+    if (!existing.variant && product.variant) existing.variant = product.variant;
+  }
+
+  return Array.from(map.values());
+}
+
 export const categories: Category[] = [
   {
     key: "buket-satin",
     label: "Buket Satin",
     emoji: "💐",
     description: "Buket satin berkualitas tinggi dengan rangkaian bunga pilihan. Sempurna untuk berbagai momen spesial.",
-    canvaLink: "https://catalog-elbouket.my.canva.site/buket-satin"
+    canvaLink: "https://catalog-aybucket.my.canva.site/buket-satin"
   },
   {
     key: "snack-bouquet",
     label: "Snack Bouquet",
     emoji: "🎁",
     description: "Kombinasi unik bunga dengan snack premium. Hadiah yang berkesan dan fungsional.",
-    canvaLink: "https://catalog-elbouket.my.canva.site/snack-bouquet"
+    canvaLink: "https://catalog-aybucket.my.canva.site/snack-bouquet"
   },
   {
     key: "money-bouquet",
     label: "Money Bouquet",
     emoji: "💰",
     description: "Buket uang yang elegan untuk momen istimewa. Hadiah yang praktis dan berkesan.",
-    canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/pricelist-money"
+    canvaLink: "https://chocolate-bouquet-aybucket.my.canva.site/pricelist-money"
   },
   {
     key: "chocolate-bouquet",
     label: "Chocolate Bouquet",
     emoji: "🍫",
     description: "Bunga dengan cokelat premium berkualitas tinggi. Sempurna untuk gift istimewa.",
-    canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/"
+    canvaLink: "https://chocolate-bouquet-aybucket.my.canva.site/"
   },
   {
     key: "fresh-flower",
     label: "Fresh Flower",
     emoji: "🌹",
     description: "Rangkaian bunga segar pilihan terbaik dengan berbagai kombinasi warna.",
-    canvaLink: "https://chocolate-bouquet-elbouket.my.canva.site/fresh-flowe"
+    canvaLink: "https://chocolate-bouquet-aybucket.my.canva.site/fresh-flowe"
   },
   {
     key: "artificial-flower",
     label: "Artificial Flower",
     emoji: "✨",
     description: "Rangkaian bunga artificial premium yang awet dan elegan.",
-    canvaLink: "https://catalog-elbouket.my.canva.site/vase"
+    canvaLink: "https://catalog-aybucket.my.canva.site/vase"
   },
   {
     key: "catalog-home",
     label: "Premium Packages",
     emoji: "👑",
     description: "Paket premium untuk acara spesial dan kebutuhan khusus.",
-    canvaLink: "https://catalog-elbouket.my.canva.site/"
+    canvaLink: "https://catalog-aybucket.my.canva.site/"
   },
+  // add simple categories for generated assets
+  { key: "accessories", label: "Accessories", emoji: "🧾", description: "Aksesoris & perlengkapan pelengkap." },
+  { key: "buckets", label: "Buckets", emoji: "🪣", description: "Bucket & rangkaian berukuran sedang hingga besar." },
+  { key: "wreaths", label: "Wreaths", emoji: "🌿", description: "Karangan bunga & papan ucapan." },
+  { key: "packaging", label: "Packaging", emoji: "🎁", description: "Layanan packaging premium dan aksesoris hadiah." },
+  { key: "ribbons", label: "Ribbons & Sashes", emoji: "🎗️", description: "Selempang & pita khusus acara." },
+  { key: "sewa", label: "Sewa (Rental)", emoji: "⏱️", description: "Layanan sewa per jam untuk standing dan dekorasi acara." },
 ];
 
 // ============================================
@@ -237,7 +433,7 @@ export interface GalleryProject {
   image: string;
 }
 
-const GALLERY_STORAGE_KEY = "elbouquet_gallery_v1";
+const GALLERY_STORAGE_KEY = "aybucket_gallery_v1";
 
 export const defaultGalleryProjects: GalleryProject[] = [
   {
@@ -245,42 +441,42 @@ export const defaultGalleryProjects: GalleryProject[] = [
     title: "Buket Satin Collection",
     category: "Buket Satin",
     aspect: "3/4",
-    image: "/assets/buket-satin-rp20000-item-01.jpg",
+    image: "/assets/Buket Bunga Asli Premium - Rp\u00A0350.000,00.png",
   },
   {
     id: "gallery-2",
     title: "Money Bouquet Premium",
     category: "Money Bouquet",
     aspect: "1/1",
-    image: "/assets/money-bouquet-rp50000-item-01.jpg",
+    image: "/assets/Mawar Candy (Bunga Asli) - Rp\u00A0170.000,00.png",
   },
   {
     id: "gallery-3",
     title: "Snack Bouquet Unik",
     category: "Snack Bouquet",
     aspect: "16/9",
-    image: "/assets/snack-bouquet-rp35000-item-01.jpg",
+    image: "/assets/Donat buket tart - Rp\u00A0100.000,00 - isi 7 donat bomboloni isi coklat topping glaze, bisa request warna. silahkan chat admin.png",
   },
   {
     id: "gallery-4",
     title: "Fresh Flower Arrangement",
     category: "Fresh Flower",
     aspect: "3/4",
-    image: "/assets/catalog-home-rp150000-item-02.jpg",
+    image: "/assets/Akrilik frame mini - Rp\u00A095.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan.png",
   },
   {
     id: "gallery-5",
     title: "Chocolate Bouquet Premium",
     category: "Chocolate Bouquet",
     aspect: "1/1",
-    image: "/assets/catalog-home-rp150000-item-02.jpg",
+    image: "/assets/Bunga Mawar Medium - Rp\u00A0100.000,00 - Bunga mawar asli, isi 7tangkai mekar + tambahan kain salju 20.000 (120.000).png",
   },
   {
     id: "gallery-6",
     title: "Artificial Flower Collection",
     category: "Artificial Flower",
     aspect: "16/9",
-    image: "/assets/catalog-home-rp150000-item-02.jpg",
+    image: "/assets/Bunga Mawar Palsu Premium (ukuran Big) - Rp\u00A0250.000,00.png",
   },
 ];
 
@@ -289,7 +485,15 @@ export function getGalleryProjects(): GalleryProject[] {
   const stored = localStorage.getItem(GALLERY_STORAGE_KEY);
   if (!stored) return defaultGalleryProjects;
   try {
-    return JSON.parse(stored) as GalleryProject[];
+    const parsed = JSON.parse(stored) as GalleryProject[];
+    const normalized = parsed.map((item) => ({
+      ...item,
+      image: migrateLegacyAssetUrl(item.image),
+    }));
+    return normalized.map((item, index) => ({
+      ...item,
+      image: item.image || defaultGalleryProjects[index % defaultGalleryProjects.length].image,
+    }));
   } catch {
     return defaultGalleryProjects;
   }
@@ -297,7 +501,11 @@ export function getGalleryProjects(): GalleryProject[] {
 
 export function setGalleryProjects(projects: GalleryProject[]): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(projects));
+  const normalized = projects.map((item) => ({
+    ...item,
+    image: migrateLegacyAssetUrl(item.image),
+  }));
+  localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(normalized));
   window.dispatchEvent(new Event("galleryProjectsChanged"));
 }
 
@@ -307,70 +515,16 @@ export function resetGalleryProjects(): void {
   window.dispatchEvent(new Event("galleryProjectsChanged"));
 }
 
-const initialProducts: Product[] = [
-  // ======= BUKET SATIN (4 items @ Rp 20.000) =======
-  { id: "bs-01", name: "Buket Satin Style 1", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-01.jpg" },
-  { id: "bs-02", name: "Buket Satin Style 2", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-02.jpg", tag: "Populer" },
-  { id: "bs-03", name: "Buket Satin Style 3", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-03.jpg" },
-  { id: "bs-04", name: "Buket Satin Style 4", category: "buket-satin", price: 20000, priceLabel: "Rp 20.000", image: "/assets/buket-satin-rp20000-item-03.jpg" },
-
-  // ======= SNACK BOUQUET (2 items @ Rp 35.000) =======
-  { id: "sb-01", name: "Snack Bouquet Deluxe", category: "snack-bouquet", price: 35000, priceLabel: "Rp 35.000", image: "/assets/snack-bouquet-rp35000-item-01.jpg", tag: "Unik" },
-  { id: "sb-02", name: "Snack Bouquet Premium", category: "snack-bouquet", price: 35000, priceLabel: "Rp 35.000", image: "/assets/snack-bouquet-rp35000-item-01.jpg", tag: "Best Seller" },
-
-  // ======= MONEY BOUQUET (9 items @ Rp 50.000) =======
-  { id: "mb-01", name: "Money Bouquet Type 1", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-01.jpg" },
-  { id: "mb-02", name: "Money Bouquet Type 2", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-02.jpg" },
-  { id: "mb-03", name: "Money Bouquet Type 3", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-03.jpg" },
-  { id: "mb-04", name: "Money Bouquet Type 4", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-04.jpg", tag: "Favorit" },
-  { id: "mb-05", name: "Money Bouquet Type 5", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-05.png" },
-  { id: "mb-06", name: "Money Bouquet Type 6", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-06.jpg", tag: "🔥 Terlaris" },
-  { id: "mb-07", name: "Money Bouquet Type 7", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-07.png" },
-  { id: "mb-08", name: "Money Bouquet Type 8", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-08.jpg" },
-  { id: "mb-09", name: "Money Bouquet Type 9", category: "money-bouquet", price: 50000, priceLabel: "Rp 50.000", image: "/assets/money-bouquet-rp50000-item-09.png", tag: "Premium" },
-
-  // ======= CHOCOLATE BOUQUET (2 items @ Rp 20.000) =======
-  { id: "cb-01", name: "Chocolate Bouquet Classic", category: "chocolate-bouquet", price: 20000, priceLabel: "Rp 20.000", image: "/assets/chocolate-bouquet-rp20000-item-01.jpg" },
-  { id: "cb-02", name: "Chocolate Bouquet Premium", category: "chocolate-bouquet", price: 20000, priceLabel: "Rp 20.000", image: "/assets/chocolate-bouquet-rp20000-item-01.jpg", tag: "Best Seller" },
-
-  // ======= FRESH FLOWER (2 items @ Rp 30.000) =======
-  { id: "ff-01", name: "Fresh Flower Arrangement", category: "fresh-flower", price: 30000, priceLabel: "Rp 30.000", image: "/assets/fresh-flower-rp30000-item-01.jpg" },
-  { id: "ff-02", name: "Fresh Flower Premium", category: "fresh-flower", price: 30000, priceLabel: "Rp 30.000", image: "/assets/fresh-flower-rp30000-item-01.jpg", tag: "Populer" },
-
-  // ======= ARTIFICIAL FLOWER (1 item @ Rp 175.000) =======
-  { id: "af-01", name: "Artificial Flower Premium", category: "artificial-flower", price: 175000, priceLabel: "Rp 175.000", image: "/assets/artificial-flower-rp175000-item-01.jpg", tag: "Eksklusif" },
-
-  // ======= CATALOG-HOME / PREMIUM PACKAGES (11 items @ Rp 150.000) =======
-  { id: "ch-01", name: "Premium Package 1", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-02.jpg" },
-  { id: "ch-02", name: "Premium Package 2", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-02.jpg", tag: "Populer" },
-  { id: "ch-03", name: "Premium Package 3", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-04.png" },
-  { id: "ch-04", name: "Premium Package 4", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-04.png" },
-  { id: "ch-05", name: "Premium Package 5", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-05.jpg" },
-  { id: "ch-06", name: "Premium Package 6", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-06.jpg", tag: "Best Seller" },
-  { id: "ch-07", name: "Premium Package 7", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-07.jpg" },
-  { id: "ch-08", name: "Premium Package 8", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-08.jpg" },
-  { id: "ch-09", name: "Premium Package 9", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-09.jpg" },
-  { id: "ch-10", name: "Premium Package 10", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-10.jpg" },
-  { id: "ch-11", name: "Premium Package 11", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/catalog-home-rp150000-item-11.jpg", tag: "👑 Premium" },
-
-  // ======= AY BUKET — CURATED PREMIUM COLLECTION (11 items) =======
-  { id: "ay-accessories-1", name: "Akrilik Frame Mini", category: "accessories", price: 95000, priceLabel: "Rp 95.000", image: "/assets/Akrilik frame mini - Rp 95.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan (10).png", tag: "Favorit Kami" },
-  { id: "ay-accessories-2", name: "Sewa Per Jam Standing Akrilik Bulat", category: "accessories", price: 40000, priceLabel: "Rp 40.000", image: "/assets/Sewa Standing Akrilik bulat (PROMO) - sewa 3 jam Rp 40.000 - sewa 12 jam Rp 50.000 - sewa 24jam Rp 75.000 - bisa untuk segala acara Ready set (2).png", tag: "Favorit Kami" },
-  { id: "ay-buckets-3", name: "Bucket Aesthetic", category: "buckets", price: 100000, priceLabel: "Rp 100.000", image: "/assets/Round Pita Satin - Rp 100.000,00 (2).png", tag: "Favorit Kami" },
-  { id: "ay-buckets-4", name: "Bucket Bunga Gradoll (Graduation Doll) Big Mesh", category: "buckets", price: 170000, priceLabel: "Rp 170.000", image: "/assets/Buket Bunga Gradoll (Graduation Doll) Big Mesh - Rp 170.000,00 - bunga palsu mix isian tidak bisa sama persis, ukuran & jumlah bu (2).png" },
-  { id: "ay-fresh-flower-5", name: "Bunga Mawar Palsu", category: "fresh-flower", price: 250000, priceLabel: "Rp 250.000", image: "/assets/Bunga Mawar Palsu Premium (ukuran Big) - Rp 250.000,00 (2).png" },
-  { id: "ay-fresh-flower-6", name: "Bunga White Sedap", category: "fresh-flower", price: 125000, priceLabel: "Rp 125.000", image: "/assets/bunga white sedap - Rp 125.000,00 - 125ribu hanya bunga asli saja (10tangkai sedap malam & 10tangkai asteria) (2).png" },
-  { id: "ay-catalog-home-7", name: "Frame Birthday Edelweis", category: "catalog-home", price: 150000, priceLabel: "Rp 150.000", image: "/assets/Frame Birthday Edelweis - Rp 150.000,00 - frame ukuran 25cm x 35cm - bisa request tulisan + 2 foto - bunga edelweis mini (2).png" },
-  { id: "ay-catalog-home-8", name: "Mawar Candy (Bunga Asli)", category: "catalog-home", price: 170000, priceLabel: "Rp 170.000", image: "/assets/Mawar Candy (Bunga Asli) - Rp 170.000,00 (2).png" },
-  { id: "ay-wreaths-9", name: "Karangan Bunga", category: "wreaths", price: 500000, priceLabel: "Rp 500.000", image: "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.000,00 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala (2).png" },
-  { id: "ay-packaging-10", name: "Packing Luxury Elegant", category: "packaging", price: 25000, priceLabel: "Rp 25.000", image: "/assets/packing luxury elegant - Rp 25.000,00 - packing box + kertas + pita organza (2).png" },
-  { id: "ay-ribbons-11", name: "Selempang Wisuda 3 Titik", category: "ribbons", price: 95000, priceLabel: "Rp 95.000", image: "/assets/Selempang Wisuda 3 Titik - Rp 95.000,00 (2).png" },
-];
+const initialProducts: Product[] = generatedInitialProducts as any;
 
 export const defaultProducts: Product[] = initialProducts.map((p) => ({
   ...p,
-  images: p.image ? [p.image] : [],
-}));
+  image: migrateLegacyAssetUrl(p.image),
+  images: Array.from(new Set([
+    ...(Array.isArray((p as any).images) ? (p as any).images : []),
+    p.image,
+  ].filter(Boolean).map((item) => migrateLegacyAssetUrl(item as string)))),
+})).map((product) => enrichProductWithMatchedAssets(product));
 
 export function getProducts(): Product[] {
   try {
@@ -378,20 +532,23 @@ export function getProducts(): Product[] {
     if (stored) {
       const parsed: any[] = JSON.parse(stored);
       const normalized = normalizeStoredProducts(parsed);
-      const migrated = JSON.stringify(parsed) !== JSON.stringify(normalized);
+      const merged = enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalized));
+      const migrated = JSON.stringify(parsed) !== JSON.stringify(merged);
       if (migrated) {
         try {
-          localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(normalized));
+          localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(merged));
         } catch { }
       }
-      return normalized as Product[];
+      return merged as Product[];
     }
   } catch { }
-  return defaultProducts;
+  return mergeProductsByNameAndPrice(defaultProducts);
 }
 
 export function saveProducts(prods: Product[]) {
-  localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(prods));
+  const normalized = normalizeStoredProducts(prods as any[]);
+  const merged = enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalized));
+  localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(merged));
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
@@ -421,7 +578,7 @@ export function getWhatsAppLink(customMessage?: string): string {
 }
 
 // ---- Video Gallery ----
-const VIDEOS_STORAGE_KEY = "elbouquet_videos_v1";
+const VIDEOS_STORAGE_KEY = "aybucket_videos_v1";
 
 export type VideoSource = "youtube" | "instagram" | "tiktok" | "file";
 export type VideoOrientation = "vertical" | "horizontal" | "square";
@@ -467,7 +624,7 @@ export const defaultVideos: VideoItem[] = [
     url: "https://www.youtube.com/watch?v=AKEXXIh-244",
     source: "youtube",
     orientation: "horizontal",
-    caption: "Behind the Scenes — Proses merangkai buket premium El Bouquet 🌸",
+    caption: "Behind the Scenes — Proses merangkai buket premium Ay Bucket 🌸",
     featured: true,
   },
   {

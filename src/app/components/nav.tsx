@@ -9,6 +9,7 @@ export function Nav() {
   const [, setTick] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [language, setLanguage] = useLanguage();
+  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     const handler = () => setTick((t) => t + 1);
@@ -52,6 +53,8 @@ export function Nav() {
   }, [menuOpen]);
 
   const config = getSiteConfig();
+  const hasLogo = Boolean((config.brandLogoUrl || BRAND_LOGO.logo)) && !logoFailed;
+  const brandDisplayName = "Ay Bucket & Gift";
 
   return (
     <>
@@ -65,12 +68,14 @@ export function Nav() {
           padding: "20px clamp(16px, 6vw, 120px)",
           fontFamily: "'Inter', sans-serif",
           backdropFilter: "blur(12px)",
-          backgroundColor: "rgba(249, 249, 247, 0.85)",
+          background: "linear-gradient(180deg, rgba(249,249,247,0.92) 0%, rgba(249,249,247,0.82) 100%)",
+          borderBottom: "1px solid rgba(184,92,59,0.18)",
+          boxShadow: "0 10px 26px rgba(0,0,0,0.06)",
         }}
       >
         <Link
           to="/"
-          aria-label={language === "id" ? "Beranda El Bouquet" : "El Bouquet home"}
+          aria-label={language === "id" ? "Beranda Ay Bucket & Gift" : "Ay Bucket & Gift home"}
           style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: "clamp(18px, 3vw, 22px)",
@@ -84,16 +89,60 @@ export function Nav() {
             zIndex: 60,
           }}
         >
-          {BRAND_LOGO.logo ? (
+          {hasLogo ? (
             <img
-              src={BRAND_LOGO.logo}
+              src={config.brandLogoUrl || BRAND_LOGO.logo}
               alt={`${config.businessName} logo`}
-              style={{ width: "44px", height: "44px", objectFit: "cover", borderRadius: "8px" }}
+              onError={() => setLogoFailed(true)}
+              style={{ width: "44px", height: "44px", objectFit: "contain", borderRadius: "12px", mixBlendMode: "multiply", backgroundColor: "transparent" }}
             />
           ) : (
-            <span style={{ fontSize: "clamp(20px, 3vw, 24px)" }}>🌸</span>
+            <span
+              aria-hidden
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "14px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "linear-gradient(135deg, rgba(184,92,59,0.14), rgba(26,26,26,0.04))",
+                border: "1px solid rgba(0,0,0,0.08)",
+                color: "#b85c3b",
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "18px",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+              }}
+            >
+              ay
+            </span>
           )}
-          <span style={{ marginLeft: 8 }}>{config.businessName}</span>
+          <span style={{ display: "flex", flexDirection: "column", marginLeft: 8, lineHeight: 1 }}>
+            <span
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "clamp(22px, 3vw, 28px)",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                textTransform: "none",
+              }}
+            >
+              {brandDisplayName}
+            </span>
+            <span
+              style={{
+                marginTop: "2px",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "9px",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "#8a6a52",
+              }}
+            >
+              {config.address || BRAND_LOGO.location || "Floral Portfolio"}
+            </span>
+          </span>
         </Link>
 
         <div
@@ -112,9 +161,12 @@ export function Nav() {
                 fontWeight: 400,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: location.pathname === link.to ? "#1a1a1a" : "#999",
-                transition: "color 0.4s ease",
+                color: location.pathname === link.to ? "#1a1a1a" : "#777",
+                transition: "all 0.4s ease",
                 textDecoration: "none",
+                padding: "6px 10px",
+                borderRadius: "999px",
+                backgroundColor: location.pathname === link.to ? "rgba(184,92,59,0.14)" : "transparent",
               }}
             >
               {getNavLabel(link.to)}

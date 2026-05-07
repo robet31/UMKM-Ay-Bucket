@@ -13,6 +13,7 @@ import {
   saveProducts,
   resetProducts,
   defaultProducts,
+  mergeProductsByNameAndPrice,
   categories,
   getVideos,
   saveVideos,
@@ -82,14 +83,14 @@ type Tab = "general" | "products" | "navbar" | "footer" | "hero" | "videos" | "g
 
 export function Admin() {
   const [config, setConfig] = useState<SiteConfig>(getSiteConfig());
-  const [products, setProductsList] = useState<Product[]>(getProducts());
+  const [products, setProductsList] = useState<Product[]>(() => mergeProductsByNameAndPrice(getProducts()));
   const [videos, setVideosList] = useState<VideoItem[]>(getVideos());
   const [galleryProjects, setGalleryProjectsList] = useState<GalleryProject[]>(getGalleryProjects());
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saved, setSaved] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
-  const [authed, setAuthed] = useState<boolean>(sessionStorage.getItem("elbouquet_admin_authed") === "1");
+  const [authed, setAuthed] = useState<boolean>(sessionStorage.getItem("aybucket_admin_authed") === "1");
   const [usernameInput, setUsernameInput] = useState("admin");
   const [passwordInput, setPasswordInput] = useState("");
 
@@ -103,8 +104,36 @@ export function Admin() {
     showSaved();
   };
 
+  const uploadBrandLogo = (file: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran gambar maksimal 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setConfig((prev) => ({ ...prev, brandLogoUrl: String(reader.result || "") }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadHeroImage = (file: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran gambar maksimal 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setConfig((prev) => ({ ...prev, heroFallbackImage: String(reader.result || "") }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveProducts = () => {
-    saveProducts(products);
+    const merged = mergeProductsByNameAndPrice(products);
+    setProductsList(merged);
+    saveProducts(merged);
     showSaved();
   };
 
@@ -125,7 +154,7 @@ export function Admin() {
       resetVideos();
       resetGalleryProjects();
       setConfig(getSiteConfig());
-      setProductsList(defaultProducts);
+      setProductsList(mergeProductsByNameAndPrice(defaultProducts));
       setVideosList(defaultVideos);
       setGalleryProjectsList(defaultGalleryProjects);
       showSaved();
@@ -149,13 +178,13 @@ export function Admin() {
   }, []);
 
   const handleDeleteProduct = (id: string) => {
-    const updated = products.filter((p) => p.id !== id);
+    const updated = mergeProductsByNameAndPrice(products.filter((p) => p.id !== id));
     setProductsList(updated);
     saveProducts(updated);
   };
 
   const handleUpdateProduct = (updated: Product) => {
-    const newList = products.map((p) => (p.id === updated.id ? updated : p));
+    const newList = mergeProductsByNameAndPrice(products.map((p) => (p.id === updated.id ? updated : p)));
     setProductsList(newList);
     setEditingProduct(null);
   };
@@ -264,7 +293,7 @@ export function Admin() {
                 const cfg = getSiteConfig();
                 const username = cfg.adminUsername || 'admin';
                 const pass = cfg.adminPassword || 'admin123';
-                if (usernameInput === username && passwordInput === pass) { sessionStorage.setItem('elbouquet_admin_authed', '1'); setAuthed(true); }
+                if (usernameInput === username && passwordInput === pass) { sessionStorage.setItem('aybucket_admin_authed', '1'); setAuthed(true); }
                 else alert('Password salah');
               }} style={btnStyle}>Masuk</button>
             </div>
@@ -389,6 +418,26 @@ export function Admin() {
               <FieldInput label="Tagline" value={config.tagline} onChange={(v) => setConfig({ ...config, tagline: v })} />
               <FieldInput label="Tahun" value={config.year} onChange={(v) => setConfig({ ...config, year: v })} />
               <FieldInput label="Alamat" value={config.address} onChange={(v) => setConfig({ ...config, address: v })} />
+              <FieldInput label="Brand Logo URL" value={config.brandLogoUrl || ""} onChange={(v) => setConfig({ ...config, brandLogoUrl: v })} />
+              <div style={{ marginBottom: "16px" }}>
+                <label style={labelStyle}>Upload Brand Logo</label>
+                <label style={{ ...btnOutlineStyle, padding: "8px 12px", cursor: "pointer", display: "inline-block" }}>
+                  Pilih Logo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => uploadBrandLogo(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+              {config.brandLogoUrl ? (
+                <img
+                  src={config.brandLogoUrl}
+                  alt="Brand logo preview"
+                  style={{ width: "160px", height: "160px", objectFit: "contain", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "16px", background: "#fff", padding: "8px" }}
+                />
+              ) : null}
             </div>
             <div style={sectionStyle}>
               <FieldInput label="Nomor WhatsApp (format: 628xxx)" value={config.whatsappNumber} onChange={(v) => setConfig({ ...config, whatsappNumber: v })} />
@@ -413,68 +462,39 @@ export function Admin() {
               <FieldTextarea label="Judul Hero (gunakan Enter untuk baris baru)" value={config.heroTitle} onChange={(v) => setConfig({ ...config, heroTitle: v })} />
               <FieldTextarea label="Subtitle Hero" value={config.heroSubtitle} onChange={(v) => setConfig({ ...config, heroSubtitle: v })} />
               <FieldInput label="Hero Fallback Image URL" value={config.heroFallbackImage || ""} onChange={(v) => setConfig({ ...config, heroFallbackImage: v })} />
+              <div style={{ marginBottom: "16px" }}>
+                <label style={labelStyle}>Upload Hero Image</label>
+                <label style={{ ...btnOutlineStyle, padding: "8px 12px", cursor: "pointer", display: "inline-block" }}>
+                  Pilih Gambar
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => uploadHeroImage(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+              {config.heroFallbackImage ? (
+                <img
+                  src={config.heroFallbackImage}
+                  alt="Hero preview"
+                  style={{ width: "100%", maxWidth: "340px", height: "200px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.08)" }}
+                />
+              ) : null}
             </div>
             <button onClick={handleSaveConfig} style={btnStyle}>Simpan Hero</button>
           </div>
         )}
 
         {activeTab === "gallery" && (
-          <div>
-            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "#1a1a1a" }}>
-                Asset Gambar Galeri ({galleryProjects.length})
-              </h2>
-              <div className="flex gap-2 flex-wrap">
-                <button onClick={handleAddGalleryProject} style={btnStyle}>+ Tambah Item</button>
-                <button onClick={handleSaveGallery} style={{ ...btnStyle, backgroundColor: "#25D366", borderColor: "#25D366" }}>💾 Simpan Galeri</button>
-              </div>
-            </div>
-
-            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "16px", lineHeight: 1.7 }}>
-              Gambar di tab ini dipakai oleh halaman Studio/Galeri. Kamu bisa ubah judul, kategori, rasio, dan gambar (URL atau upload file).
-            </p>
-
-            <div style={{ display: "grid", gap: "14px" }}>
-              {galleryProjects.map((item) => (
-                <div key={item.id} style={{ border: "1px solid rgba(0,0,0,0.08)", background: "#fff", padding: "14px" }}>
-                  <div style={{ display: "grid", gap: "10px" }}>
-                    <FieldInput label="Judul" value={item.title} onChange={(v) => updateGalleryProject(item.id, { title: v })} />
-                    <FieldInput label="Kategori" value={item.category} onChange={(v) => updateGalleryProject(item.id, { category: v })} />
-                    <div>
-                      <label style={labelStyle}>Rasio</label>
-                      <select
-                        style={inputStyle}
-                        value={item.aspect}
-                        onChange={(e) => updateGalleryProject(item.id, { aspect: e.target.value as GalleryProject["aspect"] })}
-                      >
-                        <option value="3/4">3 / 4</option>
-                        <option value="1/1">1 / 1</option>
-                        <option value="16/9">16 / 9</option>
-                      </select>
-                    </div>
-                    <FieldInput label="URL Gambar" value={item.image} onChange={(v) => updateGalleryProject(item.id, { image: v })} />
-                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                      <label style={{ ...btnOutlineStyle, padding: "8px 12px", cursor: "pointer" }}>
-                        Upload Gambar
-                        <input
-                          type="file"
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          onChange={(e) => uploadGalleryImage(item.id, e.target.files?.[0] || null)}
-                        />
-                      </label>
-                      <button onClick={() => removeGalleryProject(item.id)} style={{ ...btnOutlineStyle, borderColor: "#d44", color: "#d44", padding: "8px 12px" }}>
-                        Hapus
-                      </button>
-                    </div>
-                    {item.image ? (
-                      <img src={item.image} alt={item.title} style={{ width: "100%", maxWidth: "280px", height: "160px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.06)" }} />
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <GalleryManager 
+            items={galleryProjects}
+            onUpdate={setGalleryProjectsList}
+            onSave={handleSaveGallery}
+            onAddItem={handleAddGalleryProject}
+            onRemoveItem={removeGalleryProject}
+            onUploadImage={uploadGalleryImage}
+          />
         )}
 
         {activeTab === "navbar" && (
@@ -591,6 +611,10 @@ export function Admin() {
                 </button>
               </div>
             </div>
+
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "14px", lineHeight: 1.7 }}>
+              Gambar pertama pada daftar produk adalah gambar utama (cover) di katalog. Buka <strong>Edit</strong> lalu klik ● pada thumbnail untuk memilih cover produk.
+            </p>
 
             {/* Edit Modal */}
             <AnimatePresence>
@@ -843,6 +867,241 @@ function FieldTextarea({ label, value, onChange }: { label: string; value: strin
   );
 }
 
+// GalleryManager component dengan drag-and-drop
+interface GalleryManagerProps {
+  items: GalleryProject[];
+  onUpdate: (items: GalleryProject[]) => void;
+  onSave: () => void;
+  onAddItem: () => void;
+  onRemoveItem: (id: string) => void;
+  onUploadImage: (id: string, file: File | null) => void;
+}
+
+function GalleryManager({
+  items,
+  onUpdate,
+  onSave,
+  onAddItem,
+  onRemoveItem,
+  onUploadImage,
+}: GalleryManagerProps) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<GalleryProject | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer!.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
+
+    const draggedIndex = items.findIndex((i) => i.id === draggedId);
+    const targetIndex = items.findIndex((i) => i.id === targetId);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      const newItems = [...items];
+      [newItems[draggedIndex], newItems[targetIndex]] = [
+        newItems[targetIndex],
+        newItems[draggedIndex],
+      ];
+      onUpdate(newItems);
+    }
+
+    setDraggedId(null);
+  };
+
+  const handleFieldChange = (id: string, field: string, value: any) => {
+    const newItems = items.map((item) =>
+      item.id === id ? { ...item, [field]: value } : item
+    );
+    onUpdate(newItems);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "#1a1a1a" }}>
+          Asset Gambar Galeri ({items.length})
+        </h2>
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={onAddItem} style={btnStyle}>+ Tambah Item</button>
+          <button onClick={onSave} style={{ ...btnStyle, backgroundColor: "#25D366", borderColor: "#25D366" }}>💾 Simpan Galeri</button>
+        </div>
+      </div>
+
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "16px", lineHeight: 1.7 }}>
+        Gambar di tab ini dipakai oleh halaman Studio/Galeri. Kamu bisa geser-geser untuk mengubah urutan. Setiap item bisa diubah judul, kategori, rasio, dan gambar (URL atau upload file).
+      </p>
+
+      <div style={{ display: "grid", gap: "14px" }}>
+        {items.map((item, idx) => (
+          <div
+            key={item.id}
+            draggable
+            onDragStart={(e) => handleDragStart(e, item.id)}
+            onDragOver={(e) => handleDragOver(e)}
+            onDrop={(e) => handleDrop(e, item.id)}
+            onDragEnd={() => setDraggedId(null)}
+            style={{
+              border: draggedId === item.id ? "2px solid #4a5568" : "1px solid rgba(0,0,0,0.08)",
+              background: draggedId === item.id ? "#f7fafc" : "#fff",
+              padding: "14px",
+              cursor: "grab",
+              opacity: draggedId === item.id ? 0.7 : 1,
+              transition: "all 0.2s",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", fontWeight: 500, color: "#888" }}>
+                #{idx + 1} • 🔀 Geser untuk mengurutkan
+              </span>
+            </div>
+            <div style={{ display: "grid", gap: "10px" }}>
+              <FieldInput label="Judul" value={item.title} onChange={(v) => handleFieldChange(item.id, "title", v)} />
+              <FieldInput label="Kategori" value={item.category} onChange={(v) => handleFieldChange(item.id, "category", v)} />
+              <div>
+                <label style={labelStyle}>Rasio</label>
+                <select
+                  style={inputStyle}
+                  value={item.aspect}
+                  onChange={(e) => handleFieldChange(item.id, "aspect", e.target.value as any)}
+                >
+                  <option value="3/4">3 / 4</option>
+                  <option value="1/1">1 / 1</option>
+                  <option value="16/9">16 / 9</option>
+                </select>
+              </div>
+              <FieldInput label="URL Gambar" value={item.image} onChange={(v) => handleFieldChange(item.id, "image", v)} />
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                <label style={{ ...btnOutlineStyle, padding: "8px 12px", cursor: "pointer" }}>
+                  Upload Gambar
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => onUploadImage(item.id, e.target.files?.[0] || null)}
+                  />
+                </label>
+                <button onClick={() => onRemoveItem(item.id)} style={{ ...btnOutlineStyle, borderColor: "#d44", color: "#d44", padding: "8px 12px" }}>
+                  Hapus
+                </button>
+              </div>
+              {item.image ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedItem(item);
+                  }}
+                  style={{
+                    padding: 0,
+                    border: "none",
+                    background: "transparent",
+                    textAlign: "left",
+                    cursor: "zoom-in",
+                  }}
+                  title="Klik untuk melihat detail gambar"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    style={{ width: "100%", maxWidth: "280px", height: "160px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.06)" }}
+                  />
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => setSelectedItem(item)}
+                style={{ ...btnOutlineStyle, padding: "8px 12px", width: "fit-content" }}
+              >
+                👁️ Lihat Detail
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 10020,
+              background: "rgba(0,0,0,0.72)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 20,
+            }}
+            onClick={() => setSelectedItem(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.96, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#fff",
+                maxWidth: 920,
+                width: "100%",
+                maxHeight: "90vh",
+                overflow: "auto",
+                padding: 20,
+                boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, margin: 0, color: "#1a1a1a" }}>
+                    {selectedItem.title}
+                  </h3>
+                  <p style={{ margin: "6px 0 0", color: "#777", fontFamily: "'Inter', sans-serif", fontSize: 12 }}>
+                    {selectedItem.category} • rasio {selectedItem.aspect}
+                  </p>
+                </div>
+                <button onClick={() => setSelectedItem(null)} style={{ ...btnOutlineStyle, padding: "8px 12px" }}>
+                  Tutup
+                </button>
+              </div>
+
+              {selectedItem.image ? (
+                <img
+                  src={selectedItem.image}
+                  alt={selectedItem.title}
+                  style={{ width: "100%", maxHeight: 520, objectFit: "contain", background: "#f7f7f7", border: "1px solid rgba(0,0,0,0.08)" }}
+                />
+              ) : null}
+
+              <div style={{ marginTop: 16, display: "grid", gap: 8, color: "#333", fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
+                <div><strong>ID:</strong> {selectedItem.id}</div>
+                <div><strong>Judul:</strong> {selectedItem.title}</div>
+                <div><strong>Kategori:</strong> {selectedItem.category}</div>
+                <div><strong>Rasio:</strong> {selectedItem.aspect}</div>
+                <div><strong>URL:</strong> {selectedItem.image}</div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave: (p: Product) => void; onCancel: () => void }) {
   // support multiple images per product
   const initial: Product = {
@@ -851,6 +1110,8 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
   };
   const [form, setForm] = useState<Product>(initial);
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
+  const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<HTMLInputElement>(null);
 
@@ -901,6 +1162,14 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
     const imgs = [...(form.images || [])];
     const primary = imgs.splice(idx, 1)[0];
     imgs.unshift(primary);
+    setForm({ ...form, images: imgs });
+  };
+
+  const reorderImages = (fromIdx: number, toIdx: number) => {
+    const imgs = [...(form.images || [])];
+    if (fromIdx === toIdx) return;
+    const [movedImg] = imgs.splice(fromIdx, 1);
+    imgs.splice(toIdx, 0, movedImg);
     setForm({ ...form, images: imgs });
   };
 
@@ -962,14 +1231,47 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
         {/* Images manager */}
         <div style={{ marginBottom: "16px" }}>
-          <label style={labelStyle}>Gambar Produk (multiple)</label>
+          <label style={labelStyle}>Gambar Produk (geser untuk mengurutkan)</label>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             {(form.images || []).map((src, i) => (
-              <div key={i} style={{ width: 96, height: 96, position: 'relative', borderRadius: 8, overflow: 'hidden', border: i === 0 ? '2px solid #1a1a1a' : '1px solid rgba(0,0,0,0.06)' }}>
+              <div
+                key={`${src}-${i}`}
+                draggable
+                onDragStart={() => setDraggedImageIndex(i)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.opacity = "0.6";
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.style.opacity = "1";
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.style.opacity = "1";
+                  if (draggedImageIndex !== null && draggedImageIndex !== i) {
+                    reorderImages(draggedImageIndex, i);
+                  }
+                  setDraggedImageIndex(null);
+                }}
+                onDragEnd={() => setDraggedImageIndex(null)}
+                onClick={() => setSelectedImageIndex(i)}
+                title="Klik untuk lihat detail gambar"
+                style={{
+                  width: 96,
+                  height: 96,
+                  position: 'relative',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  border: i === 0 ? '2px solid #1a1a1a' : '1px solid rgba(0,0,0,0.06)',
+                  cursor: 'zoom-in',
+                  opacity: draggedImageIndex === i ? 0.5 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
                 <img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`img-${i}`} />
                 <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 6 }}>
-                  <button type="button" onClick={() => setPrimary(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff' }} title="Set primary">●</button>
-                  <button type="button" onClick={() => removeImageAt(i)} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: '#d44', color: '#fff' }} title="Hapus">✕</button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setPrimary(i); }} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff' }} title="Set primary">●</button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); removeImageAt(i); }} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: '#d44', color: '#fff' }} title="Hapus">✕</button>
                 </div>
               </div>
             ))}
@@ -981,8 +1283,71 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
             <input ref={urlRef} placeholder="Tambah URL gambar" style={{ ...inputStyle, flex: 1, minWidth: isMobile ? '100%' : '200px' }} />
             <button type="button" onClick={() => addImageUrl(urlRef.current?.value || '')} style={{ ...btnStyle, padding: '10px 12px', width: isMobile ? '100%' : undefined }}>+ Add</button>
           </div>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: "#bbb", marginTop: "8px" }}>Urutan gambar menentukan gambar utama (pertama). Klik ● pada thumbnail untuk set primary.</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: "#bbb", marginTop: "8px" }}>Urutan gambar menentukan gambar utama (pertama). Klik thumbnail untuk lihat detail, klik ● untuk set primary, atau geser gambar untuk mengubah urutan.</p>
         </div>
+
+        <AnimatePresence>
+          {selectedImageIndex !== null && form.images?.[selectedImageIndex] && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 10020,
+                background: "rgba(0,0,0,0.72)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 20,
+              }}
+              onClick={() => setSelectedImageIndex(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.96, y: 10 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.96, y: 10 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "#fff",
+                  maxWidth: 920,
+                  width: "100%",
+                  maxHeight: "90vh",
+                  overflow: "auto",
+                  padding: 20,
+                  boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 16 }}>
+                  <div>
+                    <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, margin: 0, color: "#1a1a1a" }}>
+                      Detail Gambar {selectedImageIndex + 1}
+                    </h3>
+                    <p style={{ margin: "6px 0 0", color: "#777", fontFamily: "'Inter', sans-serif", fontSize: 12 }}>
+                      Produk: {form.name}
+                    </p>
+                  </div>
+                  <button onClick={() => setSelectedImageIndex(null)} style={{ ...btnOutlineStyle, padding: "8px 12px" }}>
+                    Tutup
+                  </button>
+                </div>
+
+                <img
+                  src={form.images[selectedImageIndex]}
+                  alt={`detail-${selectedImageIndex}`}
+                  style={{ width: "100%", maxHeight: 560, objectFit: "contain", background: "#f7f7f7", border: "1px solid rgba(0,0,0,0.08)" }}
+                />
+
+                <div style={{ marginTop: 16, display: "grid", gap: 8, color: "#333", fontFamily: "'Inter', sans-serif", fontSize: 13 }}>
+                  <div><strong>Index:</strong> {selectedImageIndex}</div>
+                  <div><strong>Utama:</strong> {selectedImageIndex === 0 ? "Ya" : "Tidak"}</div>
+                  <div><strong>URL/Sumber:</strong> {form.images[selectedImageIndex]}</div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <FieldInput label="Tag (opsional)" value={form.tag || ""} onChange={(v) => setForm({ ...form, tag: v || undefined })} />
         <FieldInput label="Varian (opsional)" value={form.variant || ""} onChange={(v) => setForm({ ...form, variant: v || undefined })} />

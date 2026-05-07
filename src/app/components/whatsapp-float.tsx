@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { getWhatsAppLink, businessInfo } from "../data";
+import { useLanguage } from "../language";
 
 export function WhatsAppFloat() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [pulse, setPulse] = useState(true);
+  const [language] = useLanguage();
+  const defaultMessage = language === "id" ? "Halo Ay Bucket! Saya mau pesan bunga 🌸" : "Hello Ay Bucket! I'd like to order flowers 🌸";
 
   return (
     <div
@@ -44,7 +47,7 @@ export function WhatsAppFloat() {
                 marginBottom: "4px",
               }}
             >
-              Halo! 👋
+              {language === "id" ? "Halo! 👋" : "Hello! 👋"}
             </p>
             <p
               style={{
@@ -55,10 +58,10 @@ export function WhatsAppFloat() {
                 marginBottom: "12px",
               }}
             >
-              Ada yang bisa kami bantu? Chat langsung via WhatsApp untuk pemesanan bunga.
+              {language === "id" ? "Ada yang bisa kami bantu? Chat langsung via WhatsApp untuk pemesanan bunga." : "How can we help? Chat directly via WhatsApp to place your flower order."}
             </p>
             <a
-              href={getWhatsAppLink("Halo El Bouquet! Saya mau pesan bunga 🌸")}
+              href={getWhatsAppLink(defaultMessage)}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -75,7 +78,7 @@ export function WhatsAppFloat() {
               }}
               className="whatsapp-btn-hover"
             >
-              Chat Sekarang
+              {language === "id" ? "Chat Sekarang" : "Chat Now"}
             </a>
             <p
               style={{
@@ -92,11 +95,11 @@ export function WhatsAppFloat() {
       </AnimatePresence>
 
       <motion.a
-        href={getWhatsAppLink("Halo El Bouquet! Saya mau pesan bunga 🌸")}
+        href={getWhatsAppLink(defaultMessage)}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Chat with El Bouquet on WhatsApp"
-        title="Chat with El Bouquet on WhatsApp"
+        aria-label={language === "id" ? "Chat dengan Ay Bucket di WhatsApp" : "Chat with Ay Bucket on WhatsApp"}
+        title={language === "id" ? "Chat dengan Ay Bucket di WhatsApp" : "Chat with Ay Bucket on WhatsApp"}
         onMouseEnter={() => { setShowTooltip(true); setPulse(false); }}
         onMouseLeave={() => setShowTooltip(false)}
         whileHover={{ scale: 1.1 }}

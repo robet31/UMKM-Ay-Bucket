@@ -199,6 +199,9 @@ function CategoryProductCard({ product }: { product: typeof products[0] }) {
             alt={product.name}
             className="h-full w-full transition-transform duration-[1.2s] ease-out group-hover:scale-105"
             style={{ objectFit: "cover" }}
+            onError={(e) => {
+              e.currentTarget.src = `https://placehold.co/800x1000/ebebe9/1a1a1a?text=${encodeURIComponent(product.name)}`;
+            }}
           />
         </div>
         <div

@@ -1,0 +1,332 @@
+[
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Akrilik"
+    },
+    "created": "2026-05-03",
+    "description": "Aksesori dekorasi berkualitas tinggi untuk melengkapi rangkaian bunga Anda. Harga: Rp 95.000",
+    "likes": 0,
+    "id": "ay-product-1",
+    "isStarred": true,
+    "images": [
+      {
+        "url": "/assets/Akrilik frame mini - Rp 95.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan (10).png",
+        "caption": "Akrilik Frame Mini   Rp 95.000,00   Akrilik Dome Ukuran A5 Standing Lampu Warna Putih, Bisa Request Warna, Foto & Tulisan - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "accessories",
+        "name": "Akrilik frame mini",
+        "count": 1
+      }
+    ],
+    "source": "Akrilik frame mini",
+    "price": "Rp 95K",
+    "tags": [
+      "accessories",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Sewa"
+    },
+    "created": "2026-05-03",
+    "description": "Aksesori dekorasi berkualitas tinggi untuk melengkapi rangkaian bunga Anda. Harga: Rp 40.000",
+    "likes": 0,
+    "id": "ay-product-2",
+    "isStarred": true,
+    "images": [
+      {
+        "url": "/assets/Sewa Standing Akrilik bulat (PROMO) - sewa 3 jam Rp 40.000 - sewa 12 jam Rp 50.000 - sewa 24jam Rp 75.000 - bisa untuk segala acara Ready set (2).png",
+        "caption": "Sewa Standing Akrilik Bulat (PROMO)   Sewa 3 Jam Rp 40.000   Sewa 12 Jam Rp 50.000   Sewa 24jam Rp 75.000   Bisa Untuk Segala Acara Ready Set - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "accessories",
+        "name": "Sewa Per Jam Standing Akrilik Bulat",
+        "count": 1
+      }
+    ],
+    "source": "Sewa Per Jam Standing Akrilik Bulat",
+    "price": "Rp 40K",
+    "tags": [
+      "accessories",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Bucket"
+    },
+    "created": "2026-05-03",
+    "description": "Buket bunga premium dengan wadah berkualitas. Rangkaian indah untuk hadiah istimewa. Harga: Rp 100.000",
+    "likes": 0,
+    "id": "ay-product-3",
+    "isStarred": true,
+    "images": [
+      {
+        "url": "/assets/Round Pita Satin - Rp 100.000,00 (2).png",
+        "caption": "Round Pita Satin   Rp 100.000,00 - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "buckets",
+        "name": "Bucket Aesthetic",
+        "count": 1
+      }
+    ],
+    "source": "Bucket Aesthetic",
+    "price": "Rp 100K",
+    "tags": [
+      "buckets",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Bucket"
+    },
+    "created": "2026-05-03",
+    "description": "Buket bunga premium dengan wadah berkualitas. Rangkaian indah untuk hadiah istimewa. Harga: Rp 170.000",
+    "likes": 0,
+    "id": "ay-product-4",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/Buket Bunga Gradoll (Graduation Doll) Big Mesh - Rp 170.000,00 - bunga palsu mix isian tidak bisa sama persis, ukuran & jumlah bu (2).png",
+        "caption": "Buket Bunga Gradoll (Graduation Doll) Big Mesh   Rp 170.000,00   Bunga Palsu Mix Isian Tidak Bisa Sama Persis, Ukuran & Jumlah Bu - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "buckets",
+        "name": "Bucket Bunga Gradoll (Graduation Doll) Big Mesh",
+        "count": 1
+      }
+    ],
+    "source": "Bucket Bunga Gradoll (Graduation Doll) Big Mesh",
+    "price": "Rp 170K",
+    "tags": [
+      "buckets",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Bunga"
+    },
+    "created": "2026-05-03",
+    "description": "Rangkaian bunga segar pilihan terbaik. Kesegaran alami untuk momen spesial. Harga: Rp 250.000",
+    "likes": 0,
+    "id": "ay-product-5",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/Bunga Mawar Palsu Premium (ukuran Big) - Rp 250.000,00 (2).png",
+        "caption": "Bunga Mawar Palsu Premium (Ukuran Big)   Rp 250.000,00 - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "fresh-flower",
+        "name": "Bunga Mawar Palsu",
+        "count": 1
+      }
+    ],
+    "source": "Bunga Mawar Palsu",
+    "price": "Rp 250K",
+    "tags": [
+      "fresh-flower",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Bunga"
+    },
+    "created": "2026-05-03",
+    "description": "Rangkaian bunga segar pilihan terbaik. Kesegaran alami untuk momen spesial. Harga: Rp 125.000",
+    "likes": 0,
+    "id": "ay-product-6",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/bunga white sedap - Rp 125.000,00 - 125ribu hanya bunga asli saja (10tangkai sedap malam & 10tangkai asteria) (2).png",
+        "caption": "Bunga White Sedap   Rp 125.000,00   125ribu Hanya Bunga Asli Saja (10tangkai Sedap Malam & 10tangkai Asteria) - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "fresh-flower",
+        "name": "Bunga White Sedap",
+        "count": 1
+      }
+    ],
+    "source": "Bunga White Sedap",
+    "price": "Rp 125K",
+    "tags": [
+      "fresh-flower",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Frmae"
+    },
+    "created": "2026-05-03",
+    "description": "Paket premium ay buket untuk hadiah istimewa. Harga: Rp 150.000",
+    "likes": 0,
+    "id": "ay-product-7",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/Frame Birthday Edelweis - Rp 150.000,00 - frame ukuran 25cm x 35cm - bisa request tulisan + 2 foto - bunga edelweis mini (2).png",
+        "caption": "Frame Birthday Edelweis   Rp 150.000,00   Frame Ukuran 25cm X 35cm   Bisa Request Tulisan + 2 Foto   Bunga Edelweis Mini - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "catalog-home",
+        "name": "Frmae Birthday Edelweis",
+        "count": 1
+      }
+    ],
+    "source": "Frmae Birthday Edelweis",
+    "price": "Rp 150K",
+    "tags": [
+      "catalog-home",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Mawar"
+    },
+    "created": "2026-05-03",
+    "description": "Paket premium ay buket untuk hadiah istimewa. Harga: Rp 170.000",
+    "likes": 0,
+    "id": "ay-product-8",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/Mawar Candy (Bunga Asli) - Rp 170.000,00 (2).png",
+        "caption": "Mawar Candy (Bunga Asli)   Rp 170.000,00 - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "catalog-home",
+        "name": "Mawar Candy (Bunga Asli)",
+        "count": 1
+      }
+    ],
+    "source": "Mawar Candy (Bunga Asli)",
+    "price": "Rp 170K",
+    "tags": [
+      "catalog-home",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Karangan"
+    },
+    "created": "2026-05-03",
+    "description": "Karangan bunga papan untuk berbagai acara. Elegan dan berkesan. Harga: Rp 500.000",
+    "likes": 0,
+    "id": "ay-product-9",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.000,00 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala (2).png",
+        "caption": "Karangan Bunga Bunga Papan 1 Titik   Rp 500.000,00   Karangan Bunga Bunga Papan Bisa Untuk Segala Acara Ready Setiap Hari Bisa Dikirim Kamal Telang Socah Bangkala - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "wreaths",
+        "name": "Karangan Bunga",
+        "count": 1
+      }
+    ],
+    "source": "Karangan Bunga",
+    "price": "Rp 500K",
+    "tags": [
+      "wreaths",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-premium",
+      "name": "packing"
+    },
+    "created": "2026-05-03",
+    "description": "Packing mewah untuk hadiah premium. Presentasi pertama yang mengesankan. Harga: Rp 25.000",
+    "likes": 0,
+    "id": "ay-product-10",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/packing luxury elegant - Rp 25.000,00 - packing box + kertas + pita organza (2).png",
+        "caption": "Packing Luxury Elegant   Rp 25.000,00   Packing Box + Kertas + Pita Organza - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "packaging",
+        "name": "packing Luxury Elegant",
+        "count": 1
+      }
+    ],
+    "source": "packing Luxury Elegant",
+    "price": "Rp 25K",
+    "tags": [
+      "packaging",
+      "ready-order"
+    ]
+  },
+  {
+    "by": {
+      "userId": "merchant-standard",
+      "name": "Selempang"
+    },
+    "created": "2026-05-03",
+    "description": "Pita dan selempang berkualitas untuk melengkapi rangkaian. Finishing yang sempurna. Harga: Rp 95.000",
+    "likes": 0,
+    "id": "ay-product-11",
+    "isStarred": false,
+    "images": [
+      {
+        "url": "/assets/Selempang Wisuda 3 Titik - Rp 95.000,00 (2).png",
+        "caption": "Selempang Wisuda 3 Titik   Rp 95.000,00 - ay buket"
+      }
+    ],
+    "items": [
+      {
+        "type": "ribbons",
+        "name": "Selempang Wisuda 3 Titik",
+        "count": 1
+      }
+    ],
+    "source": "Selempang Wisuda 3 Titik",
+    "price": "Rp 95K",
+    "tags": [
+      "ribbons",
+      "ready-order"
+    ]
+  }
+]
