@@ -199,6 +199,16 @@ export function Footer() {
               {config.footerText}
             </p>
           )}
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "8px", letterSpacing: "0.06em", color: "#ccc", margin: "16px 0 0 0", lineHeight: 1.6 }}>
+            crafted by{" "}
+            <a href="https://www.linkedin.com/in/arraffi-abqori-nur-azizi/" target="_blank" rel="noopener noreferrer" style={{ color: "#bbb", textDecoration: "none", borderBottom: "1px dotted #ddd", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#888"} onMouseLeave={(e) => e.currentTarget.style.color = "#bbb"}>
+              Ravnxx
+            </a>
+            {" · "}
+            <a href="https://github.com/robet31" target="_blank" rel="noopener noreferrer" style={{ color: "#ccc", textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "#888"} onMouseLeave={(e) => e.currentTarget.style.color = "#ccc"}>
+              github
+            </a>
+          </p>
         </div>
       </div>
 
