@@ -22,6 +22,8 @@ import {
   defaultVideos,
   detectVideoSource,
   formatRupiah,
+  getSiteConfigWithNeon,
+  syncAllWithNeon,
   type GalleryProject,
   type SiteConfig,
   type Product,
@@ -97,6 +99,7 @@ export function Admin() {
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     if (!authed) {
@@ -319,16 +322,33 @@ export function Admin() {
   ];
 
   if (!authed) {
-    const handleLogin = () => {
-      const cfg = getSiteConfig();
-      const username = cfg.adminUsername || 'admin';
-      const pass = cfg.adminPassword || 'AyBucket2026!';
-      if (usernameInput === username && passwordInput === pass) {
-        setLoginError("");
-        setAuthed(true);
-      } else {
-        setLoginError("Username atau password salah!");
-        setPasswordInput("");
+    const handleLogin = async () => {
+      if (isLoggingIn) return;
+      setIsLoggingIn(true);
+      setLoginError("");
+      
+      try {
+        const cfg = await getSiteConfigWithNeon();
+        const username = cfg.adminUsername || 'admin';
+        const pass = cfg.adminPassword || 'AyBucket2026!';
+        
+        if (usernameInput === username && passwordInput === pass) {
+          setAuthed(true);
+          // Sync all data from Neon DB so the admin sees the latest remote changes
+          syncAllWithNeon().then(() => {
+            setConfig(getSiteConfig());
+            setProductsList(mergeProductsByNameAndPrice(getProducts()));
+            setVideosList(getVideos());
+            setGalleryProjectsList(getGalleryProjects());
+          });
+        } else {
+          setLoginError("Username atau password salah!");
+          setPasswordInput("");
+        }
+      } catch (err) {
+        setLoginError("Koneksi gagal, silakan coba lagi.");
+      } finally {
+        setIsLoggingIn(false);
       }
     };
 
@@ -421,8 +441,9 @@ export function Admin() {
             </div>
             <motion.button
               onClick={handleLogin}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              disabled={isLoggingIn}
+              whileHover={isLoggingIn ? {} : { scale: 1.02 }}
+              whileTap={isLoggingIn ? {} : { scale: 0.98 }}
               style={{
                 ...btnStyle,
                 width: '100%',
@@ -431,11 +452,12 @@ export function Admin() {
                 fontSize: '11px',
                 letterSpacing: '0.12em',
                 marginTop: '4px',
-                background: 'linear-gradient(135deg, #1a1a1a, #333)',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                background: isLoggingIn ? '#666' : 'linear-gradient(135deg, #1a1a1a, #333)',
+                boxShadow: isLoggingIn ? 'none' : '0 8px 20px rgba(0,0,0,0.15)',
+                cursor: isLoggingIn ? 'not-allowed' : 'pointer',
               }}
             >
-              MASUK
+              {isLoggingIn ? "MEMERIKSA..." : "MASUK"}
             </motion.button>
           </div>
 
