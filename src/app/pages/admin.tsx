@@ -111,6 +111,7 @@ export function Admin() {
 
   const showSaved = () => {
     setSaved(true);
+    alert("Pengaturan berhasil disimpan!");
     setTimeout(() => setSaved(false), 2000);
   };
 
@@ -132,17 +133,27 @@ export function Admin() {
     reader.readAsDataURL(file);
   };
 
-  const uploadHeroImage = (file: File | null) => {
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran gambar maksimal 5MB");
-      return;
+  const uploadHeroImage = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const fileArray = Array.from(files).slice(0, 3); // Max 3 images
+    const results: string[] = [];
+
+    for (const file of fileArray) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`Gambar ${file.name} terlalu besar (maks 5MB)`);
+        continue;
+      }
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(String(reader.result || ""));
+        reader.readAsDataURL(file);
+      });
+      if (dataUrl) results.push(dataUrl);
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setConfig((prev) => ({ ...prev, heroFallbackImage: String(reader.result || "") }));
-    };
-    reader.readAsDataURL(file);
+
+    if (results.length > 0) {
+      setConfig((prev) => ({ ...prev, heroFallbackImage: results.join(',') }));
+    }
   };
 
   const handleSaveProducts = () => {
@@ -502,17 +513,31 @@ export function Admin() {
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     style={{ display: "none" }}
-                    onChange={(e) => uploadHeroImage(e.target.files?.[0] || null)}
+                    onChange={(e) => uploadHeroImage(e.target.files)}
                   />
                 </label>
               </div>
               {config.heroFallbackImage ? (
-                <img
-                  src={config.heroFallbackImage}
-                  alt="Hero preview"
-                  style={{ width: "100%", maxWidth: "340px", height: "200px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.08)" }}
-                />
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "16px" }}>
+                  {config.heroFallbackImage.split(',').filter(Boolean).map((img, idx) => (
+                    <div key={idx} style={{ position: "relative", width: "100%", maxWidth: "200px" }}>
+                      <img
+                        src={img.trim()}
+                        alt={`Hero preview ${idx + 1}`}
+                        style={{ width: "100%", height: "140px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "8px" }}
+                      />
+                      <button
+                        onClick={() => {
+                          const newImages = config.heroFallbackImage.split(',').filter((_, i) => i !== idx).join(',');
+                          setConfig({ ...config, heroFallbackImage: newImages });
+                        }}
+                        style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(255,0,0,0.8)", color: "#fff", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
               ) : null}
             </div>
             <button onClick={handleSaveConfig} style={btnStyle}>Simpan Hero</button>

@@ -132,34 +132,42 @@ export function Home() {
   };
 
   const heroFrames = (() => {
-    const adminHero: Product = {
-      id: "hero-fallback",
+    const adminImages = config.heroFallbackImage ? config.heroFallbackImage.split(',').map(s => s.trim()).filter(Boolean) : [];
+    
+    const adminHeroes: Product[] = adminImages.map((img, idx) => ({
+      id: `hero-fallback-${idx}`,
       name: config.heroTitle || config.businessName || "Ay Bucket",
       category: "catalog-home" as ProductCategory,
       description: config.heroSubtitle || config.tagline || (language === "id" ? "Katalog polaroid yang bergerak mengikuti scroll." : "Polaroid catalog that moves with scroll."),
-      image: config.heroFallbackImage,
-      images: [config.heroFallbackImage],
+      image: img,
+      images: [img],
       price: 0,
       priceLabel: language === "id" ? "Katalog" : "Catalog",
       tag: "hero",
       variant: "hero",
-    };
+    }));
 
-    const validProducts = products.filter((item) => item.image);
-    if (validProducts.length === 0) return [adminHero];
+    if (adminHeroes.length === 0) {
+      adminHeroes.push({
+        id: "hero-fallback",
+        name: config.heroTitle || config.businessName || "Ay Bucket",
+        category: "catalog-home" as ProductCategory,
+        description: config.heroSubtitle || config.tagline || "",
+        image: "https://placehold.co/600x800/ebebe9/1a1a1a?text=Hero",
+        images: ["https://placehold.co/600x800/ebebe9/1a1a1a?text=Hero"],
+        price: 0,
+        priceLabel: language === "id" ? "Katalog" : "Catalog",
+      });
+    }
 
-    return [adminHero, ...validProducts.slice(0, 5)];
+    const validProducts = Array.from(new Map(products.filter((p) => p.image).map((p) => [p.image, p])).values());
+    const needed = Math.max(0, 6 - adminHeroes.length);
+
+    return [...adminHeroes, ...validProducts.slice(0, needed)];
   })();
 
-  const heroTitleText =
-    language === "en" && (config.heroTitle || "") === "Buket Bunga Premium\nUntuk Setiap Momen"
-      ? "Premium Flower Bouquets\nFor Every Moment"
-      : config.heroTitle || (language === "id" ? "Koleksi Segar Pilihan" : "Curated Fresh Collection");
-
-  const heroSubtitleText =
-    language === "en" && (config.heroSubtitle || "") === "Rangkaian bunga segar pilihan, snack bouquet unik, money bouquet eksklusif, dan vas cantik. Dibuat dengan perhatian penuh untuk moment spesial Anda."
-      ? "Selected fresh arrangements, unique snack bouquets, exclusive money bouquets, and beautiful vases. Crafted with full attention for your special moments."
-      : config.heroSubtitle || (language === "id" ? "Rangkaian segar, snack unik, money bouquet eksklusif" : "Fresh arrangements, unique snacks, exclusive money bouquets");
+  const heroTitleText = config.heroTitle || (language === "id" ? "Buket Bunga Premium" : "Premium Flower Bouquets");
+  const heroSubtitleText = config.heroSubtitle || (language === "id" ? "Hadiah terbaik untuk momen spesial Anda." : "The best gift for your special moments.");
   const heroCount = heroFrames.length;
   const currentHero = heroFrames[heroIndex % heroCount];
   const previousHero = heroFrames[(heroIndex - 1 + heroCount) % heroCount];
@@ -198,67 +206,6 @@ export function Home() {
                   style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", padding: "16px 40px", backgroundColor: "#F9F9F7", color: heroAccent, border: "none", cursor: "pointer", transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)", fontWeight: 800, borderRadius: "12px", boxShadow: "0 12px 30px rgba(0,0,0,0.2)" }}
                 >
                   ↓ {language === "id" ? "Scroll untuk Jelajahi" : "Scroll to Explore"}
-                </motion.button>
-
-                <motion.button
-                  onClick={() => {
-                    const randomIdx = Math.floor(Math.random() * heroFrames.length);
-                    setHeroIndex(randomIdx);
-                  }}
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.94 }}
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
-                  title={language === "id" ? "Tampilkan gambar acak" : "Show random image"}
-                >
-                  🎲 {language === "id" ? "Acak" : "Random"}
-                </motion.button>
-
-                <motion.button
-                  onClick={() => {
-                    const bucketProducts = heroFrames.filter((p) => p.category === "buckets");
-                    if (bucketProducts.length > 0) {
-                      const idx = heroFrames.indexOf(bucketProducts[0]);
-                      setHeroIndex(idx);
-                    }
-                  }}
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.94 }}
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
-                  title={language === "id" ? "Tampilkan kategori bucket" : "Show bucket category"}
-                >
-                  🪣 {language === "id" ? "Bucket" : "Bucket"}
-                </motion.button>
-
-                <motion.button
-                  onClick={() => {
-                    const standingProducts = products.filter((p) => /standing|akrilik/i.test(p.name));
-                    if (standingProducts.length > 0) {
-                      const idx = heroFrames.indexOf(standingProducts[0] as any);
-                      if (idx >= 0) setHeroIndex(idx);
-                    }
-                  }}
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.94 }}
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
-                  title={language === "id" ? "Tampilkan standing akrilik" : "Show standing display"}
-                >
-                  🎭 {language === "id" ? "Standing" : "Standing"}
-                </motion.button>
-
-                <motion.button
-                  onClick={() => {
-                    const karanganProducts = products.filter((p) => /karangan|wreath/i.test(p.name));
-                    if (karanganProducts.length > 0) {
-                      const idx = heroFrames.indexOf(karanganProducts[0] as any);
-                      if (idx >= 0) setHeroIndex(idx);
-                    }
-                  }}
-                  whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.94 }}
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.2)", color: "#F9F9F7", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 700 }}
-                  title={language === "id" ? "Tampilkan karangan bunga" : "Show flower arrangement"}
-                >
-                  💐 {language === "id" ? "Karangan Bunga" : "Arrangements"}
                 </motion.button>
               </div>
             </motion.div>
@@ -884,9 +831,20 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "8px" : "clamp(16px, 3vw, 32px)", overflow: "hidden" }} onClick={onClose}>
-      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", maxHeight: isMobile ? "calc(100dvh - 16px)" : "88vh", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.28)", borderRadius: isMobile ? "16px" : "20px" }}>
-        {/* Navigation Buttons */}
-        {onNavigate && allProducts && allProducts.length > 1 && (
+      
+      {/* Previous Product Silhouette */}
+      {!isMobile && onNavigate && prevProduct && (
+        <button onClick={(e) => { e.stopPropagation(); onNavigate(prevProduct); }} style={{ position: "absolute", left: "2vw", top: "50%", transform: "translateY(-50%)", width: "80px", aspectRatio: "4/5", background: `url(${prevProduct.images?.[0] || prevProduct.image}) center/cover`, borderRadius: "12px", border: "2px solid rgba(255,255,255,0.4)", cursor: "pointer", opacity: 0.6, filter: "brightness(0.6) blur(2px)", transition: "all 0.3s ease", zIndex: 10 }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "brightness(1) blur(0px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.9)"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.filter = "brightness(0.6) blur(2px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }} />
+      )}
+
+      {/* Next Product Silhouette */}
+      {!isMobile && onNavigate && nextProduct && (
+        <button onClick={(e) => { e.stopPropagation(); onNavigate(nextProduct); }} style={{ position: "absolute", right: "2vw", top: "50%", transform: "translateY(-50%)", width: "80px", aspectRatio: "4/5", background: `url(${nextProduct.images?.[0] || nextProduct.image}) center/cover`, borderRadius: "12px", border: "2px solid rgba(255,255,255,0.4)", cursor: "pointer", opacity: 0.6, filter: "brightness(0.6) blur(2px)", transition: "all 0.3s ease", zIndex: 10 }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "brightness(1) blur(0px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.9)"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.filter = "brightness(0.6) blur(2px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }} />
+      )}
+
+      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", maxHeight: isMobile ? "calc(100dvh - 16px)" : "88vh", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.28)", borderRadius: isMobile ? "16px" : "20px", zIndex: 20 }}>
+        {/* Navigation Buttons (Mobile Only) */}
+        {isMobile && onNavigate && allProducts && allProducts.length > 1 && (
           <>
             <button
               onClick={() => prevProduct && onNavigate(prevProduct)}
@@ -1031,7 +989,7 @@ function CategoryPreviewModal({
   onClose,
   onSelectProduct,
 }: {
-  category: Category;
+  category: { key: ProductCategory; label: string; emoji: string; description: string; noted?: string; canvaLink?: string; count: number };
   products: Product[];
   onClose: () => void;
   onSelectProduct: (product: Product) => void;
