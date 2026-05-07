@@ -375,7 +375,15 @@ export function getGalleryProjects(): GalleryProject[] {
   } catch { return defaultGalleryProjects; }
 }
 
-export function setGalleryProjects(projects: GalleryProject[]): void { if (typeof window === "undefined") return; localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(projects.map(p => ({ ...p, image: migrateLegacyAssetUrl(p.image) })))); window.dispatchEvent(new Event("galleryProjectsChanged")); }
+export function setGalleryProjects(projects: GalleryProject[]): void {
+  if (typeof window === "undefined") return;
+  const dataToSave = projects.map(p => ({ ...p, image: migrateLegacyAssetUrl(p.image) }));
+  localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(dataToSave));
+  window.dispatchEvent(new Event("galleryProjectsChanged"));
+  if (isProduction) {
+    saveToNeon("gallery_projects", dataToSave).catch(console.error);
+  }
+}
 export function resetGalleryProjects(): void { if (typeof window === "undefined") return; localStorage.removeItem(GALLERY_STORAGE_KEY); window.dispatchEvent(new Event("galleryProjectsChanged")); }
 
 const initialProducts: Product[] = generatedInitialProducts as any;
@@ -393,7 +401,14 @@ export function getProducts(): Product[] {
   return mergeProductsByNameAndPrice(defaultProducts);
 }
 
-export function saveProducts(prods: Product[]) { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[]))))); window.dispatchEvent(new Event("siteConfigChanged")); }
+export function saveProducts(prods: Product[]) {
+  const dataToSave = enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[])));
+  localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(dataToSave));
+  window.dispatchEvent(new Event("siteConfigChanged"));
+  if (isProduction) {
+    saveToNeon("products", dataToSave).catch(console.error);
+  }
+}
 export function resetProducts() { localStorage.removeItem(PRODUCTS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
 export const products = defaultProducts;
 
@@ -425,5 +440,11 @@ export const defaultVideos: VideoItem[] = [
 ];
 
 export function getVideos(): VideoItem[] { try { const stored = localStorage.getItem(VIDEOS_STORAGE_KEY); if (stored) return JSON.parse(stored); } catch { } return defaultVideos; }
-export function saveVideos(vids: VideoItem[]) { localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids)); window.dispatchEvent(new Event("siteConfigChanged")); }
+export function saveVideos(vids: VideoItem[]) {
+  localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids));
+  window.dispatchEvent(new Event("siteConfigChanged"));
+  if (isProduction) {
+    saveToNeon("videos", vids).catch(console.error);
+  }
+}
 export function resetVideos() { localStorage.removeItem(VIDEOS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
