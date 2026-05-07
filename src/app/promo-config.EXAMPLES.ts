@@ -87,7 +87,7 @@ export const PROMO_CONFIG = {
 // AUTO-APPLY PROMO FUNCTION (jangan diubah)
 // ════════════════════════════════════════════════════════════
 
-export function applyPromoToProduct(product) {
+export function applyPromoToProduct(product: any) {
   const promoConfig = PROMO_CONFIG[product.name];
 
   if (!promoConfig) {

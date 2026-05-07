@@ -396,10 +396,15 @@ export function StudioVideoSection() {
 
   useEffect(() => {
     if (!selectedVideo) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const htmlElem = document.documentElement;
+    const bodyElem = document.body;
+    const prevHtmlOverflow = htmlElem.style.overflow;
+    const prevBodyOverflow = bodyElem.style.overflow;
+    htmlElem.style.overflow = "hidden";
+    bodyElem.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prev;
+      htmlElem.style.overflow = prevHtmlOverflow;
+      bodyElem.style.overflow = prevBodyOverflow;
     };
   }, [selectedVideo]);
 
@@ -495,7 +500,8 @@ export function StudioVideoSection() {
               zIndex: 9999,
               backdropFilter: "blur(2px)",
               padding: isMobile ? "10px" : "20px",
-              overflowY: "auto",
+              overflowY: "hidden",
+              overflowX: "hidden",
             }}
           >
             <motion.div
@@ -534,6 +540,40 @@ export function StudioVideoSection() {
                         display: "block",
                       }}
                     />
+                  ) : selectedVideo.source === "instagram" ? (
+                    // Responsive Instagram embed wrapper
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflowY: "auto",
+                        padding: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          maxWidth: selectedVideo.orientation === "vertical" ? "325px" : "550px",
+                          aspectRatio: selectedVideo.orientation === "vertical" ? "9/16" : "4/5",
+                        }}
+                      >
+                        <iframe
+                          src={iframeSrc}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            border: 0,
+                            display: "block",
+                          }}
+                          allow="encrypted-media; picture-in-picture"
+                          allowFullScreen
+                          title={selectedVideo.caption}
+                        />
+                      </div>
+                    </div>
                   ) : (
                     <iframe
                       src={iframeSrc}

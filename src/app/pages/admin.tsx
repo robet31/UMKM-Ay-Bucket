@@ -94,6 +94,21 @@ export function Admin() {
   const [usernameInput, setUsernameInput] = useState("admin");
   const [passwordInput, setPasswordInput] = useState("");
 
+  useEffect(() => {
+    if (!authed) {
+      const htmlElem = document.documentElement;
+      const bodyElem = document.body;
+      const prevHtmlOverflow = htmlElem.style.overflow;
+      const prevBodyOverflow = bodyElem.style.overflow;
+      htmlElem.style.overflow = "hidden";
+      bodyElem.style.overflow = "hidden";
+      return () => {
+        htmlElem.style.overflow = prevHtmlOverflow;
+        bodyElem.style.overflow = prevBodyOverflow;
+      };
+    }
+  }, [authed]);
+
   const showSaved = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
