@@ -2,6 +2,32 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
 import { PageTransition } from "../components/page-transition";
 import { getSiteConfig, getWhatsAppLink } from "../data";
+
+const getCatalogLink = () => {
+  const config = getSiteConfig();
+  const link = config.catalogLink;
+  const type = config.catalogLinkType || "wa";
+  
+  if (!link) return null;
+  
+  if (type === "wa") {
+    const message = encodeURIComponent(`Halo ${config.businessName}! 🌸\n\nSaya ingin melihat katalog produk Anda.`);
+    return `https://wa.me/${link.replace(/[^0-9]/g, "")}?text=${message}`;
+  } else if (type === "pdf") {
+    return link;
+  } else {
+    return link;
+  }
+};
+
+const getCatalogLinkLabel = (type: string) => {
+  switch (type) {
+    case "wa": return "WhatsApp";
+    case "pdf": return "PDF";
+    case "link": return "Link";
+    default: return "WhatsApp";
+  }
+};
 import AnimatedPetals from "../components/animated-petals";
 import { useLanguage } from "../language";
 
@@ -177,12 +203,37 @@ export function Contact() {
                       @{config.instagram}
                     </p>
                   </div>
-                  <div style={{ paddingTop: "12px", borderTopWidth: "1px", borderTopStyle: "solid", borderTopColor: "rgba(0,0,0,0.06)" }}>
-                    <span style={{ ...mono, color: "#999", fontSize: "10px", marginBottom: "6px", display: "block" }}>🎨 Katalog</span>
-                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", margin: 0, color: "#777" }}>
-                      {language === "id" ? "Canva / Pinterest" : "Canva / Pinterest"}
+<div style={{ paddingTop: "12px", borderTopWidth: "1px", borderTopStyle: "solid", borderTopColor: "rgba(0,0,0,0.06)" }}>
+                    <span style={{ ...mono, color: "#999", fontSize: "10px", marginBottom: "6px", display: "block" }}>📸 Instagram</span>
+                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", margin: 0, color: "#1a1a1a", fontWeight: 500 }}>
+                      @{config.instagram}
                     </p>
                   </div>
+                  {getCatalogLink() && (
+                  <div style={{ paddingTop: "12px", borderTopWidth: "1px", borderTopStyle: "solid", borderTopColor: "rgba(0,0,0,0.06)" }}>
+                    <span style={{ ...mono, color: "#999", fontSize: "10px", marginBottom: "6px", display: "block" }}>📚 Katalog</span>
+                    <a 
+                      href={getCatalogLink() || "#"}
+                      target={config.catalogLinkType === "wa" ? "_blank" : "_blank"}
+                      rel="noopener noreferrer"
+                      style={{ 
+                        fontFamily: "'Inter', sans-serif", 
+                        fontSize: "13px", 
+                        margin: 0, 
+                        color: "#1a1a1a", 
+                        fontWeight: 500,
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {language === "id" ? "Lihat Katalog" : "View Catalog"} 
+                      <span style={{ fontSize: "10px", color: "#999", fontWeight: 400 }}>({getCatalogLinkLabel(config.catalogLinkType || "wa")})</span>
+                    </a>
+                  </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -446,6 +446,24 @@ export function Admin() {
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
             </div>
             <div style={sectionStyle}>
+              <FieldSelect 
+                label="Tipe Link Katalog" 
+                value={config.catalogLinkType || "wa"} 
+                options={[
+                  { value: "wa", label: " WhatsApp" },
+                  { value: "link", label: " Link Eksternal (Canva/etc)" },
+                  { value: "pdf", label: " File PDF" },
+                ]}
+                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })} 
+              />
+              <FieldInput 
+                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"} 
+                value={config.catalogLink || ""} 
+                placeholder={config.catalogLinkType === "wa" ? "628xxx..." : config.catalogLinkType === "pdf" ? "https://..." : "https://..."}
+                onChange={(v) => setConfig({ ...config, catalogLink: v })} 
+              />
+            </div>
+            <div style={sectionStyle}>
               <FieldInput label="Username Admin" value={config.adminUsername || "admin"} onChange={(v) => setConfig({ ...config, adminUsername: v })} />
               <FieldInput label="Password Admin" value={config.adminPassword || "admin123"} onChange={(v) => setConfig({ ...config, adminPassword: v })} />
             </div>
@@ -564,6 +582,22 @@ export function Admin() {
               <FieldInput label="Instagram" value={config.instagram} onChange={(v) => setConfig({ ...config, instagram: v })} />
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
               <FieldInput label="Nomor WhatsApp Display" value={config.whatsappDisplay} onChange={(v) => setConfig({ ...config, whatsappDisplay: v })} />
+              <FieldSelect 
+                label="Tipe Link Katalog" 
+                value={config.catalogLinkType || "wa"} 
+                options={[
+                  { value: "wa", label: " WhatsApp" },
+                  { value: "link", label: " Link Eksternal (Canva/etc)" },
+                  { value: "pdf", label: " File PDF" },
+                ]}
+                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })} 
+              />
+              <FieldInput 
+                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"} 
+                value={config.catalogLink || ""} 
+                placeholder={config.catalogLinkType === "wa" ? "628xxx..." : config.catalogLinkType === "pdf" ? "https://..." : "https://..."}
+                onChange={(v) => setConfig({ ...config, catalogLink: v })} 
+              />
               <FieldTextarea label="Teks Tambahan Footer" value={config.footerText} onChange={(v) => setConfig({ ...config, footerText: v })} />
             </div>
             <div style={sectionStyle}>
@@ -837,17 +871,35 @@ export function Admin() {
 
 // ---- Sub-components ----
 
-function FieldInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function FieldInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div style={{ marginBottom: "16px" }}>
       <label style={labelStyle}>{label}</label>
       <input
         style={inputStyle}
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         onFocus={(e) => { e.target.style.borderColor = "#1a1a1a"; }}
         onBlur={(e) => { e.target.style.borderColor = "rgba(0,0,0,0.12)"; }}
       />
+    </div>
+  );
+}
+
+function FieldSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: Array<{ value: string; label: string }> }) {
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <label style={labelStyle}>{label}</label>
+      <select
+        style={{ ...inputStyle, cursor: "pointer" }}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
     </div>
   );
 }

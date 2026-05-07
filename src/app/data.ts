@@ -153,6 +153,8 @@ export interface SiteConfig {
   heroFallbackImage: string;
   brandLogoUrl: string;
   mapsEmbedUrl: string;
+  catalogLink: string;
+  catalogLinkType: "wa" | "pdf" | "link";
   adminUsername?: string;
   adminPassword?: string;
 }
@@ -177,6 +179,8 @@ const defaultConfig: SiteConfig = {
   heroFallbackImage: "/assets/Akrilik frame mini - Rp\u00A095.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan.png",
   brandLogoUrl: "/assets/ay-logo-5.png",
   mapsEmbedUrl: "",
+  catalogLink: "",
+  catalogLinkType: "wa",
   adminUsername: "admin",
   adminPassword: "admin123",
 };
@@ -239,7 +243,17 @@ export const businessInfo = {
   get whatsappDisplay() { return getSiteConfig().whatsappDisplay; },
   get instagram() { return getSiteConfig().instagram; },
   get tiktok() { return getSiteConfig().tiktok; },
+  get catalogLink() { return getSiteConfig().catalogLink; },
+  get catalogLinkType() { return getSiteConfig().catalogLinkType || "wa"; },
 };
+
+export function getCatalogWhatsAppLink(): string {
+  const config = getSiteConfig();
+  const link = config.catalogLink;
+  if (!link || config.catalogLinkType !== "wa") return "";
+  const message = encodeURIComponent(`Halo ${config.businessName}! 🌸\n\nSaya ingin melihat katalog produk Anda.`);
+  return `https://wa.me/${link.replace(/[^0-9]/g, "")}?text=${message}`;
+}
 
 export type ProductCategory =
   | "buket-satin"
