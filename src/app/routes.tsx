@@ -15,6 +15,7 @@ export const router = createBrowserRouter([
       { path: "work/:slug", Component: CaseStudy },
       { path: "studio", Component: Studio },
       { path: "contact", Component: Contact },
+      { path: "admin", Component: Admin },
       { path: "*", Component: Home },
     ],
   },
