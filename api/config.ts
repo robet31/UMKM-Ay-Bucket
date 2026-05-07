@@ -1,5 +1,5 @@
 import type { VercelApiHandler } from "@vercel/node";
-import { getConfig, getConfigs, getUsageStats, setConfig, setConfigs } from "./db.js";
+import { getConfig, getConfigs, getUsageStats, setConfig, setConfigs } from "./_db.js";
 
 const ALLOWED_KEYS = ["site_config", "products", "videos", "gallery_projects"] as const;
 type AllowedKey = (typeof ALLOWED_KEYS)[number];
