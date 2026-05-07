@@ -202,7 +202,7 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   }
 }
 
-export async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<string> {
+export async function compressImage(file: File, maxWidth = 800, quality = 0.5): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -221,7 +221,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.8):
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', quality));
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = reject;
     };
@@ -238,6 +238,8 @@ export const isProduction =
   (import.meta as any).env?.PROD === 'true' || 
   (import.meta as any).env?.VITE_VERCEL === '1';
 
+let memoryCache: Record<string, any> = {};
+
 export async function syncAllWithNeon(): Promise<boolean> {
   if (!isProduction) return false;
   try {
@@ -245,10 +247,17 @@ export async function syncAllWithNeon(): Promise<boolean> {
     const result = await res.json();
     if (result.success && result.data) {
       const { site_config, products, videos, gallery_projects } = result.data;
-      if (site_config) localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(site_config));
-      if (products) localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
-      if (videos) localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(videos));
-      if (gallery_projects) localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(gallery_projects));
+      
+      const safeSave = (key: string, data: any) => {
+        memoryCache[key] = data;
+        try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { console.warn(`Storage full for ${key}, using memory fallback.`); }
+      };
+
+      if (site_config) safeSave(CONFIG_STORAGE_KEY, site_config);
+      if (products) safeSave(PRODUCTS_STORAGE_KEY, products);
+      if (videos) safeSave(VIDEOS_STORAGE_KEY, videos);
+      if (gallery_projects) safeSave(GALLERY_STORAGE_KEY, gallery_projects);
+      
       window.dispatchEvent(new Event("siteConfigChanged"));
       window.dispatchEvent(new Event("galleryProjectsChanged"));
       return true;
@@ -260,13 +269,20 @@ export async function syncAllWithNeon(): Promise<boolean> {
 export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
   if (isProduction) {
     const remote = await fetchSiteConfigFromNeon();
-    if (remote) { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(remote)); return { ...defaultConfig, ...remote } as SiteConfig; }
+    if (remote) { 
+      memoryCache[ADMIN_STORAGE_KEY] = remote;
+      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(remote)); } catch (e) { }
+      return { ...defaultConfig, ...remote } as SiteConfig; 
+    }
   }
   return getSiteConfig();
 }
 
 export function getSiteConfig(): SiteConfig {
   try {
+    const cached = memoryCache[ADMIN_STORAGE_KEY];
+    if (cached) return { ...defaultConfig, ...cached } as SiteConfig;
+    
     const stored = localStorage.getItem(ADMIN_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<SiteConfig>;
@@ -326,7 +342,14 @@ export function cleanMapsUrl(url: string | undefined): string {
 export async function saveSiteConfig(config: Partial<SiteConfig>): Promise<void> {
   const current = getSiteConfig();
   const merged = { ...current, ...config, heroFallbackImage: migrateLegacyAssetUrl(config.heroFallbackImage ?? current.heroFallbackImage), brandLogoUrl: migrateLegacyAssetUrl(config.brandLogoUrl ?? current.brandLogoUrl ?? defaultConfig.brandLogoUrl), };
-  localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
+  
+  memoryCache[ADMIN_STORAGE_KEY] = merged;
+  try {
+    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
+  } catch (e) {
+    console.warn("LocalStorage full, saving to Neon only.");
+  }
+  
   if (isProduction && typeof fetch !== 'undefined') { 
     await saveSiteConfigToNeon(merged); 
   }
@@ -399,6 +422,10 @@ export const defaultGalleryProjects: GalleryProject[] = [
 
 export function getGalleryProjects(): GalleryProject[] {
   if (typeof window === "undefined") return defaultGalleryProjects;
+  
+  const cached = memoryCache[GALLERY_STORAGE_KEY];
+  if (cached) return cached;
+
   const stored = localStorage.getItem(GALLERY_STORAGE_KEY);
   if (!stored) return defaultGalleryProjects;
   try {
@@ -410,7 +437,14 @@ export function getGalleryProjects(): GalleryProject[] {
 export async function setGalleryProjects(projects: GalleryProject[]): Promise<void> {
   if (typeof window === "undefined") return;
   const dataToSave = projects.map(p => ({ ...p, image: migrateLegacyAssetUrl(p.image) }));
-  localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(dataToSave));
+  
+  memoryCache[GALLERY_STORAGE_KEY] = dataToSave;
+  try {
+    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(dataToSave));
+  } catch (e) {
+    console.warn("LocalStorage full, saving to Neon only.");
+  }
+  
   window.dispatchEvent(new Event("galleryProjectsChanged"));
   if (isProduction) {
     await saveToNeon("gallery_projects", dataToSave);
@@ -423,6 +457,9 @@ export const defaultProducts: Product[] = initialProducts.map((p) => ({ ...p, im
 
 export function getProducts(): Product[] {
   try {
+    const cached = memoryCache[PRODUCTS_STORAGE_KEY];
+    if (cached) return cached;
+
     const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
     if (stored) {
       const parsed: any[] = JSON.parse(stored);
@@ -435,7 +472,14 @@ export function getProducts(): Product[] {
 
 export async function saveProducts(prods: Product[]): Promise<void> {
   const dataToSave = enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[])));
-  localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(dataToSave));
+  
+  memoryCache[PRODUCTS_STORAGE_KEY] = dataToSave;
+  try {
+    localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(dataToSave));
+  } catch (e) {
+    console.warn("LocalStorage full, saving to Neon only.");
+  }
+  
   window.dispatchEvent(new Event("siteConfigChanged"));
   if (isProduction) {
     await saveToNeon("products", dataToSave);
@@ -471,9 +515,24 @@ export const defaultVideos: VideoItem[] = [
   { id: "v-4", url: "https://www.youtube.com/shorts/_Wbq-ium2GE", source: "youtube", orientation: "vertical", caption: "Money Bouquet Tutorial (Layout Vertikal) 💰", featured: true, },
 ];
 
-export function getVideos(): VideoItem[] { try { const stored = localStorage.getItem(VIDEOS_STORAGE_KEY); if (stored) return JSON.parse(stored); } catch { } return defaultVideos; }
+export function getVideos(): VideoItem[] { 
+  try { 
+    const cached = memoryCache[VIDEOS_STORAGE_KEY];
+    if (cached) return cached;
+    
+    const stored = localStorage.getItem(VIDEOS_STORAGE_KEY); 
+    if (stored) return JSON.parse(stored); 
+  } catch { } 
+  return defaultVideos; 
+}
 export async function saveVideos(vids: VideoItem[]): Promise<void> {
-  localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids));
+  memoryCache[VIDEOS_STORAGE_KEY] = vids;
+  try {
+    localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids));
+  } catch (e) {
+    console.warn("LocalStorage full, saving to Neon only.");
+  }
+  
   window.dispatchEvent(new Event("siteConfigChanged"));
   if (isProduction) {
     await saveToNeon("videos", vids);
