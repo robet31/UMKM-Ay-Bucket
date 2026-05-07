@@ -329,7 +329,7 @@ export function Admin() {
       {/* Header */}
       <div
         style={{
-          paddingTop: "40px",
+          paddingTop: "120px",
           paddingBottom: "30px",
           borderBottom: "1px solid rgba(0,0,0,0.08)",
           marginBottom: "40px",
