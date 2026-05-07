@@ -1029,7 +1029,7 @@ function CategoryPreviewModal({
             )}
           </div>
 
-          <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? "120px" : "140px"}, 1fr))`, gap: "14px" }}>
+          <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "120px" : "140px"}, 1fr))`, gap: "14px" }}>
             {previewProducts.map((product) => (
               (() => {
                 const previewName = getProductDisplayName(product, language);
