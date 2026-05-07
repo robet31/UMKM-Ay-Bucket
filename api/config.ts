@@ -41,9 +41,9 @@ function checkRateLimit(key: string, maxRequests: number): boolean {
 // Periodic cleanup to prevent memory leaks
 setInterval(() => {
   const now = Date.now();
-  for (const [key, entry] of rateLimitMap.entries()) {
+  rateLimitMap.forEach((entry, key) => {
     if (now > entry.resetAt) rateLimitMap.delete(key);
-  }
+  });
 }, 300_000); // Clean every 5 minutes
 
 const MAX_BODY_SIZE_BYTES = 5_000_000; // 5MB max request body
