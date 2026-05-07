@@ -91,6 +91,7 @@ function VideoCard({ video, index, onSelect }: { video: VideoItem; index: number
             src={previewUrl}
             alt={video.caption}
             loading="lazy"
+            decoding="async"
             style={{
               width: "100%",
               height: "100%",

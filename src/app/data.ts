@@ -208,7 +208,7 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   }
 }
 
-export async function compressImage(file: File, maxWidth = 800, quality = 0.5): Promise<string> {
+export async function compressImage(file: File, maxWidth = 1024, quality = 0.7): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -226,8 +226,14 @@ export async function compressImage(file: File, maxWidth = 800, quality = 0.5): 
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        // Use high quality image smoothing
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+        }
+        // WebP is much better for quality/size ratio
+        resolve(canvas.toDataURL('image/webp', quality));
       };
       img.onerror = reject;
     };

@@ -298,7 +298,7 @@ export function Home() {
                   transition={{ duration: 0.9, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
                   style={{ position: "absolute", left: "2%", top: "18%", width: "min(34vw, 250px)", pointerEvents: "none" }}
                 >
-                  <PolaroidCard product={previousHero} compact />
+                  <PolaroidCard product={previousHero} compact loading="eager" />
                 </motion.div>
 
                 <AnimatePresence mode="wait">
@@ -310,7 +310,7 @@ export function Home() {
                     transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                     style={{ position: "relative", zIndex: 2, width: "min(100%, 460px)" }}
                   >
-                    <PolaroidCard product={currentHero} accent={heroAccent} />
+                    <PolaroidCard product={currentHero} accent={heroAccent} loading="eager" />
                   </motion.div>
                 </AnimatePresence>
 
@@ -321,7 +321,7 @@ export function Home() {
                   transition={{ duration: 0.9, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   style={{ position: "absolute", right: "2%", bottom: "8%", width: "min(34vw, 250px)", pointerEvents: "none" }}
                 >
-                  <PolaroidCard product={nextHero} compact />
+                  <PolaroidCard product={nextHero} compact loading="eager" />
                 </motion.div>
               </div>
 
@@ -584,7 +584,7 @@ export function Home() {
   );
 }
 
-function PolaroidCard({ product, accent, compact = false }: { product: Product; accent?: string; compact?: boolean }) {
+function PolaroidCard({ product, accent, compact = false, loading = "lazy" }: { product: Product; accent?: string; compact?: boolean; loading?: "lazy" | "eager" }) {
   const [language] = useLanguage();
   const frameAccent = accent || "#b85c3b";
   const displayName = getProductDisplayName(product, language);
@@ -613,8 +613,8 @@ function PolaroidCard({ product, accent, compact = false }: { product: Product; 
         <img
           src={(product.images && product.images[0]) || product.image}
           alt={displayName}
-          loading="lazy"
-          decoding="async"
+          loading={loading}
+          decoding={loading === "eager" ? "sync" : "async"}
           style={{
             width: "100%",
             height: "100%",

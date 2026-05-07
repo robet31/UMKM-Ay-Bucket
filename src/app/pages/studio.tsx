@@ -172,7 +172,7 @@ export function Studio() {
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr)", gap: "18px", padding: "22px", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "18px", background: "linear-gradient(135deg, rgba(255,255,255,0.82), rgba(255,248,244,0.74))", boxShadow: "0 16px 36px rgba(0,0,0,0.05)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
                 <div style={{ width: "108px", height: "108px", padding: "10px", borderRadius: "999px", background: "rgba(255,255,255,0.92)", border: "1px solid rgba(184,92,59,0.14)", boxShadow: "0 10px 24px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={config.brandLogoUrl || BRAND_LOGO.logo} alt="Ay Bucket & Gift logo" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "999px", mixBlendMode: "multiply" }} />
+                  <img src={config.brandLogoUrl || BRAND_LOGO.logo} alt="Ay Bucket & Gift logo" loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "999px", mixBlendMode: "multiply" }} />
                 </div>
                 <div>
                   <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px, 5vw, 48px)", lineHeight: 1, color: "#1a1a1a" }}>Ay Bucket & Gift</p>
@@ -296,6 +296,8 @@ export function Studio() {
                       <img
                         src={normalizeAssetUrl(project.image)}
                         alt={project.title}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full transition-transform duration-[1.2s] ease-out group-hover:scale-105"
                         style={{ objectFit: "cover" }}
                         onError={(event) => {
@@ -351,6 +353,8 @@ export function Studio() {
                   <img
                     src={normalizeAssetUrl(project.image)}
                     alt={project.title}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full"
                     style={{ objectFit: "cover" }}
                     onError={(event) => {
