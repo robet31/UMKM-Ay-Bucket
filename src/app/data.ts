@@ -149,7 +149,7 @@ const defaultConfig: SiteConfig = {
   heroFallbackImage: "/assets/Buket Bunga Asli Premium - Rp\u00A0350.000,00.png",
   heroSettings: [],
   brandLogoUrl: "/assets/ay-logo-5.png",
-  mapsEmbedUrl: "",
+  mapsEmbedUrl: "https://maps.google.com/maps?q=Pertokoan+Pasar+Senenan+Bangkalan&t=&z=15&ie=UTF8&iwloc=&output=embed",
   catalogLink: "6285880021020",
   catalogLinkType: "wa",
   adminUsername: "admin",

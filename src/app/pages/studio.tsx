@@ -472,7 +472,9 @@ export function Studio() {
         <StudioVideoSection />
 
         {/* ===== MAPS SECTION ===== */}
-        {config.mapsEmbedUrl && (
+        {(() => {
+          const mapUrl = config.mapsEmbedUrl || `https://maps.google.com/maps?q=${encodeURIComponent(config.address || "Pertokoan Pasar Senenan Bangkalan")}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+          return (
           <div
             className="border-t"
             style={{
@@ -535,7 +537,7 @@ export function Studio() {
                 }}
               >
                 <iframe
-                  src={config.mapsEmbedUrl}
+                  src={mapUrl}
                   width="100%"
                   height="100%"
                   className="map-iframe-hover"
@@ -683,7 +685,8 @@ export function Studio() {
               </div>
             </motion.div>
           </div>
-        )}
+          );
+        })()}
       </div>
       <div style={{ marginTop: 48 }}>
         <AnimatedPetals />
