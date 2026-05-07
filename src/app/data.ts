@@ -84,6 +84,12 @@ function findRelatedAssetPaths(productName: string): string[] {
 
 function enrichProductWithMatchedAssets(product: Product): Product {
   const existingImages = (product.images || (product.image ? [product.image] : [])).filter(Boolean).map((item) => migrateLegacyAssetUrl(item));
+  
+  // Only enrich if the product has NO images. This allows admins to delete images permanently.
+  if (existingImages.length > 0) {
+    return { ...product, image: existingImages[0], images: existingImages };
+  }
+
   const matchedAssets = findRelatedAssetPaths(product.name);
   const mergedImages = Array.from(new Set([...existingImages, ...matchedAssets]));
   return { ...product, image: mergedImages[0] || migrateLegacyAssetUrl(product.image) || "", images: mergedImages };
@@ -471,7 +477,7 @@ export function getProducts(): Product[] {
 }
 
 export async function saveProducts(prods: Product[]): Promise<void> {
-  const dataToSave = enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[])));
+  const dataToSave = mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[]));
   
   memoryCache[PRODUCTS_STORAGE_KEY] = dataToSave;
   try {

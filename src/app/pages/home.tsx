@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { categories, formatRupiah, getProducts, getSiteConfig, mergeProductsByNameAndPrice, syncAllWithNeon, type Product, type ProductCategory, type Category } from "../data";
+import { categories, formatRupiah, getProducts, getSiteConfig, mergeProductsByNameAndPrice, syncAllWithNeon, isProduction, getGalleryProjects, getVideos, type Product, type ProductCategory, type Category } from "../data";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
@@ -28,9 +28,29 @@ function deduplicateProducts(products: Product[]): Product[] {
 function useAdminSync() {
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    const handler = () => setTick((t) => t + 1);
+    const handler = () => {
+      setTick((t) => t + 1);
+    };
+
     window.addEventListener("siteConfigChanged", handler);
-    return () => window.removeEventListener("siteConfigChanged", handler);
+    window.addEventListener("storage", (e) => {
+      if (e.key?.includes("aybucket")) handler();
+    });
+
+    // Cross-device sync: Poll Neon DB every 15 seconds
+    const interval = setInterval(() => {
+      if (isProduction) {
+        syncAllWithNeon().then((changed) => {
+          if (changed) handler();
+        });
+      }
+    }, 15000);
+
+    return () => {
+      window.removeEventListener("siteConfigChanged", handler);
+      window.removeEventListener("storage", handler);
+      clearInterval(interval);
+    };
   }, []);
   return tick;
 }
