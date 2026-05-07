@@ -38,6 +38,16 @@ function checkRateLimit(key: string, maxRequests: number): boolean {
   return true;
 }
 
+// Periodic cleanup to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  }
+}, 300_000); // Clean every 5 minutes
+
+const MAX_BODY_SIZE_BYTES = 5_000_000; // 5MB max request body
+
 // ---- Security: Input Sanitization ----
 function sanitizeString(value: unknown, maxLength: number = 10000): string {
   if (typeof value !== "string") return "";
@@ -189,8 +199,22 @@ const handler: VercelApiHandler = async (req, res) => {
   // Set security headers
   setSecurityHeaders(res);
   
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Admin-Username, X-Admin-Password");
+    res.status(204).end();
+    return;
+  }
+
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  // Validate request body size
+  const bodyStr = JSON.stringify(req.body || {});
+  if (Buffer.byteLength(bodyStr, 'utf8') > MAX_BODY_SIZE_BYTES) {
+    res.status(413).json({ success: false, error: "Request body too large" });
     return;
   }
 

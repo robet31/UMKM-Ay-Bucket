@@ -202,36 +202,28 @@ export function Nav() {
             {language === "id" ? "🇮🇩 ID" : "🇬🇧 ENG"}
           </button>
 
-          {(() => {
-            const catalogLinkType = config.catalogLinkType || "wa";
-            let catalogHref = getCatalogWhatsAppLink() || `https://wa.me/${(config.whatsappNumber || "6282257827867").replace(/[^0-9]/g, "")}`;
-            if (catalogLinkType === "wa" && config.catalogLink) {
-              catalogHref = getCatalogWhatsAppLink() || `https://wa.me/${config.catalogLink.replace(/[^0-9]/g, "")}`;
-            } else if ((catalogLinkType === "link" || catalogLinkType === "pdf") && config.catalogLink) {
-              catalogHref = config.catalogLink;
-            }
-            return (
-              <a
-                href={catalogHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "#fff",
-                  backgroundColor: "#1a1a1a",
-                  textDecoration: "none",
-                  padding: "10px 16px",
-                  borderRadius: "999px",
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-                }}
-              >
-                {language === "id" ? "Katalog" : "Catalog"}
-              </a>
-            );
-          })()}
+          <a
+            href={`https://wa.me/${(config.whatsappNumber || "6282257827867").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "#fff",
+              backgroundColor: "#25D366",
+              textDecoration: "none",
+              padding: "10px 16px",
+              borderRadius: "999px",
+              boxShadow: "0 8px 20px rgba(37,211,102,0.2)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            💬 {language === "id" ? "Pesan Sekarang" : "Order Now"}
+          </a>
         </div>
 
         <button
@@ -376,6 +368,37 @@ export function Nav() {
               >
                 {language === "id" ? "🇮🇩 Bahasa Indonesia" : "🇬🇧 English"}
               </button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: config.navLinks.length * 0.08 + 0.25 }}
+              style={{ marginTop: "8px" }}
+            >
+              <a
+                href={`https://wa.me/${(config.whatsappNumber || "6282257827867").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "#fff",
+                  backgroundColor: "#25D366",
+                  textDecoration: "none",
+                  padding: "14px 32px",
+                  borderRadius: "999px",
+                  boxShadow: "0 8px 24px rgba(37,211,102,0.25)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                💬 {language === "id" ? "Pesan Sekarang" : "Order Now"}
+              </a>
             </motion.div>
 
             <motion.div

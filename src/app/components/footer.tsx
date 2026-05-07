@@ -174,8 +174,14 @@ export function Footer() {
           </div>
           <div>
             <span style={{ color: "#bbb", display: "block", marginBottom: "4px" }}>{language === "id" ? "Sosial Media" : "Social Media"}</span>
-            <span style={{ color: "#666", display: "block" }}>IG: {config.instagram?.startsWith('@') ? config.instagram : `@${config.instagram}`}</span>
-            {config.tiktok && <span style={{ color: "#666", display: "block" }}>TikTok: {config.tiktok?.startsWith('@') ? config.tiktok : `@${config.tiktok}`}</span>}
+            <a href={`https://instagram.com/${(config.instagram || "aybuket").replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" style={{ color: "#666", display: "block", textDecoration: "none" }}>
+              IG: {config.instagram?.startsWith('@') ? config.instagram : `@${config.instagram}`}
+            </a>
+            {config.tiktok && (
+              <a href={`https://tiktok.com/@${(config.tiktok || "").replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" style={{ color: "#666", display: "block", textDecoration: "none" }}>
+                TikTok: {config.tiktok?.startsWith('@') ? config.tiktok : `@${config.tiktok}`}
+              </a>
+            )}
           </div>
           <div>
             <span style={{ color: "#ccc" }}>&copy; {brandDisplayName} {config.year}. All rights reserved.</span>

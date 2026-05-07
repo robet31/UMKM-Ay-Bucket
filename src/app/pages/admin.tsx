@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -405,8 +406,8 @@ export function Admin() {
 
       {/* Success Modal Overlay */}
       <AnimatePresence>
-        {showSuccessModal && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 20000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        {showSuccessModal && createPortal(
+          <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -451,7 +452,8 @@ export function Admin() {
                 OKE, MENGERTI
               </button>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
 
@@ -518,22 +520,9 @@ export function Admin() {
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
             </div>
             <div style={sectionStyle}>
-              <FieldSelect
-                label="Tipe Link Katalog"
-                value={config.catalogLinkType || "wa"}
-                options={[
-                  { value: "wa", label: " WhatsApp" },
-                  { value: "link", label: " Link Eksternal (Canva/etc)" },
-                  { value: "pdf", label: " File PDF" },
-                ]}
-                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })}
-              />
-              <FieldInput
-                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"}
-                value={config.catalogLink || ""}
-                placeholder={config.catalogLinkType === "wa" ? "628xxx..." : config.catalogLinkType === "pdf" ? "https://..." : "https://..."}
-                onChange={(v) => setConfig({ ...config, catalogLink: v })}
-              />
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "12px", lineHeight: 1.6 }}>
+                💡 Tombol "Pesan Sekarang" di navbar dan footer akan mengarahkan pengunjung ke WhatsApp dengan nomor yang terdaftar di atas.
+              </p>
             </div>
             <div style={sectionStyle}>
               <FieldInput label="Username Admin" value={config.adminUsername || "admin"} onChange={(v) => setConfig({ ...config, adminUsername: v })} />
@@ -632,22 +621,6 @@ export function Admin() {
               <FieldInput label="Instagram" value={config.instagram} onChange={(v) => setConfig({ ...config, instagram: v })} />
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
               <FieldInput label="Nomor WhatsApp Display" value={config.whatsappDisplay} onChange={(v) => setConfig({ ...config, whatsappDisplay: v })} />
-              <FieldSelect
-                label="Tipe Link Katalog"
-                value={config.catalogLinkType || "wa"}
-                options={[
-                  { value: "wa", label: " WhatsApp" },
-                  { value: "link", label: " Link Eksternal (Canva/etc)" },
-                  { value: "pdf", label: " File PDF" },
-                ]}
-                onChange={(v) => setConfig({ ...config, catalogLinkType: v as "wa" | "link" | "pdf" })}
-              />
-              <FieldInput
-                label={config.catalogLinkType === "wa" ? "Nomor WhatsApp Katalog" : config.catalogLinkType === "pdf" ? "URL File PDF" : "URL Katalog"}
-                value={config.catalogLink || ""}
-                placeholder={config.catalogLinkType === "wa" ? "628xxx..." : config.catalogLinkType === "pdf" ? "https://..." : "https://..."}
-                onChange={(v) => setConfig({ ...config, catalogLink: v })}
-              />
               <FieldTextarea label="Teks Tambahan Footer" value={config.footerText} onChange={(v) => setConfig({ ...config, footerText: v })} />
             </div>
             <div style={sectionStyle}>
@@ -1367,7 +1340,7 @@ function GalleryManager({
       </div>
 
       <AnimatePresence>
-        {selectedItem && (
+        {selectedItem && createPortal(
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1429,7 +1402,8 @@ function GalleryManager({
                 <div><strong>URL:</strong> {selectedItem.image}</div>
               </div>
             </motion.div>
-          </motion.div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
     </div>
@@ -1512,7 +1486,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
     if (form.price && !form.priceLabel) setForm({ ...form, priceLabel: formatRupiah(form.price) });
   }, []);
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -1697,7 +1671,8 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
           <button onClick={onCancel} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
         </div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
@@ -1742,7 +1717,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
     reader.readAsDataURL(file);
   };
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -1909,6 +1884,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
           <button onClick={onCancel} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
         </div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
