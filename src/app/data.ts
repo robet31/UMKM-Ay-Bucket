@@ -185,6 +185,44 @@ const defaultConfig: SiteConfig = {
   adminPassword: "admin123",
 };
 
+// Neon API Configuration
+export const NEON_API_URL = import.meta.env.VITE_NEON_API_URL || '/api/config';
+
+// Fetch config from Neon DB
+export async function fetchSiteConfigFromNeon(): Promise<SiteConfig | null> {
+  try {
+    const res = await fetch(NEON_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get', key: 'site_config' }),
+    });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  } catch (e) {
+    console.error('Failed to fetch from Neon:', e);
+    return null;
+  }
+}
+
+// Save config to Neon DB
+export async function saveSiteConfigToNeon(config: any): Promise<boolean> {
+  try {
+    const res = await fetch(NEON_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'set', key: 'site_config', data: config }),
+    });
+    const data = await res.json();
+    return data.success;
+  } catch (e) {
+    console.error('Failed to save to Neon:', e);
+    return false;
+  }
+}
+
+// Check if running in production (Vercel)
+export const isProduction = import.meta.env.PROD === 'true' || import.meta.env.VITE_VERCEL === '1';
+
 export function getSiteConfig(): SiteConfig {
   try {
     const stored = localStorage.getItem(ADMIN_STORAGE_KEY);
