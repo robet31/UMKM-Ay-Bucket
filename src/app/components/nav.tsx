@@ -203,7 +203,7 @@ export function Nav() {
           </button>
 
           <a
-            href={`https://wa.me/${(config.whatsappNumber || "6282257827867").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
+            href={`https://wa.me/${(config.whatsappNumber || "6285880021020").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -377,7 +377,7 @@ export function Nav() {
               style={{ marginTop: "8px" }}
             >
               <a
-                href={`https://wa.me/${(config.whatsappNumber || "6282257827867").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
+                href={`https://wa.me/${(config.whatsappNumber || "6285880021020").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMenuOpen(false)}

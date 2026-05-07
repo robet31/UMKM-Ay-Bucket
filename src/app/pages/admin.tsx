@@ -406,44 +406,65 @@ export function Admin() {
       </div>
 
       {/* Success Toast Notification */}
-      <AnimatePresence>
-        {showSuccessModal && createPortal(
-          <motion.div
-            initial={{ opacity: 0, y: -40, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: -40, x: "-50%" }}
-            style={{
-              position: 'fixed',
-              top: '24px',
-              left: '50%',
-              zIndex: 2147483647,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '14px',
-              padding: '16px 28px',
-              backgroundColor: '#fff',
-              borderRadius: '16px',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)',
-              maxWidth: '460px',
-              width: 'calc(100vw - 32px)',
-              cursor: 'pointer',
-            }}
-            onClick={() => setShowSuccessModal(false)}
-          >
-            <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#f0fdf4', color: '#22c55e', fontSize: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              ✅
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>Berhasil Disimpan!</p>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#666', margin: 0, lineHeight: 1.4 }}>
-                Perubahan telah tersimpan. Klik untuk menutup.
-              </p>
-            </div>
-            <span style={{ color: '#ccc', fontSize: '18px', fontWeight: 300, flexShrink: 0 }}>×</span>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
+          {showSuccessModal && (
+            <motion.div
+              key="success-toast"
+              initial={{ opacity: 0, y: -60, x: "-50%" }}
+              animate={{ opacity: 1, y: 0, x: "-50%" }}
+              exit={{ opacity: 0, y: -60, x: "-50%" }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              style={{
+                position: 'fixed',
+                top: '24px',
+                left: '50%',
+                zIndex: 2147483647,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '16px 24px',
+                backgroundColor: '#fff',
+                borderRadius: '16px',
+                boxShadow: '0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)',
+                maxWidth: '460px',
+                width: 'calc(100vw - 32px)',
+                cursor: 'pointer',
+                overflow: 'hidden',
+              }}
+              onClick={() => setShowSuccessModal(false)}
+            >
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', color: '#22c55e', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                ✅
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '14px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 2px 0' }}>Berhasil Disimpan!</p>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#888', margin: 0, lineHeight: 1.4 }}>
+                  Perubahan tersimpan ke database.
+                </p>
+              </div>
+              <span style={{ color: '#ccc', fontSize: '18px', fontWeight: 300, flexShrink: 0 }}>×</span>
+              {/* Auto-dismiss progress bar */}
+              <motion.div
+                initial={{ scaleX: 1 }}
+                animate={{ scaleX: 0 }}
+                transition={{ duration: 4, ease: "linear" }}
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: '3px',
+                  backgroundColor: '#22c55e',
+                  transformOrigin: 'left',
+                  borderRadius: '0 0 16px 16px',
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2" style={{ marginBottom: "40px" }}>

@@ -169,8 +169,11 @@ export function Footer() {
           </div>
           <div>
             <span style={{ color: "#bbb", display: "block", marginBottom: "4px", fontSize: "9px" }}>{language === "id" ? "Sosial Media" : "Social Media"}</span>
-            <a href={`https://instagram.com/${(config.instagram || "aybuket").replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" style={{ color: "#555", display: "block", textDecoration: "none", fontSize: "11px", textTransform: "none", letterSpacing: "0.02em" }}>
+            <a href={`https://instagram.com/${(config.instagram || "ay.bucket").replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" style={{ color: "#555", display: "block", textDecoration: "none", fontSize: "11px", textTransform: "none", letterSpacing: "0.02em" }}>
               📸 Instagram: {config.instagram?.startsWith('@') ? config.instagram : `@${config.instagram}`}
+            </a>
+            <a href="https://instagram.com/karanganbungakamaltelang" target="_blank" rel="noopener noreferrer" style={{ color: "#555", display: "block", textDecoration: "none", fontSize: "11px", textTransform: "none", letterSpacing: "0.02em", marginTop: "2px" }}>
+              📸 Instagram: @karanganbungakamaltelang
             </a>
             {config.tiktok && (
               <a href={`https://tiktok.com/@${(config.tiktok || "").replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" style={{ color: "#555", display: "block", textDecoration: "none", fontSize: "11px", textTransform: "none", letterSpacing: "0.02em", marginTop: "2px" }}>

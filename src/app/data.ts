@@ -10,9 +10,9 @@ import { ALL_ASSET_PATHS } from "./asset_index";
 export const BRAND_LOGO = {
   name: "Ay Bucket",
   tagline: "Wujudkan Hadiah Impianmu",
-  whatsapp: "6282257827867",
+  whatsapp: "6285880021020",
   location: "Pertokoan pasar senenan Bangkalan",
-  instagram: "@aybuket",
+  instagram: "@ay.bucket",
   logo: "/assets/ay-logo-5.png",
 };
 
@@ -134,9 +134,9 @@ const defaultConfig: SiteConfig = {
   tagline: "Wujudkan Hadiah Impianmu",
   year: "2026",
   address: "Pertokoan pasar senenan Bangkalan",
-  whatsappNumber: "6282257827867",
-  whatsappDisplay: "0822-5782-7867",
-  instagram: "@aybuket",
+  whatsappNumber: "6285880021020",
+  whatsappDisplay: "0858-8002-1020",
+  instagram: "@ay.bucket",
   tiktok: "",
   navLinks: [
     { to: "/", label: "Katalog" },
@@ -150,10 +150,10 @@ const defaultConfig: SiteConfig = {
   heroSettings: [],
   brandLogoUrl: "/assets/ay-logo-5.png",
   mapsEmbedUrl: "",
-  catalogLink: "6282257827867",
+  catalogLink: "6285880021020",
   catalogLinkType: "wa",
   adminUsername: "admin",
-  adminPassword: "admin123",
+  adminPassword: "AyBucket2026!",
 };
 
 export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {

@@ -120,7 +120,7 @@ function getAuthFromReq(req: any) {
 
 function isAuthorized(req: any): boolean {
   const expectedUser = process.env.ADMIN_PANEL_USERNAME || "admin";
-  const expectedPass = process.env.ADMIN_PANEL_PASSWORD || "admin123";
+  const expectedPass = process.env.ADMIN_PANEL_PASSWORD || "AyBucket2026!";
   const auth = getAuthFromReq(req);
   
   // Constant-time comparison to prevent timing attacks
