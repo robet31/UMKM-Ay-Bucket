@@ -163,9 +163,12 @@ export function Contact() {
                     (e.currentTarget as any).style.borderColor = "rgba(0,0,0,0.06)";
                   }}
                 >
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", margin: 0, color: "#1a1a1a", fontWeight: 400, letterSpacing: "-0.02em" }}>
-                    {config.businessName}
-                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                    {config.brandLogoUrl && <img src={config.brandLogoUrl} alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />}
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", margin: 0, color: "#1a1a1a", fontWeight: 600, letterSpacing: "-0.02em", textTransform: "capitalize" }}>
+                      {config.businessName}
+                    </p>
+                  </div>
                   <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", lineHeight: 1.8, color: "#666", marginTop: "12px", marginBottom: 0 }}>
                     {language === "id"
                       ? "Kami menghadirkan buket premium, snack bouquet, money bouquet, dan rangkaian custom terbaik untuk hadiah istimewa, momen berharga, dan kebutuhan acara spesial Anda. Setiap produk dibuat dengan detail dan kualitas terbaik."
@@ -200,15 +203,17 @@ export function Contact() {
                   <div style={{ marginBottom: "14px", paddingTop: "12px", borderTopWidth: "1px", borderTopStyle: "solid", borderTopColor: "rgba(0,0,0,0.06)" }}>
                     <span style={{ ...mono, color: "#999", fontSize: "10px", marginBottom: "6px", display: "block" }}>📸 Instagram</span>
                     <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", margin: 0, color: "#1a1a1a", fontWeight: 500 }}>
-                      @{config.instagram}
+                      {config.instagram?.startsWith('@') ? config.instagram : `@${config.instagram}`}
                     </p>
                   </div>
-                  <div style={{ paddingTop: "12px", borderTopWidth: "1px", borderTopStyle: "solid", borderTopColor: "rgba(0,0,0,0.06)" }}>
-                    <span style={{ ...mono, color: "#999", fontSize: "10px", marginBottom: "6px", display: "block" }}>📸 Instagram</span>
-                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", margin: 0, color: "#1a1a1a", fontWeight: 500 }}>
-                      @{config.instagram}
-                    </p>
-                  </div>
+                  {config.tiktok && (
+                    <div style={{ marginBottom: "14px", paddingTop: "12px", borderTopWidth: "1px", borderTopStyle: "solid", borderTopColor: "rgba(0,0,0,0.06)" }}>
+                      <span style={{ ...mono, color: "#999", fontSize: "10px", marginBottom: "6px", display: "block" }}>🎵 TikTok</span>
+                      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", margin: 0, color: "#1a1a1a", fontWeight: 500 }}>
+                        {config.tiktok?.startsWith('@') ? config.tiktok : `@${config.tiktok}`}
+                      </p>
+                    </div>
+                  )}
                   {getCatalogLink() && (
                     <div style={{ paddingTop: "12px", borderTopWidth: "1px", borderTopStyle: "solid", borderTopColor: "rgba(0,0,0,0.06)" }}>
                       <span style={{ ...mono, color: "#999", fontSize: "10px", marginBottom: "6px", display: "block" }}>📚 Katalog</span>
