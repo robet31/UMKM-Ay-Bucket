@@ -626,6 +626,22 @@ export function Admin() {
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
             </div>
             <div style={sectionStyle}>
+              <FieldInput label="Google Maps Embed URL" value={config.mapsEmbedUrl || ""} onChange={(v) => setConfig({ ...config, mapsEmbedUrl: v })} />
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: "#999", marginTop: "-8px", marginBottom: "12px", lineHeight: 1.5 }}>
+                💡 Kosongkan untuk menggunakan embed otomatis dari alamat. Atau paste URL embed Google Maps dari Google Maps → Share → Embed a map.
+              </p>
+              {(config.mapsEmbedUrl || config.address) && (
+                <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(0,0,0,0.08)", marginBottom: "8px" }}>
+                  <iframe
+                    src={config.mapsEmbedUrl || `https://maps.google.com/maps?q=${encodeURIComponent(config.address || "Pertokoan Pasar Senenan Bangkalan")}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    style={{ width: "100%", height: "200px", border: 0, display: "block" }}
+                    loading="lazy"
+                    title="Maps Preview"
+                  />
+                </div>
+              )}
+            </div>
+            <div style={sectionStyle}>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "12px", lineHeight: 1.6 }}>
                 💡 Tombol "Pesan Sekarang" di navbar dan footer akan mengarahkan pengunjung ke WhatsApp dengan nomor yang terdaftar di atas.
               </p>

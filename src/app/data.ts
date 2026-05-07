@@ -210,6 +210,11 @@ export function getSiteConfig(): SiteConfig {
       const parsed = JSON.parse(stored) as Partial<SiteConfig>;
       const merged = { ...defaultConfig, ...parsed } as SiteConfig;
       
+      // Fix: if mapsEmbedUrl was saved as empty string, use default
+      if (!merged.mapsEmbedUrl) {
+        merged.mapsEmbedUrl = defaultConfig.mapsEmbedUrl;
+      }
+
       // Migration: Convert comma-separated heroFallbackImage to |SEP| if it contains data URLs or multiple items
       if (merged.heroFallbackImage && !merged.heroFallbackImage.includes("|SEP|")) {
         const value = merged.heroFallbackImage;
