@@ -199,7 +199,12 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
 
 export const fetchSiteConfigFromNeon = () => fetchFromNeon('site_config');
 export const saveSiteConfigToNeon = (config: any) => saveToNeon('site_config', config);
-export const isProduction = (import.meta as any).env?.PROD === 'true' || (import.meta as any).env?.VITE_VERCEL === '1';
+
+// Fix: import.meta.env.PROD is a boolean in Vite production builds
+export const isProduction = 
+  (import.meta as any).env?.PROD === true || 
+  (import.meta as any).env?.PROD === 'true' || 
+  (import.meta as any).env?.VITE_VERCEL === '1';
 
 export async function syncAllWithNeon(): Promise<boolean> {
   if (!isProduction) return false;
