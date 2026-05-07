@@ -166,10 +166,27 @@ export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
 
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
-    const res = await fetch(NEON_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', key, data }), });
+    const config = getSiteConfig();
+    const username = config.adminUsername || "admin";
+    const password = config.adminPassword || "AyBucket2026!";
+    
+    const res = await fetch(NEON_API_URL, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ 
+        action: 'set', 
+        key, 
+        data,
+        username,
+        password
+      }), 
+    });
     const result = await res.json();
     return result.success;
-  } catch (e) { console.error(`Failed to save ${key}:`, e); return false; }
+  } catch (e) { 
+    console.error(`Failed to save ${key}:`, e); 
+    return false; 
+  }
 }
 
 export const fetchSiteConfigFromNeon = () => fetchFromNeon('site_config');

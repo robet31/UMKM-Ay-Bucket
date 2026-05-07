@@ -118,10 +118,21 @@ function getAuthFromReq(req: any) {
   };
 }
 
-function isAuthorized(req: any): boolean {
-  const expectedUser = process.env.ADMIN_PANEL_USERNAME || "admin";
-  const expectedPass = process.env.ADMIN_PANEL_PASSWORD || "AyBucket2026!";
+async function isAuthorized(req: any): Promise<boolean> {
+  let expectedUser = process.env.ADMIN_PANEL_USERNAME || "admin";
+  let expectedPass = process.env.ADMIN_PANEL_PASSWORD || "AyBucket2026!";
   const auth = getAuthFromReq(req);
+  
+  // Try to load custom credentials from database
+  try {
+    const siteConfig = await getConfig("site_config");
+    if (siteConfig && siteConfig.adminUsername && siteConfig.adminPassword) {
+      expectedUser = siteConfig.adminUsername;
+      expectedPass = siteConfig.adminPassword;
+    }
+  } catch (e) {
+    console.error("Failed to read auth config from DB:", e);
+  }
   
   // Constant-time comparison to prevent timing attacks
   if (auth.username.length !== expectedUser.length || auth.password.length !== expectedPass.length) {
@@ -242,7 +253,7 @@ const handler: VercelApiHandler = async (req, res) => {
         res.status(429).json({ success: false, error: "Too many login attempts. Please wait." });
         return;
       }
-      res.status(200).json({ success: isAuthorized(req) });
+      res.status(200).json({ success: await isAuthorized(req) });
       return;
     }
 
@@ -276,7 +287,7 @@ const handler: VercelApiHandler = async (req, res) => {
         res.status(429).json({ success: false, error: "Rate limit exceeded." });
         return;
       }
-      if (!isAuthorized(req)) {
+      if (!(await isAuthorized(req))) {
         res.status(401).json({ success: false, error: "Unauthorized" });
         return;
       }
@@ -290,7 +301,7 @@ const handler: VercelApiHandler = async (req, res) => {
         res.status(429).json({ success: false, error: "Rate limit exceeded." });
         return;
       }
-      if (!isAuthorized(req)) {
+      if (!(await isAuthorized(req))) {
         res.status(401).json({ success: false, error: "Unauthorized" });
         return;
       }
