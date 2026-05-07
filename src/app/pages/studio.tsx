@@ -45,14 +45,7 @@ const steps = [
   { num: "04", title: "Terima Keindahan", titleEn: "Receive Beauty", text: "Setiap buket dirancang dengan penuh perhatian dan cinta. Kami mengantarkan bunga segar langsung ke alamat tujuan Anda.", textEn: "Every bouquet is designed with full attention and love. We deliver fresh flowers directly to your destination." },
 ];
 
-const catalogLinks = [
-  { label: "Snack Bouquet", url: "https://catalog-aybucket.my.canva.site/snack-bouquet" },
-  { label: "Buket Satin", url: "https://catalog-aybucket.my.canva.site/buket-satin" },
-  { label: "Vase", url: "https://catalog-aybucket.my.canva.site/vase" },
-  { label: "Money Bouquet", url: "https://chocolate-bouquet-aybucket.my.canva.site/pricelist-money" },
-  { label: "Chocolate Bouquet", url: "https://chocolate-bouquet-aybucket.my.canva.site/" },
-  { label: "Fresh Flower", url: "https://chocolate-bouquet-aybucket.my.canva.site/fresh-flowe" },
-];
+// Legacy catalog links removed – catalog now directs to WhatsApp via nav/footer
 
 export function Studio() {
   const [, setTick] = useState(0);
@@ -74,7 +67,8 @@ export function Studio() {
   }, []);
 
   const config = getSiteConfig();
-  const studioImageFallback = normalizeAssetUrl(config.heroFallbackImage);
+  const heroImages = config.heroFallbackImage ? config.heroFallbackImage.split('|SEP|') : [];
+  const studioImageFallback = normalizeAssetUrl(heroImages[0] || "");
 
   return (
     <PageTransition>
@@ -579,11 +573,8 @@ export function Studio() {
                 gridTemplateColumns: "1fr",
                 gap: "24px",
                 paddingTop: "40px",
-                "@media (min-width: 768px)": {
-                  gridTemplateColumns: "1fr 1fr",
-                },
               }}
-              className="mt-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
+              className="mt-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between studio-footer-grid"
             >
               {/* Address card */}
               <motion.div
@@ -616,7 +607,8 @@ export function Studio() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", "@media (min-width: 768px)": { justifyContent: "flex-end" } }}
+                style={{ display: "flex", alignItems: "center", justifyContent: "flex-start" }}
+              className="studio-nav-btn-container"
               >
                 <a
                   href={`https://maps.google.com/?q=${encodeURIComponent(config.address)}`}
@@ -667,7 +659,7 @@ export function Studio() {
                 background: "rgba(255,255,255,0.4)",
                 borderRadius: "12px",
                 border: "1px solid rgba(0,0,0,0.06)",
-                backdrop: "blur(4px)",
+                backdropFilter: "blur(4px)",
               }}
             >
               <p style={{ ...mono, marginBottom: "12px", color: "#999" }}>{language === "id" ? "Jam Operasional" : "Operating Hours"}</p>
@@ -696,6 +688,16 @@ export function Studio() {
       <div style={{ marginTop: 48 }}>
         <AnimatedPetals />
       </div>
+      <style>{`
+        @media (min-width: 768px) {
+          .studio-footer-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .studio-nav-btn-container {
+            justify-content: flex-end !important;
+          }
+        }
+      `}</style>
       <Footer />
     </PageTransition>
   );

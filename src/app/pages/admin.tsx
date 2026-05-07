@@ -27,6 +27,7 @@ import {
   type VideoItem,
   type VideoSource,
   type VideoOrientation,
+  type HeroSetting,
 } from "../data";
 
 const mono = {
@@ -88,6 +89,7 @@ export function Admin() {
   const [galleryProjects, setGalleryProjectsList] = useState<GalleryProject[]>(getGalleryProjects());
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saved, setSaved] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoItem | null>(null);
   const [authed, setAuthed] = useState<boolean>(() => (typeof window !== "undefined" && sessionStorage.getItem("aybucket_admin_authed") === "1") || false);
@@ -111,12 +113,17 @@ export function Admin() {
 
   const showSaved = () => {
     setSaved(true);
-    alert("Pengaturan berhasil disimpan!");
-    setTimeout(() => setSaved(false), 2000);
+    setShowSuccessModal(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   const handleSaveConfig = () => {
-    saveSiteConfig(config);
+    const normalizedConfig = {
+      ...config,
+      instagram: config.instagram?.startsWith('@@') ? config.instagram.substring(1) : config.instagram,
+      tiktok: config.tiktok?.startsWith('@@') ? config.tiktok.substring(1) : config.tiktok,
+    };
+    saveSiteConfig(normalizedConfig);
     showSaved();
   };
 
@@ -135,14 +142,10 @@ export function Admin() {
 
   const uploadHeroImage = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const fileArray = Array.from(files).slice(0, 3); // Max 3 images
+    const fileArray = Array.from(files).slice(0, 10);
     const results: string[] = [];
-
     for (const file of fileArray) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`Gambar ${file.name} terlalu besar (maks 5MB)`);
-        continue;
-      }
+      if (file.size > 5 * 1024 * 1024) continue;
       const dataUrl = await new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(String(reader.result || ""));
@@ -150,10 +153,26 @@ export function Admin() {
       });
       if (dataUrl) results.push(dataUrl);
     }
-
     if (results.length > 0) {
-      setConfig((prev) => ({ ...prev, heroFallbackImage: results.join(',') }));
+      const currentSettings = config.heroSettings || [];
+      const newSettings = [...currentSettings];
+      results.forEach((url) => {
+        newSettings.push({ image: url });
+      });
+      setConfig((prev) => ({ ...prev, heroSettings: newSettings.slice(0, 10) }));
     }
+  };
+
+  const updateHeroSlot = (index: number, patch: Partial<HeroSetting>) => {
+    const current = [...(config.heroSettings || [])];
+    while (current.length <= index) current.push({});
+    current[index] = { ...current[index], ...patch };
+    setConfig({ ...config, heroSettings: current });
+  };
+
+  const removeHeroSlot = (index: number) => {
+    const current = (config.heroSettings || []).filter((_, i) => i !== index);
+    setConfig({ ...config, heroSettings: current });
   };
 
   const handleSaveProducts = () => {
@@ -384,28 +403,55 @@ export function Admin() {
         </div>
       </div>
 
-      {/* Saved Toast */}
+      {/* Success Modal Overlay */}
       <AnimatePresence>
-        {saved && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            style={{
-              position: "fixed",
-              top: "24px",
-              right: "24px",
-              zIndex: 10000,
-              backgroundColor: "#1a1a1a",
-              color: "#fff",
-              padding: "12px 24px",
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "11px",
-              letterSpacing: "0.05em",
-            }}
-          >
-            ✅ Tersimpan!
-          </motion.div>
+        {showSuccessModal && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 20000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSuccessModal(false)}
+              style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(26,26,26,0.4)', backdropFilter: 'blur(4px)' }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              style={{
+                position: 'relative',
+                backgroundColor: '#fff',
+                padding: '40px',
+                borderRadius: '24px',
+                maxWidth: '400px',
+                width: '100%',
+                textAlign: 'center',
+                boxShadow: '0 30px 60px rgba(0,0,0,0.15)',
+              }}
+            >
+              <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#f0fdf4', color: '#22c55e', fontSize: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                ✨
+              </div>
+              <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '28px', color: '#1a1a1a', marginBottom: '12px' }}>Berhasil Disimpan!</h3>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '15px', color: '#666', lineHeight: 1.6, marginBottom: '32px' }}>
+                Semua perubahan yang Anda buat telah berhasil disimpan ke database Neon. Website Anda kini sudah diperbarui.
+              </p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                style={{
+                  ...btnStyle,
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  letterSpacing: '0.15em',
+                  boxShadow: '0 10px 20px rgba(26,26,26,0.15)',
+                }}
+              >
+                OKE, MENGERTI
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -498,50 +544,14 @@ export function Admin() {
         )}
 
         {activeTab === "hero" && (
-          <div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "#1a1a1a", marginBottom: "30px" }}>
-              Hero Section
-            </h2>
-            <div style={sectionStyle}>
-              <FieldTextarea label="Judul Hero (gunakan Enter untuk baris baru)" value={config.heroTitle} onChange={(v) => setConfig({ ...config, heroTitle: v })} />
-              <FieldTextarea label="Subtitle Hero" value={config.heroSubtitle} onChange={(v) => setConfig({ ...config, heroSubtitle: v })} />
-              <FieldInput label="Hero Fallback Image URL" value={config.heroFallbackImage || ""} onChange={(v) => setConfig({ ...config, heroFallbackImage: v })} />
-              <div style={{ marginBottom: "16px" }}>
-                <label style={labelStyle}>Upload Hero Image</label>
-                <label style={{ ...btnOutlineStyle, padding: "8px 12px", cursor: "pointer", display: "inline-block" }}>
-                  Pilih Gambar
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: "none" }}
-                    onChange={(e) => uploadHeroImage(e.target.files)}
-                  />
-                </label>
-              </div>
-              {config.heroFallbackImage ? (
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "16px" }}>
-                  {config.heroFallbackImage.split(',').filter(Boolean).map((img, idx) => (
-                    <div key={idx} style={{ position: "relative", width: "100%", maxWidth: "200px" }}>
-                      <img
-                        src={img.trim()}
-                        alt={`Hero preview ${idx + 1}`}
-                        style={{ width: "100%", height: "140px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "8px" }}
-                      />
-                      <button
-                        onClick={() => {
-                          const newImages = config.heroFallbackImage.split(',').filter((_, i) => i !== idx).join(',');
-                          setConfig({ ...config, heroFallbackImage: newImages });
-                        }}
-                        style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(255,0,0,0.8)", color: "#fff", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                      >×</button>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            <button onClick={handleSaveConfig} style={btnStyle}>Simpan Hero</button>
-          </div>
+          <HeroSlotManager
+            config={config}
+            setConfig={setConfig}
+            products={products}
+            updateHeroSlot={updateHeroSlot}
+            removeHeroSlot={removeHeroSlot}
+            onSave={handleSaveConfig}
+          />
         )}
 
         {activeTab === "gallery" && (
@@ -959,6 +969,238 @@ function FieldTextarea({ label, value, onChange }: { label: string; value: strin
   );
 }
 
+// ---- Hero Slot Manager ----
+function HeroSlotManager({
+  config,
+  setConfig,
+  products,
+  updateHeroSlot,
+  removeHeroSlot,
+  onSave,
+}: {
+  config: SiteConfig;
+  setConfig: (c: SiteConfig) => void;
+  products: Product[];
+  updateHeroSlot: (index: number, patch: Partial<HeroSetting>) => void;
+  removeHeroSlot: (index: number) => void;
+  onSave: () => void;
+}) {
+  const MAX_HERO_SLOTS = 3;
+  const heroSlots = config.heroSettings || [];
+  const [slotCategoryFilters, setSlotCategoryFilters] = useState<Record<number, string>>({});
+
+  const getFilteredProducts = (idx: number) => {
+    const cat = slotCategoryFilters[idx];
+    if (!cat || cat === "all") return products;
+    return products.filter(p => p.category === cat);
+  };
+
+  const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
+
+  return (
+    <div>
+      <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "#1a1a1a", marginBottom: "12px" }}>
+        🎡 Hero Carousel
+      </h2>
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "#666", lineHeight: 1.7, marginBottom: "28px" }}>
+        Atur gambar yang tampil di Hero Section. Maksimal <strong>{MAX_HERO_SLOTS} slot</strong>. 
+        Setiap slot bisa menggunakan <strong>gambar custom</strong> atau <strong>mengambil otomatis dari produk</strong> yang dipilih. 
+        Jika produk dipilih, nama dan harga akan otomatis muncul di hero.
+      </p>
+
+      <div style={sectionStyle}>
+        <FieldTextarea label="Judul Hero (Tampil jika slot tidak terhubung ke produk)" value={config.heroTitle} onChange={(v) => setConfig({ ...config, heroTitle: v })} />
+        <FieldTextarea label="Subtitle Hero" value={config.heroSubtitle} onChange={(v) => setConfig({ ...config, heroSubtitle: v })} />
+      </div>
+
+      <div style={{ marginBottom: '40px' }}>
+        <p style={{ ...mono, color: '#666', marginBottom: '20px' }}>Hero Slides ({heroSlots.length}/{MAX_HERO_SLOTS})</p>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {heroSlots.map((slot, idx) => {
+            const linkedProduct = products.find(p => p.id === slot.productId);
+            const previewImage = slot.image || linkedProduct?.image || "";
+            const previewName = linkedProduct?.name || config.heroTitle || "Ay Bucket";
+            const previewPrice = linkedProduct ? formatRupiah(linkedProduct.price) : "";
+            const filteredProducts = getFilteredProducts(idx);
+
+            return (
+              <div key={idx} style={{ 
+                padding: '20px', 
+                backgroundColor: '#fff', 
+                border: linkedProduct ? '2px solid rgba(184,92,59,0.3)' : '1px solid rgba(0,0,0,0.08)', 
+                borderRadius: '16px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ 
+                      width: '32px', height: '32px', borderRadius: '50%', 
+                      background: 'linear-gradient(135deg, #b85c3b, #d17047)', 
+                      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: '12px', fontWeight: 700 
+                    }}>
+                      {idx + 1}
+                    </span>
+                    <p style={{ ...mono, fontSize: '11px', color: '#1a1a1a', margin: 0 }}>Slide #{idx + 1}</p>
+                  </div>
+                  <button onClick={() => removeHeroSlot(idx)} style={{ border: 'none', background: '#fee2e2', color: '#dc2626', cursor: 'pointer', fontSize: '11px', padding: '6px 12px', borderRadius: '6px', fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>
+                    🗑️ Hapus
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '20px' }}>
+                  {/* Preview Image */}
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ width: '140px', height: '180px', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#f3f0eb', border: '1px solid rgba(0,0,0,0.08)' }}>
+                      {previewImage ? (
+                        <img src={previewImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontFamily: "'Inter', sans-serif", fontSize: '12px', textAlign: 'center', padding: '12px' }}>
+                          Belum ada gambar
+                        </div>
+                      )}
+                    </div>
+                    <label style={{ 
+                      position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)',
+                      cursor: 'pointer', padding: '4px 10px', borderRadius: '6px',
+                      backgroundColor: 'rgba(0,0,0,0.7)', color: '#fff', 
+                      fontFamily: "'Inter', sans-serif", fontSize: '10px', fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      📷 Upload
+                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 5 * 1024 * 1024) { alert("Maksimal 5MB"); return; }
+                          const reader = new FileReader();
+                          reader.onloadend = () => updateHeroSlot(idx, { image: String(reader.result) });
+                          reader.readAsDataURL(file);
+                        }
+                      }} />
+                    </label>
+                    {/* Preview info */}
+                    {linkedProduct && (
+                      <div style={{ marginTop: '8px', textAlign: 'center' }}>
+                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600, color: '#1a1a1a', margin: '0 0 2px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewName}</p>
+                        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#b85c3b', margin: 0 }}>{previewPrice}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Controls */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Category Filter */}
+                    <div>
+                      <label style={labelStyle}>Filter Kategori Produk</label>
+                      <select
+                        style={{ ...inputStyle, fontSize: '13px' }}
+                        value={slotCategoryFilters[idx] || "all"}
+                        onChange={(e) => {
+                          setSlotCategoryFilters(prev => ({ ...prev, [idx]: e.target.value }));
+                          // Reset product if switching category
+                          if (slot.productId) {
+                            const prod = products.find(p => p.id === slot.productId);
+                            if (prod && e.target.value !== "all" && prod.category !== e.target.value) {
+                              updateHeroSlot(idx, { productId: "" });
+                            }
+                          }
+                        }}
+                      >
+                        <option value="all">📋 Semua Kategori</option>
+                        {uniqueCategories.map(cat => {
+                          const catInfo = categories.find(c => c.key === cat);
+                          return (
+                            <option key={cat} value={cat}>{catInfo?.emoji || "📦"} {catInfo?.label || cat}</option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    {/* Product Picker */}
+                    <div>
+                      <label style={labelStyle}>Pilih Produk</label>
+                      <select
+                        style={{ ...inputStyle, fontSize: '13px' }}
+                        value={slot.productId || ""}
+                        onChange={(e) => {
+                          const prodId = e.target.value;
+                          const prod = products.find(p => p.id === prodId);
+                          // Auto-set image from product if no custom image
+                          if (prod && !slot.image) {
+                            updateHeroSlot(idx, { productId: prodId, image: prod.image });
+                          } else {
+                            updateHeroSlot(idx, { productId: prodId });
+                          }
+                        }}
+                      >
+                        <option value="">-- Pilih Produk --</option>
+                        {filteredProducts.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} — {formatRupiah(p.price)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {linkedProduct && (
+                      <div style={{ 
+                        padding: '10px 14px', borderRadius: '10px', 
+                        background: 'linear-gradient(135deg, rgba(184,92,59,0.08), rgba(209,112,71,0.04))',
+                        border: '1px solid rgba(184,92,59,0.15)',
+                      }}>
+                        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#1a1a1a', fontWeight: 600, margin: '0 0 4px 0' }}>
+                          ✅ Terhubung: {linkedProduct.name}
+                        </p>
+                        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#b85c3b', margin: 0 }}>
+                          {formatRupiah(linkedProduct.price)} • {categories.find(c => c.key === linkedProduct.category)?.label || linkedProduct.category}
+                        </p>
+                      </div>
+                    )}
+
+                    {!linkedProduct && (
+                      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#999', fontStyle: 'italic', margin: 0 }}>
+                        💡 Pilih produk agar nama & harga otomatis muncul, atau biarkan kosong untuk info default.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {heroSlots.length < MAX_HERO_SLOTS && (
+          <button
+            onClick={() => setConfig({ ...config, heroSettings: [...heroSlots, {}] })}
+            style={{ 
+              ...btnOutlineStyle, 
+              marginTop: '20px', 
+              width: '100%', 
+              padding: '14px',
+              borderRadius: '12px',
+              borderStyle: 'dashed',
+              fontSize: '11px',
+            }}
+          >
+            + Tambah Slide Hero ({heroSlots.length}/{MAX_HERO_SLOTS})
+          </button>
+        )}
+
+        {heroSlots.length >= MAX_HERO_SLOTS && (
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#999', textAlign: 'center', marginTop: '16px' }}>
+            Maksimal {MAX_HERO_SLOTS} slide hero telah tercapai.
+          </p>
+        )}
+      </div>
+
+      <button onClick={onSave} style={{ ...btnStyle, borderRadius: '10px', padding: '14px 28px' }}>
+        💾 Simpan Hero
+      </button>
+    </div>
+  );
+}
+
 // GalleryManager component dengan drag-and-drop
 interface GalleryManagerProps {
   items: GalleryProject[];
@@ -1133,7 +1375,7 @@ function GalleryManager({
             style={{
               position: "fixed",
               inset: 0,
-              zIndex: 10020,
+              zIndex: 2147483647,
               background: "rgba(0,0,0,0.72)",
               display: "flex",
               alignItems: "center",

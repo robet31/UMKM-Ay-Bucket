@@ -54,7 +54,7 @@ export function Nav() {
 
   const config = getSiteConfig();
   const hasLogo = Boolean((config.brandLogoUrl || BRAND_LOGO.logo)) && !logoFailed;
-  const brandDisplayName = "Ay Bucket & Gift";
+  const brandDisplayName = config.businessName || "Ay Bucket & Gift";
 
   return (
     <>
@@ -115,7 +115,7 @@ export function Nav() {
                 letterSpacing: "0.08em",
               }}
             >
-              ay
+              {brandDisplayName.substring(0, 2).toLowerCase()}
             </span>
           )}
           <span style={{ display: "flex", flexDirection: "column", marginLeft: 8, lineHeight: 1 }}>
@@ -204,7 +204,7 @@ export function Nav() {
 
           {(() => {
             const catalogLinkType = config.catalogLinkType || "wa";
-            let catalogHref = BRAND_LOGO.canvaCatalog;
+            let catalogHref = getCatalogWhatsAppLink() || `https://wa.me/${(config.whatsappNumber || "6282257827867").replace(/[^0-9]/g, "")}`;
             if (catalogLinkType === "wa" && config.catalogLink) {
               catalogHref = getCatalogWhatsAppLink() || `https://wa.me/${config.catalogLink.replace(/[^0-9]/g, "")}`;
             } else if ((catalogLinkType === "link" || catalogLinkType === "pdf") && config.catalogLink) {

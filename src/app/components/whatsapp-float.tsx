@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { getWhatsAppLink, businessInfo } from "../data";
+import { getWhatsAppLink, getSiteConfig } from "../data";
 import { useLanguage } from "../language";
 
 export function WhatsAppFloat() {
@@ -88,7 +88,7 @@ export function WhatsAppFloat() {
                 marginTop: "8px",
               }}
             >
-              📞 {businessInfo.whatsappDisplay}
+              📞 {getSiteConfig().whatsappDisplay}
             </p>
           </motion.div>
         )}

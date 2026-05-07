@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { categories, formatRupiah, getProducts, getSiteConfig, getWhatsAppOrderLink, mergeProductsByNameAndPrice, type Product, type ProductCategory } from "../data";
+import { categories, formatRupiah, getProducts, getSiteConfig, getWhatsAppOrderLink, mergeProductsByNameAndPrice, syncAllWithNeon, type Product, type ProductCategory, type Category } from "../data";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
@@ -75,6 +75,10 @@ export function Home() {
   }, [products]);
 
   useEffect(() => {
+    syncAllWithNeon().catch(console.error);
+  }, []);
+
+  useEffect(() => {
     if (selectedProduct || selectedCategory) {
       const scrollY = window.scrollY;
       document.body.style.position = "fixed";
@@ -93,24 +97,24 @@ export function Home() {
     }
   }, [selectedProduct, selectedCategory]);
 
-  const filteredProducts = activeCategory === "all" ? products : products.filter((p) => p.category === activeCategory);
+  const filteredProducts = activeCategory === "all" ? products : products.filter((p: Product) => p.category === activeCategory);
   const displayedProducts = showAll ? filteredProducts : filteredProducts.slice(0, 12);
-  const activeInfo = activeCategory !== "all" ? categories.find((c) => c.key === activeCategory) : null;
-  const selectedCategoryInfo = selectedCategory ? categories.find((c) => c.key === selectedCategory) ?? null : null;
-  const selectedCategoryProducts = selectedCategory ? products.filter((p) => p.category === selectedCategory) : [];
+  const activeInfo = activeCategory !== "all" ? categories.find((c: Category) => c.key === activeCategory) : null;
+  const selectedCategoryInfo = selectedCategory ? categories.find((c: Category) => c.key === selectedCategory) ?? null : null;
+  const selectedCategoryProducts = selectedCategory ? products.filter((p: Product) => p.category === selectedCategory) : [];
 
   const categoriesWithProducts = useMemo(() => {
     return categories
-      .map((category) => ({
+      .map((category: Category) => ({
         ...category,
-        count: products.filter((product) => product.category === category.key).length,
+        count: products.filter((product: Product) => product.category === category.key).length,
       }))
       .filter((category) => category.count > 0);
   }, [products]);
 
   const polaroidCards = useMemo(() => {
-    return categoriesWithProducts.map((category, index) => {
-      const product = products.find((item) => item.category === category.key);
+    return categoriesWithProducts.map((category: any, index: number) => {
+      const product = products.find((item: Product) => item.category === category.key);
       if (!product) return null;
 
       const seed = product.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), index * 31);
@@ -151,13 +155,33 @@ export function Home() {
   };
 
   const heroFrames = (() => {
-    const adminImages = config.heroFallbackImage ? config.heroFallbackImage.split(',').map(s => s.trim()).filter(Boolean) : [];
-    
-    const adminHeroes: Product[] = adminImages.map((img, idx) => ({
-      id: `hero-fallback-${idx}`,
+    // 1. Get from new heroSettings
+    const settingsHeroes: Product[] = (config.heroSettings || []).map((slot, idx) => {
+      const linkedProduct = products.find(p => p.id === slot.productId);
+      const img = slot.image || linkedProduct?.image || "";
+      if (!img && !linkedProduct) return null;
+      
+      return {
+        id: `hero-slot-${idx}`,
+        name: linkedProduct?.name || config.heroTitle || config.businessName || "Ay Bucket",
+        category: linkedProduct?.category || ("catalog-home" as ProductCategory),
+        description: linkedProduct ? formatRupiah(linkedProduct.price) : (config.heroSubtitle || ""),
+        image: img,
+        images: [img],
+        price: linkedProduct?.price || 0,
+        priceLabel: linkedProduct ? formatRupiah(linkedProduct.price) : (language === "id" ? "Katalog" : "Catalog"),
+        tag: "hero",
+        variant: "hero",
+      } as Product;
+    }).filter((p): p is Product => p !== null);
+
+    // 2. Fallback to legacy heroFallbackImage if settings are empty
+    const adminImages = config.heroFallbackImage ? config.heroFallbackImage.split('|SEP|').map(s => s.trim()).filter(Boolean) : [];
+    const legacyHeroes: Product[] = settingsHeroes.length > 0 ? [] : adminImages.map((img, idx) => ({
+      id: `hero-legacy-${idx}`,
       name: config.heroTitle || config.businessName || "Ay Bucket",
       category: "catalog-home" as ProductCategory,
-      description: config.heroSubtitle || config.tagline || (language === "id" ? "Katalog polaroid yang bergerak mengikuti scroll." : "Polaroid catalog that moves with scroll."),
+      description: config.heroSubtitle || "",
       image: img,
       images: [img],
       price: 0,
@@ -165,6 +189,8 @@ export function Home() {
       tag: "hero",
       variant: "hero",
     }));
+
+    const adminHeroes = [...settingsHeroes, ...legacyHeroes];
 
     if (adminHeroes.length === 0) {
       adminHeroes.push({
@@ -303,55 +329,8 @@ export function Home() {
             </p>
           </div>
 
-          <div style={{ marginBottom: "12px", display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveCategory("all");
-                setShowAll(false);
-              }}
-              style={{
-                border: `1px solid ${activeCategory === "all" ? "#1a1a1a" : "rgba(0,0,0,0.12)"}`,
-                background: activeCategory === "all" ? "#1a1a1a" : "#fff",
-                color: activeCategory === "all" ? "#fff" : "#666",
-                borderRadius: "999px",
-                padding: "8px 14px",
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "10px",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-              }}
-            >
-              {language === "id" ? "Semua" : "All"} ({products.length})
-            </button>
-            {categoriesWithProducts.map((category) => {
-              const isActive = activeCategory === category.key;
-              return (
-                <button
-                  key={category.key}
-                  type="button"
-                  onClick={() => {
-                    setActiveCategory(category.key);
-                    setShowAll(false);
-                  }}
-                  style={{
-                    border: `1px solid ${isActive ? getCategoryAccent(category.key) : "rgba(0,0,0,0.12)"}`,
-                    background: isActive ? getCategoryAccent(category.key) : "#fff",
-                    color: isActive ? "#fff" : "#666",
-                    borderRadius: "999px",
-                    padding: "8px 14px",
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: "10px",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    cursor: "pointer",
-                  }}
-                >
-                  {getCategoryLabel(category.key, category.label, language)} ({category.count})
-                </button>
-              );
-            })}
+          <div style={{ display: "none" }}>
+            {/* Category filters removed per user request */}
           </div>
 
           {activeInfo && (
@@ -363,11 +342,7 @@ export function Home() {
                 {activeInfo.description}
               </p>
               {activeInfo.noted && <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "#888", margin: "12px 0 0 0", lineHeight: 1.6 }}>💡 {activeInfo.noted}</p>}
-              {activeInfo.canvaLink && (
-                <a href={activeInfo.canvaLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: "18px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", padding: "10px 20px", border: `1px solid ${getCategoryAccent(activeInfo.key)}`, backgroundColor: getCategoryAccent(activeInfo.key), color: "#fff", cursor: "pointer", textDecoration: "none", transition: "all 0.3s ease", borderRadius: "8px", fontWeight: 600 }}>
-                  📋 {language === "id" ? "Lihat Katalog Lengkap" : "View Full Catalog"} →
-                </a>
-              )}
+
             </motion.div>
           )}
         </motion.section>
@@ -912,12 +887,9 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
             {renderPriceDisplayWithPromo(product, language)}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
-            {categoryInfo?.canvaLink && (
-              <a href={categoryInfo.canvaLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "12px 18px", backgroundColor: "transparent", color: "#1a1a1a", border: "1px solid rgba(0,0,0,0.14)", textDecoration: "none", textAlign: "center", borderRadius: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                {language === "id" ? "Menuju Katalog" : "Open Catalog"}
-              </a>
-            )}
-            <a href={getWhatsAppOrderLink(displayName, product.priceLabel || String(product.price || ""))} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "12px 18px", backgroundColor: "#1a1a1a", color: "#fff", textDecoration: "none", textAlign: "center", borderRadius: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase" }}>{language === "id" ? "Pesan via WhatsApp" : "Order via WhatsApp"}</a>
+            <a href={getWhatsAppOrderLink(displayName, product.priceLabel || String(product.price || ""))} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "12px 18px", backgroundColor: "#25D366", color: "#fff", textDecoration: "none", textAlign: "center", borderRadius: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", boxShadow: "0 4px 12px rgba(37,211,102,0.3)" }}>
+              💬 {language === "id" ? "Pesan via WhatsApp" : "Order via WhatsApp"}
+            </a>
           </div>
         </div>
       </motion.div>
@@ -995,7 +967,7 @@ function CategoryPreviewModal({
   onClose,
   onSelectProduct,
 }: {
-  category: { key: ProductCategory; label: string; emoji: string; description: string; noted?: string; canvaLink?: string; count: number };
+  category: Category;
   products: Product[];
   onClose: () => void;
   onSelectProduct: (product: Product) => void;
@@ -1031,11 +1003,7 @@ function CategoryPreviewModal({
             <div style={{ padding: "10px 14px", borderRadius: "999px", background: "rgba(0,0,0,0.05)", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "#666" }}>
               {products.length} {language === "id" ? "produk tersedia" : "products available"}
             </div>
-            {category.canvaLink && (
-              <a href={category.canvaLink} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: "999px", background: "#1a1a1a", color: "#fff", textDecoration: "none", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                {language === "id" ? "Menuju katalog" : "Open catalog"}
-              </a>
-            )}
+
           </div>
 
           <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "120px" : "140px"}, 1fr))`, gap: "14px" }}>
