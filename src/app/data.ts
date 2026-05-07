@@ -189,12 +189,44 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
         password
       }), 
     });
+    if (!res.ok) {
+      if (res.status === 413) throw new Error("Ukuran data terlalu besar! Harap hapus beberapa gambar atau gunakan ukuran gambar yang lebih kecil (Maks 10MB).");
+      throw new Error(`Server error: ${res.statusText}`);
+    }
     const result = await res.json();
-    return result.success;
-  } catch (e) { 
+    if (!result.success) throw new Error(result.error || "Gagal menyimpan ke server");
+    return true;
+  } catch (e: any) { 
     console.error(`Failed to save ${key}:`, e); 
-    return false; 
+    throw e;
   }
+}
+
+export async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', quality));
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
 }
 
 export const fetchSiteConfigFromNeon = () => fetchFromNeon('site_config');
@@ -291,14 +323,14 @@ export function cleanMapsUrl(url: string | undefined): string {
   return clean;
 }
 
-export function saveSiteConfig(config: Partial<SiteConfig>) {
-  try {
-    const current = getSiteConfig();
-    const merged = { ...current, ...config, heroFallbackImage: migrateLegacyAssetUrl(config.heroFallbackImage ?? current.heroFallbackImage), brandLogoUrl: migrateLegacyAssetUrl(config.brandLogoUrl ?? current.brandLogoUrl ?? defaultConfig.brandLogoUrl), };
-    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
-    if (isProduction && typeof fetch !== 'undefined') { saveSiteConfigToNeon(merged).catch(console.error); }
-    window.dispatchEvent(new Event("siteConfigChanged"));
-  } catch { }
+export async function saveSiteConfig(config: Partial<SiteConfig>): Promise<void> {
+  const current = getSiteConfig();
+  const merged = { ...current, ...config, heroFallbackImage: migrateLegacyAssetUrl(config.heroFallbackImage ?? current.heroFallbackImage), brandLogoUrl: migrateLegacyAssetUrl(config.brandLogoUrl ?? current.brandLogoUrl ?? defaultConfig.brandLogoUrl), };
+  localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
+  if (isProduction && typeof fetch !== 'undefined') { 
+    await saveSiteConfigToNeon(merged); 
+  }
+  window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
 export function resetSiteConfig() { localStorage.removeItem(ADMIN_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
@@ -375,13 +407,13 @@ export function getGalleryProjects(): GalleryProject[] {
   } catch { return defaultGalleryProjects; }
 }
 
-export function setGalleryProjects(projects: GalleryProject[]): void {
+export async function setGalleryProjects(projects: GalleryProject[]): Promise<void> {
   if (typeof window === "undefined") return;
   const dataToSave = projects.map(p => ({ ...p, image: migrateLegacyAssetUrl(p.image) }));
   localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(dataToSave));
   window.dispatchEvent(new Event("galleryProjectsChanged"));
   if (isProduction) {
-    saveToNeon("gallery_projects", dataToSave).catch(console.error);
+    await saveToNeon("gallery_projects", dataToSave);
   }
 }
 export function resetGalleryProjects(): void { if (typeof window === "undefined") return; localStorage.removeItem(GALLERY_STORAGE_KEY); window.dispatchEvent(new Event("galleryProjectsChanged")); }
@@ -401,12 +433,12 @@ export function getProducts(): Product[] {
   return mergeProductsByNameAndPrice(defaultProducts);
 }
 
-export function saveProducts(prods: Product[]) {
+export async function saveProducts(prods: Product[]): Promise<void> {
   const dataToSave = enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[])));
   localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(dataToSave));
   window.dispatchEvent(new Event("siteConfigChanged"));
   if (isProduction) {
-    saveToNeon("products", dataToSave).catch(console.error);
+    await saveToNeon("products", dataToSave);
   }
 }
 export function resetProducts() { localStorage.removeItem(PRODUCTS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
@@ -440,11 +472,11 @@ export const defaultVideos: VideoItem[] = [
 ];
 
 export function getVideos(): VideoItem[] { try { const stored = localStorage.getItem(VIDEOS_STORAGE_KEY); if (stored) return JSON.parse(stored); } catch { } return defaultVideos; }
-export function saveVideos(vids: VideoItem[]) {
+export async function saveVideos(vids: VideoItem[]): Promise<void> {
   localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids));
   window.dispatchEvent(new Event("siteConfigChanged"));
   if (isProduction) {
-    saveToNeon("videos", vids).catch(console.error);
+    await saveToNeon("videos", vids);
   }
 }
 export function resetVideos() { localStorage.removeItem(VIDEOS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }

@@ -26,6 +26,7 @@ import {
   syncAllWithNeon,
   setAdminCredentials,
   cleanMapsUrl,
+  compressImage,
   type GalleryProject,
   type SiteConfig,
   type Product,
@@ -125,27 +126,33 @@ export function Admin() {
     setTimeout(() => setShowSuccessModal(false), 4000);
   };
 
-  const handleSaveConfig = () => {
+  const handleSaveConfig = async () => {
     const normalizedConfig = {
       ...config,
       instagram: config.instagram?.startsWith('@@') ? config.instagram.substring(1) : config.instagram,
       tiktok: config.tiktok?.startsWith('@@') ? config.tiktok.substring(1) : config.tiktok,
     };
-    saveSiteConfig(normalizedConfig);
-    showSaved();
+    try {
+      await saveSiteConfig(normalizedConfig);
+      showSaved();
+      alert("Pengaturan Website berhasil disimpan!");
+    } catch (e: any) {
+      alert(e.message || "Gagal menyimpan pengaturan.");
+    }
   };
 
-  const uploadBrandLogo = (file: File | null) => {
+  const uploadBrandLogo = async (file: File | null) => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       alert("Ukuran gambar maksimal 5MB");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setConfig((prev) => ({ ...prev, brandLogoUrl: String(reader.result || "") }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await compressImage(file, 800, 0.8);
+      setConfig((prev) => ({ ...prev, brandLogoUrl: dataUrl }));
+    } catch (e) {
+      alert("Gagal memproses gambar");
+    }
   };
 
   const uploadHeroImage = async (files: FileList | null) => {
@@ -154,12 +161,12 @@ export function Admin() {
     const results: string[] = [];
     for (const file of fileArray) {
       if (file.size > 5 * 1024 * 1024) continue;
-      const dataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(String(reader.result || ""));
-        reader.readAsDataURL(file);
-      });
-      if (dataUrl) results.push(dataUrl);
+      try {
+        const dataUrl = await compressImage(file, 1200, 0.8);
+        if (dataUrl) results.push(dataUrl);
+      } catch (e) {
+        console.error("Failed to compress image:", e);
+      }
     }
     if (results.length > 0) {
       const currentSettings = config.heroSettings || [];
@@ -179,25 +186,43 @@ export function Admin() {
   };
 
   const removeHeroSlot = (index: number) => {
-    const current = (config.heroSettings || []).filter((_, i) => i !== index);
-    setConfig({ ...config, heroSettings: current });
+    if (window.confirm("Hapus slot hero ini?")) {
+      const current = (config.heroSettings || []).filter((_, i) => i !== index);
+      setConfig({ ...config, heroSettings: current });
+      alert("Slot Hero dihapus (jangan lupa klik Simpan Pengaturan)");
+    }
   };
 
-  const handleSaveProducts = () => {
+  const handleSaveProducts = async () => {
     const merged = mergeProductsByNameAndPrice(products);
-    setProductsList(merged);
-    saveProducts(merged);
-    showSaved();
+    try {
+      await saveProducts(merged);
+      setProductsList(merged);
+      showSaved();
+      alert("Data Produk berhasil disimpan!");
+    } catch (e: any) {
+      alert(e.message || "Gagal menyimpan produk.");
+    }
   };
 
-  const handleSaveVideos = () => {
-    saveVideos(videos);
-    showSaved();
+  const handleSaveVideos = async () => {
+    try {
+      await saveVideos(videos);
+      showSaved();
+      alert("Data Video berhasil disimpan!");
+    } catch (e: any) {
+      alert(e.message || "Gagal menyimpan video.");
+    }
   };
 
-  const handleSaveGallery = () => {
-    setGalleryProjects(galleryProjects);
-    showSaved();
+  const handleSaveGallery = async () => {
+    try {
+      await setGalleryProjects(galleryProjects);
+      showSaved();
+      alert("Data Galeri berhasil disimpan!");
+    } catch (e: any) {
+      alert(e.message || "Gagal menyimpan galeri.");
+    }
   };
 
   const handleResetAll = () => {
@@ -230,10 +255,17 @@ export function Admin() {
     };
   }, []);
 
-  const handleDeleteProduct = (id: string) => {
-    const updated = mergeProductsByNameAndPrice(products.filter((p) => p.id !== id));
-    setProductsList(updated);
-    saveProducts(updated);
+  const handleDeleteProduct = async (id: string) => {
+    if (window.confirm("Hapus produk ini secara permanen?")) {
+      const updated = mergeProductsByNameAndPrice(products.filter((p) => p.id !== id));
+      try {
+        await saveProducts(updated);
+        setProductsList(updated);
+        alert("Produk berhasil dihapus!");
+      } catch (e: any) {
+        alert(e.message || "Gagal menghapus produk dari server.");
+      }
+    }
   };
 
   const handleUpdateProduct = (updated: Product) => {
@@ -269,10 +301,17 @@ export function Admin() {
     setEditingVideo(newVideo);
   };
 
-  const handleDeleteVideo = (id: string) => {
-    const updated = videos.filter((v) => v.id !== id);
-    setVideosList(updated);
-    saveVideos(updated);
+  const handleDeleteVideo = async (id: string) => {
+    if (window.confirm("Hapus video ini?")) {
+      const updated = videos.filter((v) => v.id !== id);
+      try {
+        await saveVideos(updated);
+        setVideosList(updated);
+        alert("Video berhasil dihapus!");
+      } catch (e: any) {
+        alert(e.message || "Gagal menghapus video dari server.");
+      }
+    }
   };
 
   const handleUpdateVideo = (updated: VideoItem) => {
@@ -297,20 +336,24 @@ export function Admin() {
   };
 
   const removeGalleryProject = (id: string) => {
-    setGalleryProjectsList((prev) => prev.filter((item) => item.id !== id));
+    if (window.confirm("Hapus item galeri ini?")) {
+      setGalleryProjectsList((prev) => prev.filter((item) => item.id !== id));
+      alert("Item galeri dihapus (jangan lupa klik Simpan Galeri)");
+    }
   };
 
-  const uploadGalleryImage = (id: string, file: File | null) => {
+  const uploadGalleryImage = async (id: string, file: File | null) => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       alert("Ukuran gambar maksimal 5MB");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      updateGalleryProject(id, { image: String(reader.result || "") });
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await compressImage(file, 1000, 0.8);
+      updateGalleryProject(id, { image: dataUrl });
+    } catch (e) {
+      alert("Gagal memproses gambar");
+    }
   };
 
   const tabs: { key: Tab; label: string }[] = [
@@ -1218,9 +1261,12 @@ function HeroSlotManager({
                         const file = e.target.files?.[0];
                         if (file) {
                           if (file.size > 5 * 1024 * 1024) { alert("Maksimal 5MB"); return; }
-                          const reader = new FileReader();
-                          reader.onloadend = () => updateHeroSlot(idx, { image: String(reader.result) });
-                          reader.readAsDataURL(file);
+                          try {
+                            const dataUrl = await compressImage(file, 1200, 0.8);
+                            updateHeroSlot(idx, { image: dataUrl });
+                          } catch (err) {
+                            alert("Gagal memproses gambar");
+                          }
                         }
                       }} />
                     </label>
@@ -1607,21 +1653,23 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
     setForm({ ...form, price: num, priceLabel: formatRupiah(num) });
   };
 
-  const handleFiles = (files: FileList | null) => {
+  const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const max = 5 * 1024 * 1024;
-    const readers: Promise<string>[] = [];
+    const promises: Promise<string>[] = [];
     Array.from(files).forEach((file) => {
-      if (file.size > max) return;
-      readers.push(new Promise((res) => {
-        const r = new FileReader();
-        r.onloadend = () => res(r.result as string);
-        r.readAsDataURL(file);
-      }));
+      if (file.size > max) {
+        alert("Beberapa gambar lebih dari 5MB dan dilewati");
+        return;
+      }
+      promises.push(compressImage(file, 1000, 0.8));
     });
-    Promise.all(readers).then((dataUrls) => {
+    try {
+      const dataUrls = await Promise.all(promises);
       setForm({ ...form, images: [...(form.images || []), ...dataUrls] });
-    });
+    } catch (e) {
+      alert("Gagal memproses gambar");
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => handleFiles(e.target.files);
@@ -1842,7 +1890,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
             const out = { ...form, image: (form.images && form.images[0]) || form.image } as Product;
             onSave(out);
           }} style={{ ...btnStyle, width: isMobile ? "100%" : undefined }}>Simpan</button>
-          <button onClick={onCancel} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
+          <button onClick={() => { if(window.confirm("Batalkan perubahan?")) onCancel(); }} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
         </div>
       </div>
     </motion.div>,
@@ -1873,22 +1921,32 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
     });
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
       alert("File terlalu besar! Maksimal 50MB untuk video.");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm({
-        ...form,
-        url: reader.result as string,
-        source: "file",
-      });
-    };
-    reader.readAsDataURL(file);
+    
+    if (file.type.startsWith('image/')) {
+      try {
+        const dataUrl = await compressImage(file, 1000, 0.8);
+        setForm({ ...form, url: dataUrl, source: "file" });
+      } catch (err) {
+        alert("Gagal memproses gambar");
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm({
+          ...form,
+          url: reader.result as string,
+          source: "file",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return createPortal(
@@ -2057,7 +2115,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
 
         <div className="flex gap-3 mt-6" style={{ flexWrap: "wrap" }}>
           <button onClick={() => onSave(form)} style={{ ...btnStyle, width: isMobile ? "100%" : undefined }}>Simpan</button>
-          <button onClick={onCancel} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
+          <button onClick={() => { if(window.confirm("Batalkan perubahan?")) onCancel(); }} style={{ ...btnOutlineStyle, width: isMobile ? "100%" : undefined }}>Batal</button>
         </div>
       </div>
     </motion.div>,

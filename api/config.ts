@@ -4,6 +4,14 @@ import { getConfig, getConfigs, getUsageStats, setConfig, setConfigs } from "./_
 const ALLOWED_KEYS = ["site_config", "products", "videos", "gallery_projects"] as const;
 type AllowedKey = (typeof ALLOWED_KEYS)[number];
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 const DB_SOFT_LIMIT_BYTES = Number(process.env.DB_SOFT_LIMIT_BYTES || 2_000_000);
 const MIN_IMAGES_PER_PRODUCT = Number(process.env.MIN_IMAGES_PER_PRODUCT || 1);
 const MAX_IMAGES_PER_PRODUCT = Number(process.env.MAX_IMAGES_PER_PRODUCT || 10);
@@ -46,7 +54,7 @@ setInterval(() => {
   });
 }, 300_000); // Clean every 5 minutes
 
-const MAX_BODY_SIZE_BYTES = 5_000_000; // 5MB max request body
+const MAX_BODY_SIZE_BYTES = 10_000_000; // 10MB max request body
 
 // ---- Security: Input Sanitization ----
 function sanitizeString(value: unknown, maxLength: number = 10000): string {
