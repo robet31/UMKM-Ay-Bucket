@@ -164,11 +164,19 @@ export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
   } catch (e) { console.error(`Failed to fetch ${key}:`, e); return null; }
 }
 
+let activeAdminUsername = "";
+let activeAdminPassword = "";
+
+export function setAdminCredentials(user: string, pass: string) {
+  activeAdminUsername = user;
+  activeAdminPassword = pass;
+}
+
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
     const config = getSiteConfig();
-    const username = config.adminUsername || "admin";
-    const password = config.adminPassword || "AyBucket2026!";
+    const username = activeAdminUsername || config.adminUsername || "admin";
+    const password = activeAdminPassword || config.adminPassword || "AyBucket2026!";
     
     const res = await fetch(NEON_API_URL, { 
       method: 'POST', 

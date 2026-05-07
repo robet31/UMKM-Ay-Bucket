@@ -24,6 +24,7 @@ import {
   formatRupiah,
   getSiteConfigWithNeon,
   syncAllWithNeon,
+  setAdminCredentials,
   type GalleryProject,
   type SiteConfig,
   type Product,
@@ -334,6 +335,7 @@ export function Admin() {
         
         if (usernameInput === username && passwordInput === pass) {
           setAuthed(true);
+          setAdminCredentials(usernameInput, passwordInput);
           // Sync all data from Neon DB so the admin sees the latest remote changes
           syncAllWithNeon().then(() => {
             setConfig(getSiteConfig());
