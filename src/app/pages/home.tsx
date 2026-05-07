@@ -1004,9 +1004,9 @@ function CategoryPreviewModal({
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "8px" : "clamp(16px, 4vw, 40px)", overflow: "hidden" }} onClick={onClose}>
-    <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", maxHeight: isMobile ? "calc(100dvh - 16px)" : "88vh", overflow: isMobile ? "auto" : "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "16px" : "20px" }}>
+    <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", maxHeight: isMobile ? "calc(100dvh - 16px)" : "88vh", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "16px" : "20px" }}>
         <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.92)", cursor: "pointer" }}>×</button>
-        <div style={{ minHeight: 0, padding: isMobile ? "18px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflow: isMobile ? "visible" : "auto", overscrollBehavior: "contain" }}>
+        <div style={{ flex: isMobile ? "1" : "1.05", minHeight: 0, minWidth: 0, padding: isMobile ? "18px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflow: "auto", overscrollBehavior: "contain" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Preview kategori" : "Category preview"}
           </p>
@@ -1069,7 +1069,7 @@ function CategoryPreviewModal({
           </div>
         </div>
 
-        <div style={{ minHeight: 0, padding: isMobile ? "18px" : "28px", background: "#f2ede7", overflow: isMobile ? "visible" : "auto", overscrollBehavior: "contain", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
+        <div style={{ flex: isMobile ? "1" : "0.95", minHeight: 0, minWidth: 0, padding: isMobile ? "18px" : "28px", background: "#f2ede7", overflow: "auto", overscrollBehavior: "contain", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Ringkasan isi kategori" : "Category content summary"}
           </p>
