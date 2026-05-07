@@ -63,7 +63,7 @@ export function Contact() {
         className="flex min-h-screen flex-col justify-between overflow-x-hidden"
         style={{ padding: "0 clamp(20px, 5vw, 60px)" }}
       >
-        <div style={{ paddingTop: "200px", maxWidth: "1280px", margin: "0 auto", width: "100%" }}>
+        <div style={{ paddingTop: "100px", maxWidth: "1280px", margin: "0 auto", width: "100%" }}>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

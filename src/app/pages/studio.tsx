@@ -80,7 +80,7 @@ export function Studio() {
     <PageTransition>
       <div style={{ padding: "0 clamp(24px, 8vw, 120px)" }}>
         {/* Header */}
-        <div style={{ paddingTop: "160px", paddingBottom: "100px", position: "relative", overflow: "hidden" }}>
+        <div style={{ paddingTop: "80px", paddingBottom: "100px", position: "relative", overflow: "hidden" }}>
           {/* Animated flower decorations */}
           <motion.div
             animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}

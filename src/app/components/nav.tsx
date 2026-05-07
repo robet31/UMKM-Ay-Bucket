@@ -63,12 +63,12 @@ export function Nav() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 0.2 }}
-        className="fixed top-0 right-0 left-0 z-50 flex items-center justify-between"
+        className="sticky top-0 z-50 flex items-center justify-between"
         style={{
           padding: "20px clamp(16px, 6vw, 120px)",
           fontFamily: "'Inter', sans-serif",
           backdropFilter: "blur(12px)",
-          background: "linear-gradient(180deg, rgba(249,249,247,0.92) 0%, rgba(249,249,247,0.82) 100%)",
+          background: "linear-gradient(180deg, rgba(249,249,247,1) 0%, rgba(249,249,247,0.95) 100%)",
           borderBottom: "1px solid rgba(184,92,59,0.18)",
           boxShadow: "0 10px 26px rgba(0,0,0,0.06)",
         }}

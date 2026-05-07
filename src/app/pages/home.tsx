@@ -172,7 +172,7 @@ export function Home() {
         <motion.div aria-hidden style={{ position: "absolute", top: "-20%", right: "-15%", width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%)", filter: "blur(80px)" }} animate={{ y: [0, 30, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div aria-hidden style={{ position: "absolute", bottom: "-10%", left: "-10%", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,100,80,0.15) 0%, rgba(200,100,80,0.02) 100%)", filter: "blur(100px)" }} animate={{ y: [0, -40, 0] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
 
-        <div ref={heroRef} style={{ paddingTop: "clamp(100px, 10vw, 140px)", paddingBottom: "clamp(96px, 10vw, 140px)", position: "relative", zIndex: 2 }}>
+        <div ref={heroRef} style={{ paddingTop: "clamp(40px, 6vw, 80px)", paddingBottom: "clamp(96px, 10vw, 140px)", position: "relative", zIndex: 2 }}>
           <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }} style={{ maxWidth: "620px" }}>
               <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(249,249,247,0.8)", margin: "0 0 12px 0", fontWeight: 600 }}>
