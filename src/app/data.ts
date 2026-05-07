@@ -223,6 +223,28 @@ export async function saveSiteConfigToNeon(config: any): Promise<boolean> {
 // Check if running in production (Vercel)
 export const isProduction = import.meta.env.PROD === 'true' || import.meta.env.VITE_VERCEL === '1';
 
+// Get site config - with Neon fallback
+export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
+  // First try localStorage
+  const local = getSiteConfig();
+  
+  // Try fetch from Neon in production
+  if (isProduction) {
+    try {
+      const neonData = await fetchSiteConfigFromNeon();
+      if (neonData) {
+        // Merge: localStorage takes priority for admin edits, Neon for public view
+        localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(neonData));
+        return { ...defaultConfig, ...neonData } as SiteConfig;
+      }
+    } catch (e) {
+      console.error('Neon fetch error:', e);
+    }
+  }
+  
+  return local;
+}
+
 export function getSiteConfig(): SiteConfig {
   try {
     const stored = localStorage.getItem(ADMIN_STORAGE_KEY);
@@ -255,6 +277,12 @@ export function saveSiteConfig(config: Partial<SiteConfig>) {
       brandLogoUrl: migrateLegacyAssetUrl(config.brandLogoUrl ?? current.brandLogoUrl ?? defaultConfig.brandLogoUrl),
     };
     localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
+    
+    // Also save to Neon DB if available
+    if (isProduction && typeof fetch !== 'undefined') {
+      saveSiteConfigToNeon(merged).catch(console.error);
+    }
+    
     window.dispatchEvent(new Event("siteConfigChanged"));
   } catch { }
 }
