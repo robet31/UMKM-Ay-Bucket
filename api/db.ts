@@ -5,13 +5,22 @@ type UsageStats = {
   itemCount: number;
 };
 
-const connectionString = process.env.NEON_CONNECTION_STRING || process.env.DATABASE_URL;
+let sqlClient: any = null;
 
-if (!connectionString) {
-  throw new Error("NEON_CONNECTION_STRING or DATABASE_URL environment variable is required");
+function getSql() {
+  if (sqlClient) return sqlClient;
+  const connectionString = process.env.NEON_CONNECTION_STRING || process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error("Database connection string missing!");
+    // Return a dummy client that just throws if used
+    return () => { throw new Error("NEON_CONNECTION_STRING or DATABASE_URL environment variable is required"); };
+  }
+  sqlClient = neon(connectionString);
+  return sqlClient;
 }
 
-const sql = neon(connectionString);
+const sql = (strings: TemplateStringsArray, ...values: any[]) => getSql()(strings, ...values);
+
 let initPromise: Promise<void> | null = null;
 
 async function ensureSchema() {
