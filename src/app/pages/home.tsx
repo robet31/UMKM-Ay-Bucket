@@ -329,8 +329,55 @@ export function Home() {
             </p>
           </div>
 
-          <div style={{ display: "none" }}>
-            {/* Category filters removed per user request */}
+          <div style={{ marginBottom: "12px", display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory("all");
+                setShowAll(false);
+              }}
+              style={{
+                border: `1px solid ${activeCategory === "all" ? "#1a1a1a" : "rgba(0,0,0,0.12)"}`,
+                background: activeCategory === "all" ? "#1a1a1a" : "#fff",
+                color: activeCategory === "all" ? "#fff" : "#666",
+                borderRadius: "999px",
+                padding: "8px 14px",
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "10px",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              {language === "id" ? "Semua" : "All"} ({products.length})
+            </button>
+            {categoriesWithProducts.map((category) => {
+              const isActive = activeCategory === category.key;
+              return (
+                <button
+                  key={category.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory(category.key);
+                    setShowAll(false);
+                  }}
+                  style={{
+                    border: `1px solid ${isActive ? getCategoryAccent(category.key) : "rgba(0,0,0,0.12)"}`,
+                    background: isActive ? getCategoryAccent(category.key) : "#fff",
+                    color: isActive ? "#fff" : "#666",
+                    borderRadius: "999px",
+                    padding: "8px 14px",
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: "10px",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                  }}
+                >
+                  {getCategoryLabel(category.key, category.label, language)} ({category.count})
+                </button>
+              );
+            })}
           </div>
 
           {activeInfo && (
