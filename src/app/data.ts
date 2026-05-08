@@ -32,9 +32,6 @@ export function normalizeAssetUrl(url?: string): string {
   if (!url) return "";
   let normalized = String(url).trim().replace(/\\/g, "/");
   try { normalized = decodeURIComponent(normalized); } catch { }
-  if (normalized.startsWith("/assets/")) {
-    normalized = normalized.replace(/Rp /g, "Rp\u00A0");
-  }
   try { return encodeURI(normalized); } catch { return normalized; }
 }
 
@@ -42,10 +39,10 @@ function migrateLegacyAssetUrl(url?: string): string {
   const normalized = normalizeAssetUrl(url);
   if (!normalized) return "";
   const legacyMap: Record<string, string> = {
-    "/assets/buket-satin-rp20000-item-01.jpg": "/assets/Buket Bunga Asli Premium - Rp\u00A0350.000,00.png",
-    "/assets/money-bouquet-rp50000-item-01.jpg": "/assets/Mawar Candy (Bunga Asli) - Rp\u00A0170.000,00.png",
-    "/assets/snack-bouquet-rp35000-item-01.jpg": "/assets/Donat buket tart - Rp\u00A0100.000,00 - isi 7 donat bomboloni isi coklat topping glaze, bisa request warna. silahkan chat admin.png",
-    "/assets/catalog-home-rp150000-item-02.jpg": "/assets/Akrilik frame mini - Rp\u00A095.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan.png",
+    "/assets/buket-satin-rp20000-item-01.jpg": "/assets/Buket Bunga Asli Premium - Rp 350.00000.png",
+    "/assets/money-bouquet-rp50000-item-01.jpg": "/assets/Mawar Candy (Bunga Asli) - Rp 170.000,00.png",
+    "/assets/snack-bouquet-rp35000-item-01.jpg": "/assets/Donat buket tart - Rp 100.00000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin.png",
+    "/assets/catalog-home-rp150000-item-02.jpg": "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan.png",
   };
   return legacyMap[normalized] || normalized;
 }
@@ -157,7 +154,7 @@ const defaultConfig: SiteConfig = {
   footerText: "© 2026 Ay Bucket & Gift. Dibuat dengan penuh cinta.",
   heroTitle: "Ay Bucket & Gift",
   heroSubtitle: "Pilihan Hadiah Premium Untuk Momen Spesial Anda.",
-  heroFallbackImage: "/assets/Buket Bunga Asli Premium - Rp\u00A0350.000,00.png",
+  heroFallbackImage: "/assets/Buket Bunga Asli Premium - Rp 350.00000.png",
   heroSettings: [],
   brandLogoUrl: "/assets/logo-fix.png",
   mapsEmbedUrl: "https://maps.google.com/maps?q=Pertokoan+Pasar+Senenan+Bangkalan&t=&z=15&ie=UTF8&iwloc=&output=embed",
@@ -454,12 +451,12 @@ export const categories: Category[] = typeof window !== 'undefined' ? ((getSiteC
 export interface GalleryProject { id: string; title: string; category: string; aspect: "3/4" | "1/1" | "16/9"; image: string; }
 
 export const defaultGalleryProjects: GalleryProject[] = [
-  { id: "gallery-1", title: "Premium Satin Bouquet", category: "Buket Satin", aspect: "3/4", image: "/assets/Round Pita Satin - Rp\u00A0100.000,00.png", },
-  { id: "gallery-2", title: "Exclusive Money Bouquet", category: "Money Bouquet", aspect: "1/1", image: "/assets/Mawar Candy (Bunga Asli) - Rp\u00A0170.000,00.png", },
-  { id: "gallery-3", title: "Creative Donut Tart", category: "Snack Bouquet", aspect: "16/9", image: "/assets/Donat buket tart - Rp\u00A0100.000,00 - isi 7 donat bomboloni isi coklat topping glaze, bisa request warna. silahkan chat admin.png", },
-  { id: "gallery-4", title: "Elegant Acrylic Dome", category: "Premium Packages", aspect: "3/4", image: "/assets/Akrilik frame mini - Rp\u00A095.000,00 - akrilik dome ukuran A5 standing lampu warna putih, bisa request warna, foto & tulisan.png", },
-  { id: "gallery-5", title: "Fresh Flower White Sedap", category: "Fresh Flower", aspect: "1/1", image: "/assets/bunga white sedap - Rp\u00A0125.000,00 - 125ribu hanya bunga asli saja (10tangkai sedap malam & 10tangkai asteria).png", },
-  { id: "gallery-6", title: "Big Rose Artificial", category: "Artificial Flower", aspect: "16/9", image: "/assets/Bunga Mawar Palsu Premium (ukuran Big) - Rp\u00A0250.000,00.png", },
+  { id: "gallery-1", title: "Premium Satin Bouquet", category: "Buket Satin", aspect: "3/4", image: "/assets/Round Pita Satin - Rp 100.00000.png", },
+  { id: "gallery-2", title: "Exclusive Money Bouquet", category: "Money Bouquet", aspect: "1/1", image: "/assets/Mawar Candy (Bunga Asli) - Rp 170.000,00.png", },
+  { id: "gallery-3", title: "Creative Donut Tart", category: "Snack Bouquet", aspect: "16/9", image: "/assets/Donat buket tart - Rp 100.00000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin.png", },
+  { id: "gallery-4", title: "Elegant Acrylic Dome", category: "Premium Packages", aspect: "3/4", image: "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan.png", },
+  { id: "gallery-5", title: "Fresh Flower White Sedap", category: "Fresh Flower", aspect: "1/1", image: "/assets/bunga white sedap - Rp 125.000,00 - 125ribu hanya bunga asli saja (10tangkai sedap malam & 10tangkai asteria).png", },
+  { id: "gallery-6", title: "Big Rose Artificial", category: "Artificial Flower", aspect: "16/9", image: "/assets/Bunga Mawar Palsu Premium (ukuran Big) - Rp 250.000,00.png", },
 ];
 
 export function getGalleryProjects(): GalleryProject[] {

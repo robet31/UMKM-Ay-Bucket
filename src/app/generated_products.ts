@@ -1,5 +1,5 @@
 // GENERATED FILE - do not edit by hand
-// Generated: 2026-05-08T11:57:11.156Z
+// Generated: 2026-05-08T12:11:48.290Z
 // Total: 94 unique products from 185 asset files
 export const generatedInitialProducts = [
   {
