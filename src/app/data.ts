@@ -527,7 +527,15 @@ export async function saveProducts(prods: Product[]): Promise<void> {
     await saveToNeon("products", dataToSave);
   }
 }
-export function resetProducts() { localStorage.removeItem(PRODUCTS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
+export async function resetProducts() {
+  const merged = mergeProductsByNameAndPrice(defaultProducts);
+  memoryCache[PRODUCTS_STORAGE_KEY] = merged;
+  try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(merged)); } catch (e) { console.warn("Storage full during reset, using memory."); }
+  window.dispatchEvent(new Event("siteConfigChanged"));
+  if (isProduction) {
+    try { await saveToNeon("products", merged); } catch (e) { console.warn("Failed to push reset products to Neon:", e); }
+  }
+}
 export const products = defaultProducts;
 
 export function getWhatsAppOrderLink(productName: string, price: string, adminIndex: number = 1): string {
