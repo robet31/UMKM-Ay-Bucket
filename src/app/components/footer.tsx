@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { getSiteConfig, getWhatsAppLink, BRAND_LOGO } from "../data";
+import { getSiteConfig, getWhatsAppLink, BRAND_LOGO, categories, type Category } from "../data";
 import { useLanguage } from "../language";
 
 export function Footer() {
@@ -14,6 +14,10 @@ export function Footer() {
 
   const config = getSiteConfig();
   const brandDisplayName = config.businessName || "Ay Bucket & Gift";
+
+  const currentCategories = (config.customCategories && config.customCategories.length > 0) 
+    ? config.customCategories 
+    : categories;
 
   return (
     <footer
@@ -101,26 +105,14 @@ export function Footer() {
           gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
           gap: "14px",
         }}>
-          {[
-            {
-              emoji: "🌸",
-              title: language === "id" ? "Buket Premium" : "Premium Bouquets",
-              desc: language === "id" ? "Rangkaian bunga segar & artificial berkualitas tinggi." : "High-quality fresh & artificial flower arrangements.",
-              msg: language === "id" ? `Halo ${config.businessName}! Saya tertarik dengan buket premium.` : `Hello ${config.businessName}! I'm interested in premium bouquets.`,
-            },
-            {
-              emoji: "🍭",
-              title: language === "id" ? "Snack & Money Bouquet" : "Snack & Money Bouquet",
-              desc: language === "id" ? "Hadiah unik berisi snack, cokelat, atau uang yang cantik." : "Unique gifts with snacks, chocolates, or money bouquets.",
-              msg: language === "id" ? `Halo ${config.businessName}! Saya tertarik dengan snack/money bouquet.` : `Hello ${config.businessName}! I'm interested in snack/money bouquets.`,
-            },
-            {
-              emoji: "✨",
-              title: language === "id" ? "Gift & Accessories" : "Gift & Accessories",
-              desc: language === "id" ? "Selempang wisuda, frame akrilik, standing, dan lainnya." : "Graduation sashes, acrylic frames, stands, and more.",
-              msg: language === "id" ? `Halo ${config.businessName}! Saya tertarik dengan gift & accessories.` : `Hello ${config.businessName}! I'm interested in gifts & accessories.`,
-            },
-          ].map((item) => (
+          {currentCategories.slice(0, 4).map((cat) => ({
+            emoji: cat.emoji,
+            title: cat.label,
+            desc: cat.description,
+            msg: language === "id" 
+              ? `Halo ${config.businessName}! Saya tertarik dengan ${cat.label}.` 
+              : `Hello ${config.businessName}! I'm interested in ${cat.label}.`,
+          })).map((item) => (
             <div
               key={item.title}
               style={{

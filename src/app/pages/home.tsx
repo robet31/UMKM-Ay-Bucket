@@ -119,18 +119,23 @@ export function Home() {
 
   const filteredProducts = activeCategory === "all" ? products : products.filter((p: Product) => p.category === activeCategory);
   const displayedProducts = showAll ? filteredProducts : filteredProducts.slice(0, 12);
-  const activeInfo = activeCategory !== "all" ? categories.find((c: Category) => c.key === activeCategory) : null;
-  const selectedCategoryInfo = selectedCategory ? categories.find((c: Category) => c.key === selectedCategory) ?? null : null;
+  
+  const currentCategories = useMemo(() => {
+    return (config.customCategories && config.customCategories.length > 0) ? config.customCategories : categories;
+  }, [config.customCategories]);
+
+  const activeInfo = activeCategory !== "all" ? currentCategories.find((c: Category) => c.key === activeCategory) : null;
+  const selectedCategoryInfo = selectedCategory ? currentCategories.find((c: Category) => c.key === selectedCategory) ?? null : null;
   const selectedCategoryProducts = selectedCategory ? products.filter((p: Product) => p.category === selectedCategory) : [];
 
   const categoriesWithProducts = useMemo(() => {
-    return categories
+    return currentCategories
       .map((category: Category) => ({
         ...category,
         count: products.filter((product: Product) => product.category === category.key).length,
       }))
       .filter((category) => category.count > 0);
-  }, [products]);
+  }, [products, currentCategories]);
 
   const polaroidCards = useMemo(() => {
     return categoriesWithProducts.map((category: any, index: number) => {
