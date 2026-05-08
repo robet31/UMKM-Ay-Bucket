@@ -30,11 +30,6 @@ function getVideoPreviewUrl(video: VideoItem): string {
     if (match) return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
   }
 
-  if (video.source === "instagram") {
-    const match = video.url.match(/(?:instagram\.com\/(?:p|reels|reel)\/)([^/?&]+)/);
-    if (match) return `https://www.instagram.com/p/${match[1]}/media/?size=l`;
-  }
-
   return "";
 }
 
@@ -126,16 +121,27 @@ function VideoCard({ video, index }: { video: VideoItem; index: number }) {
             style={{
               width: "100%",
               height: "100%",
-              background: "linear-gradient(145deg, rgba(192,93,93,0.35), rgba(201,139,63,0.25))",
+              background: video.source === "instagram" 
+                ? "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)"
+                : video.source === "tiktok"
+                ? "linear-gradient(135deg, #25F4EE 0%, #000000 50%, #FE2C55 100%)"
+                : "linear-gradient(145deg, rgba(192,93,93,0.35), rgba(201,139,63,0.25))",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              opacity: 0.9,
             }}
           >
-            <motion.div animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+            <motion.div animate={{ opacity: [0.6, 1, 0.6], scale: [0.95, 1.05, 0.95] }} transition={{ duration: 3, repeat: Infinity }}>
+              {video.source === "instagram" ? (
+                <span style={{ fontSize: "48px", color: "white" }}>📷</span>
+              ) : video.source === "tiktok" ? (
+                <span style={{ fontSize: "48px", color: "white" }}>🎵</span>
+              ) : (
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
             </motion.div>
           </div>
         )}
