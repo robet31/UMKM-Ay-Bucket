@@ -68,11 +68,11 @@ function VideoCard({ video, index, onSelect }: { video: VideoItem; index: number
         flexDirection: "column",
         breakInside: "avoid",
         marginBottom: "24px",
-        cursor: onSelect ? "pointer" : "default",
+        cursor: "pointer",
       }}
-      onClick={() => onSelect?.(video)}
-      role={onSelect ? "button" : undefined}
-      tabIndex={onSelect ? 0 : undefined}
+      onClick={() => window.open(video.url, "_blank")}
+      role="button"
+      tabIndex={0}
     >
       <div
         style={{
@@ -379,37 +379,7 @@ export function VideoGallery() {
 /* ---- Studio Video Section (for Tentang Kami page) ---- */
 export function StudioVideoSection() {
   const [, setTick] = useState(0);
-  const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
-  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 768 : false));
   const [language] = useLanguage();
-
-  useEffect(() => {
-    const h = () => setTick((t) => t + 1);
-    window.addEventListener("siteConfigChanged", h);
-    return () => window.removeEventListener("siteConfigChanged", h);
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (!selectedVideo) return;
-    const htmlElem = document.documentElement;
-    const bodyElem = document.body;
-    const prevHtmlOverflow = htmlElem.style.overflow;
-    const prevBodyOverflow = bodyElem.style.overflow;
-    htmlElem.style.overflow = "hidden";
-    bodyElem.style.overflow = "hidden";
-    return () => {
-      htmlElem.style.overflow = prevHtmlOverflow;
-      bodyElem.style.overflow = prevBodyOverflow;
-    };
-  }, [selectedVideo]);
-
   const allVideos = getVideos();
   if (allVideos.length === 0) return null;
   const displayVideos = [...allVideos].sort((a, b) => Number(b.featured) - Number(a.featured));
@@ -480,153 +450,9 @@ export function StudioVideoSection() {
       <div style={{ marginTop: "28px" }}>
         <MasonryLayout
           items={displayVideos}
-          renderItem={(v, i) => <VideoCard key={v.id} video={v} index={i} onSelect={setSelectedVideo} />}
+          renderItem={(v, i) => <VideoCard key={v.id} video={v} index={i} />}
         />
       </div>
-
-      {/* Modal for selected video */}
-      <AnimatePresence>
-        {selectedVideo && createPortal(
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedVideo(null)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.8)",
-              display: "flex",
-              alignItems: isMobile ? "flex-start" : "center",
-              justifyContent: "center",
-              zIndex: 2147483647,
-              backdropFilter: "blur(2px)",
-              padding: isMobile ? "10px" : "20px",
-              overflow: "hidden",
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: "relative",
-                width: isMobile ? "100%" : "90vw",
-                height: isMobile ? "70dvh" : "90vh",
-                maxWidth: "1000px",
-                maxHeight: isMobile ? "85dvh" : "700px",
-                borderRadius: isMobile ? "10px" : "12px",
-                overflow: "hidden",
-                background: "#0a0a0a",
-              }}
-            >
-              {(() => {
-                let iframeSrc = "";
-                if (selectedVideo.source === "youtube") iframeSrc = getYouTubeEmbedUrl(selectedVideo.url);
-                else if (selectedVideo.source === "tiktok") iframeSrc = getTikTokEmbedUrl(selectedVideo.url);
-                else if (selectedVideo.source === "instagram") iframeSrc = getInstagramEmbedUrl(selectedVideo.url);
-                else iframeSrc = selectedVideo.url;
-
-                return iframeSrc ? (
-                  selectedVideo.source === "file" ? (
-                    <video
-                      src={iframeSrc}
-                      controls
-                      autoPlay
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                        display: "block",
-                      }}
-                    />
-                  ) : selectedVideo.source === "instagram" ? (
-                    // Responsive Instagram embed wrapper
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        padding: "8px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "100%",
-                          maxWidth: selectedVideo.orientation === "vertical" ? "325px" : "550px",
-                          aspectRatio: selectedVideo.orientation === "vertical" ? "9/16" : "4/5",
-                        }}
-                      >
-                        <iframe
-                          src={iframeSrc}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            border: 0,
-                            display: "block",
-                          }}
-                          allow="encrypted-media; picture-in-picture"
-                          allowFullScreen
-                          title={selectedVideo.caption}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <iframe
-                      src={iframeSrc}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        border: 0,
-                        display: "block",
-                      }}
-                      allow="autoplay; encrypted-media; picture-in-picture"
-                      allowFullScreen
-                      title={selectedVideo.caption}
-                    />
-                  )
-                ) : null;
-              })()}
-
-              {/* Close button */}
-              <button
-                onClick={() => setSelectedVideo(null)}
-                style={{
-                  position: "absolute",
-                  top: isMobile ? "10px" : "16px",
-                  right: isMobile ? "10px" : "16px",
-                  width: isMobile ? "36px" : "40px",
-                  height: isMobile ? "36px" : "40px",
-                  borderRadius: "50%",
-                  background: "rgba(0,0,0,0.6)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  color: "#fff",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: isMobile ? "18px" : "20px",
-                  transition: "all 0.3s ease",
-                  zIndex: 10000,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(0,0,0,0.9)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(0,0,0,0.6)";
-                }}
-              >
-                ✕
-              </button>
-            </motion.div>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
     </div>
   );
 }
