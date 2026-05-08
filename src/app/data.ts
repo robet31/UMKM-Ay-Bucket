@@ -330,6 +330,20 @@ export function getSiteConfig(): SiteConfig {
       merged.brandLogoUrl = migrateLegacyAssetUrl(merged.brandLogoUrl || defaultConfig.brandLogoUrl);
       if (!merged.adminUsername) merged.adminUsername = "admin";
       if (!merged.adminPassword || merged.adminPassword === "aybucket") merged.adminPassword = "admin123";
+
+      // Auto-migrate address and WA if they are using the old default
+      if (merged.address === "Pertokoan pasar senenan Bangkalan") {
+        merged.address = defaultConfig.address;
+        merged.whatsappNumber2 = defaultConfig.whatsappNumber2;
+        merged.whatsappDisplay2 = defaultConfig.whatsappDisplay2;
+        
+        // Ensure changes persist immediately
+        try { 
+            memoryCache[ADMIN_STORAGE_KEY] = merged;
+            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); 
+        } catch (e) {}
+      }
+
       return merged;
     }
   } catch { }
