@@ -30,6 +30,11 @@ function getVideoPreviewUrl(video: VideoItem): string {
     if (match) return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
   }
 
+  if (video.source === "instagram") {
+    const match = video.url.match(/(?:instagram\.com\/(?:p|reels|reel)\/)([^/?&]+)/);
+    if (match) return `https://www.instagram.com/p/${match[1]}/media/?size=l`;
+  }
+
   return "";
 }
 
@@ -50,11 +55,24 @@ function getVideoSourceLabel(video: VideoItem): string {
 }
 
 /* ---- Single Video Card (masonry-friendly) ---- */
-function VideoCard({ video, index, onSelect }: { video: VideoItem; index: number; onSelect?: (video: VideoItem) => void }) {
-  const previewUrl = getVideoPreviewUrl(video);
+function VideoCard({ video, index }: { video: VideoItem; index: number }) {
+  const [autoThumbnail, setAutoThumbnail] = useState<string>("");
+  const previewUrl = video.thumbnail || autoThumbnail || getVideoPreviewUrl(video);
   const aspectRatio = getVideoAspectRatio(video);
   const sourceLabel = getVideoSourceLabel(video);
   const captionPreview = video.caption.length > 96 ? `${video.caption.slice(0, 96)}...` : video.caption;
+
+  useEffect(() => {
+    // Auto-fetch TikTok thumbnails via oEmbed (Public API)
+    if (!video.thumbnail && video.source === "tiktok") {
+      fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(video.url)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.thumbnail_url) setAutoThumbnail(data.thumbnail_url);
+        })
+        .catch(() => {});
+    }
+  }, [video.url, video.thumbnail, video.source]);
 
   return (
     <motion.div
