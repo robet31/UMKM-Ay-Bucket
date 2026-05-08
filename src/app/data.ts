@@ -286,9 +286,29 @@ export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
   if (isProduction) {
     const remote = await fetchSiteConfigFromNeon();
     if (remote) { 
-      memoryCache[ADMIN_STORAGE_KEY] = remote;
-      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(remote)); } catch (e) { }
-      return { ...defaultConfig, ...remote } as SiteConfig; 
+      const merged = { ...defaultConfig, ...remote } as SiteConfig;
+      
+      // Auto-migrate old data in Neon DB
+      let needsSave = false;
+      if (merged.address === "Pertokoan pasar senenan Bangkalan" || !merged.address?.includes('\n')) {
+        merged.address = defaultConfig.address;
+        needsSave = true;
+      }
+      if (!merged.whatsappNumber2 || merged.whatsappNumber2 === "6285155455644") {
+        merged.whatsappNumber2 = defaultConfig.whatsappNumber2;
+        merged.whatsappDisplay2 = defaultConfig.whatsappDisplay2;
+        needsSave = true;
+      }
+      
+      // Persist migration back to Neon so it sticks
+      if (needsSave) {
+        const toSave = { ...remote, address: merged.address, whatsappNumber2: merged.whatsappNumber2, whatsappDisplay2: merged.whatsappDisplay2 };
+        saveSiteConfigToNeon(toSave).catch(() => {});
+      }
+
+      memoryCache[ADMIN_STORAGE_KEY] = merged;
+      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch (e) { }
+      return merged; 
     }
   }
   return getSiteConfig();
