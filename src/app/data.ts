@@ -144,8 +144,8 @@ const defaultConfig: SiteConfig = {
   address: "Toko: Ruko Jambu Raya Perumnas Kamal\nHomestore Madura: Jl Jeruk 6 no 4 Perumnas Kamal Bangkalan\nHomestore Surabaya: Jl Wonorejo 3 Tegalsari Surabaya",
   whatsappNumber: "6285880021020",
   whatsappDisplay: "0858-8002-1020",
-  whatsappNumber2: "6285155455644", // Example number, will be editable by admin
-  whatsappDisplay2: "0851-5545-5644",
+  whatsappNumber2: "6287853094053",
+  whatsappDisplay2: "0878-5309-4053",
   instagram: "@ay.bucket",
   tiktok: "",
   navLinks: [
@@ -331,8 +331,8 @@ export function getSiteConfig(): SiteConfig {
       if (!merged.adminUsername) merged.adminUsername = "admin";
       if (!merged.adminPassword || merged.adminPassword === "aybucket") merged.adminPassword = "admin123";
 
-      // Auto-migrate address and WA if they are using the old default
-      if (merged.address === "Pertokoan pasar senenan Bangkalan") {
+      // Auto-migrate address and WA if they are using the old default or old placeholder number
+      if (merged.address === "Pertokoan pasar senenan Bangkalan" || merged.whatsappNumber2 === "6285155455644" || (!merged.whatsappNumber2 && !merged.whatsappDisplay2)) {
         merged.address = defaultConfig.address;
         merged.whatsappNumber2 = defaultConfig.whatsappNumber2;
         merged.whatsappDisplay2 = defaultConfig.whatsappDisplay2;
