@@ -1003,30 +1003,6 @@ export function Admin() {
               Gambar pertama pada daftar produk adalah gambar utama (cover) di katalog. Buka <strong>Edit</strong> lalu klik ● pada thumbnail untuk memilih cover produk. Maks. {MAX_IMAGES_PER_PRODUCT} gambar per produk.
             </p>
 
-            {/* Sync default products to Neon button */}
-            <div style={{ padding: '14px 16px', marginBottom: '16px', borderRadius: '12px', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', border: '1px solid #93c5fd' }}>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#1e40af', margin: '0 0 10px 0', lineHeight: 1.6 }}>
-                💡 <strong>Produk tidak muncul setelah deploy?</strong> Klik tombol di bawah untuk sinkronkan {defaultProducts.length} produk default ke database Neon (cloud).
-              </p>
-              <button
-                onClick={async () => {
-                  if (confirm(`Sinkronkan ${defaultProducts.length} produk default ke database Neon? Ini akan menimpa data produk lama di server.`)) {
-                    try {
-                      await resetProducts();
-                      const merged = mergeProductsByNameAndPrice(defaultProducts);
-                      setProductsList(merged);
-                      showSaved();
-                      alert(`✅ Berhasil! ${merged.length} produk sudah disinkronkan ke database Neon.`);
-                    } catch (e: any) {
-                      alert("❌ Gagal sinkronkan: " + (e.message || "Unknown error"));
-                    }
-                  }
-                }}
-                style={{ ...btnStyle, background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', borderColor: '#2563eb', borderRadius: '10px', padding: '10px 20px' }}
-              >
-                🔄 Sync {defaultProducts.length} Produk Default ke Database
-              </button>
-            </div>
 
             {/* Edit Modal */}
             <AnimatePresence>
