@@ -77,36 +77,29 @@ export function WhatsAppFloat() {
               };
 
               return cfg.whatsappNumber2 ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <a href={getWhatsAppLink(defaultMessage, 1)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
-                    {language === "id" ? "Pusat / Madura" : "HQ / Madura"}
-                  </a>
-                  <a href={getWhatsAppLink(defaultMessage, 2)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
-                    {language === "id" ? "Cabang Surabaya" : "Surabaya Branch"}
-                  </a>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <a href={getWhatsAppLink(defaultMessage, 1)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
+                      {language === "id" ? "Pusat / Madura" : "HQ / Madura"}
+                    </a>
+                    <span style={{ fontSize: "10px", color: "#bbb", fontFamily: "'Inter', sans-serif" }}>{cfg.whatsappDisplay}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <a href={getWhatsAppLink(defaultMessage, 2)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
+                      {language === "id" ? "Cabang Surabaya" : "Surabaya Branch"}
+                    </a>
+                    <span style={{ fontSize: "10px", color: "#bbb", fontFamily: "'Inter', sans-serif" }}>{cfg.whatsappDisplay2}</span>
+                  </div>
                 </div>
               ) : (
-                <a href={getWhatsAppLink(defaultMessage, 1)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
-                  {language === "id" ? "Chat Sekarang" : "Chat Now"}
-                </a>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <a href={getWhatsAppLink(defaultMessage, 1)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
+                    {language === "id" ? "Chat Sekarang" : "Chat Now"}
+                  </a>
+                  <span style={{ fontSize: "10px", color: "#bbb", fontFamily: "'Inter', sans-serif" }}>{cfg.whatsappDisplay}</span>
+                </div>
               );
             })()}
-            <p
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "9px",
-                color: "#bbb",
-                marginTop: "8px",
-              }}
-            >
-              {(() => {
-                const cfg = getSiteConfig();
-                if (cfg.whatsappNumber2) {
-                  return `Pusat: ${cfg.whatsappDisplay} | Sby: ${cfg.whatsappDisplay2}`;
-                }
-                return `📞 ${cfg.whatsappDisplay}`;
-              })()}
-            </p>
           </motion.div>
         )}
       </AnimatePresence>

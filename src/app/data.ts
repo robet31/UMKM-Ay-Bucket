@@ -11,7 +11,7 @@ export const BRAND_LOGO = {
   name: "Ay Bucket",
   tagline: "Wujudkan Hadiah Impianmu",
   whatsapp: "6285880021020",
-  location: "Pertokoan pasar senenan Bangkalan",
+  location: "Ruko Jambu Raya Perumnas Kamal",
   instagram: "@ay.bucket",
   logo: "/assets/ay-logo-5.png",
 };
@@ -332,7 +332,11 @@ export function getSiteConfig(): SiteConfig {
       if (!merged.adminUsername) merged.adminUsername = "admin";
       if (!merged.adminPassword || merged.adminPassword === "aybucket") merged.adminPassword = "admin123";
 
-
+      // Safe local migration to ensure new address is used
+      if (merged.address === "Pertokoan pasar senenan Bangkalan") {
+        merged.address = defaultConfig.address;
+        try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch(e) {}
+      }
 
       return merged;
     }

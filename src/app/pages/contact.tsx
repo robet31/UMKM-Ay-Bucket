@@ -414,28 +414,35 @@ export function Contact() {
               );
 
               return (
-                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "16px" }}>
-                  <a
-                    href={getWhatsAppLink(msg, 1)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={btnStyle}
-                    className="whatsapp-btn-hover"
-                  >
-                    {waIcon}
-                    {config.whatsappNumber2 ? (language === "id" ? "WhatsApp Pusat" : "HQ WhatsApp") : (language === "id" ? "Chat WhatsApp Sekarang" : "Chat on WhatsApp Now")}
-                  </a>
-                  {config.whatsappNumber2 && (
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "24px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
                     <a
-                      href={getWhatsAppLink(msg, 2)}
+                      href={getWhatsAppLink(msg, 1)}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={btnStyle}
                       className="whatsapp-btn-hover"
                     >
                       {waIcon}
-                      {language === "id" ? "WhatsApp Cabang" : "Branch WhatsApp"}
+                      {config.whatsappNumber2 ? (language === "id" ? "WhatsApp Pusat" : "HQ WhatsApp") : (language === "id" ? "Chat WhatsApp Sekarang" : "Chat on WhatsApp Now")}
                     </a>
+                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "#555" }}>{config.whatsappDisplay}</span>
+                  </div>
+
+                  {config.whatsappNumber2 && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                      <a
+                        href={getWhatsAppLink(msg, 2)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={btnStyle}
+                        className="whatsapp-btn-hover"
+                      >
+                        {waIcon}
+                        {language === "id" ? "WhatsApp Cabang" : "Branch WhatsApp"}
+                      </a>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "#555" }}>{config.whatsappDisplay2}</span>
+                    </div>
                   )}
                 </div>
               );
