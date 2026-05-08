@@ -954,15 +954,29 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
             {renderPriceDisplayWithPromo(product, language)}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
-            <a href={(() => {
+            {(() => {
               const cfg = getSiteConfig();
               const imgUrl = product.images?.[0] || product.image || "";
               const productUrl = typeof window !== 'undefined' ? window.location.origin : '';
               const msg = `Halo ${cfg.businessName}! 🌸\n\nSaya tertarik untuk memesan:\n\n📦 Produk: ${displayName}\n💰 Harga: ${product.priceLabel || formatRupiah(product.price)}\n${product.description ? `📝 Detail: ${product.description.substring(0, 100)}\n` : ""}${imgUrl ? `🖼️ Foto: ${imgUrl.startsWith('data:') ? '(lihat di website)' : imgUrl}\n` : ""}${productUrl ? `🌐 Website: ${productUrl}\n` : ""}\nBisa dibantu untuk proses pemesanannya? Terima kasih! 🙏`;
-              return `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
-            })()} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", flex: isMobile ? "1 1 100%" : "0 1 auto", padding: "14px 22px", backgroundColor: "#25D366", color: "#fff", textDecoration: "none", textAlign: "center", borderRadius: "10px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase", boxShadow: "0 6px 16px rgba(37,211,102,0.3)", transition: "all 0.2s ease" }}>
-              💬 {language === "id" ? "Pesan via WhatsApp" : "Order via WhatsApp"}
-            </a>
+              
+              const baseLink1 = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+              const baseLink2 = cfg.whatsappNumber2 ? `https://wa.me/${cfg.whatsappNumber2}?text=${encodeURIComponent(msg)}` : "";
+              const btnStyle = { display: "inline-block", flex: isMobile ? "1 1 100%" : "1 1 0", padding: "14px 22px", backgroundColor: "#25D366", color: "#fff", textDecoration: "none", textAlign: "center" as const, borderRadius: "10px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase" as const, boxShadow: "0 6px 16px rgba(37,211,102,0.3)", transition: "all 0.2s ease" };
+
+              return (
+                <>
+                  <a href={baseLink1} target="_blank" rel="noopener noreferrer" style={btnStyle}>
+                    💬 {cfg.whatsappNumber2 ? (language === "id" ? "Pesan via Pusat/Madura" : "Order via HQ/Madura") : (language === "id" ? "Pesan via WhatsApp" : "Order via WhatsApp")}
+                  </a>
+                  {cfg.whatsappNumber2 && (
+                    <a href={baseLink2} target="_blank" rel="noopener noreferrer" style={btnStyle}>
+                      💬 {language === "id" ? "Pesan via Surabaya" : "Order via Surabaya"}
+                    </a>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       </motion.div>

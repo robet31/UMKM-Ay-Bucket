@@ -665,7 +665,7 @@ export function Admin() {
               <FieldInput label="Nama Bisnis" value={config.businessName} onChange={(v) => setConfig({ ...config, businessName: v })} />
               <FieldInput label="Tagline" value={config.tagline} onChange={(v) => setConfig({ ...config, tagline: v })} />
               <FieldInput label="Tahun" value={config.year} onChange={(v) => setConfig({ ...config, year: v })} />
-              <FieldInput label="Alamat" value={config.address} onChange={(v) => setConfig({ ...config, address: v })} />
+              <FieldTextarea label="Alamat (Gunakan Enter untuk memisahkan cabang)" value={config.address} onChange={(v) => setConfig({ ...config, address: v })} />
               <FieldInput label="Brand Logo URL" value={config.brandLogoUrl || ""} onChange={(v) => setConfig({ ...config, brandLogoUrl: v })} />
               <div style={{ marginBottom: "16px" }}>
                 <label style={labelStyle}>Upload Brand Logo</label>
@@ -688,8 +688,10 @@ export function Admin() {
               ) : null}
             </div>
             <div style={sectionStyle}>
-              <FieldInput label="Nomor WhatsApp (format: 628xxx)" value={config.whatsappNumber} onChange={(v) => setConfig({ ...config, whatsappNumber: v })} />
-              <FieldInput label="Nomor WhatsApp Display (format: 08xxx)" value={config.whatsappDisplay} onChange={(v) => setConfig({ ...config, whatsappDisplay: v })} />
+              <FieldInput label="Nomor WhatsApp 1 (Pusat / Madura) (format: 628xxx)" value={config.whatsappNumber} onChange={(v) => setConfig({ ...config, whatsappNumber: v })} />
+              <FieldInput label="Nomor WhatsApp 1 Display (format: 08xxx)" value={config.whatsappDisplay} onChange={(v) => setConfig({ ...config, whatsappDisplay: v })} />
+              <FieldInput label="Nomor WhatsApp 2 (Cabang Surabaya) (Opsional)" value={config.whatsappNumber2 || ""} onChange={(v) => setConfig({ ...config, whatsappNumber2: v })} />
+              <FieldInput label="Nomor WhatsApp 2 Display (Opsional)" value={config.whatsappDisplay2 || ""} onChange={(v) => setConfig({ ...config, whatsappDisplay2: v })} />
               <FieldInput label="Instagram" value={config.instagram} onChange={(v) => setConfig({ ...config, instagram: v })} />
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
             </div>
@@ -807,10 +809,11 @@ export function Admin() {
             </h2>
             <div style={sectionStyle}>
               <FieldInput label="Nama Bisnis" value={config.businessName} onChange={(v) => setConfig({ ...config, businessName: v })} />
-              <FieldInput label="Alamat" value={config.address} onChange={(v) => setConfig({ ...config, address: v })} />
+              <FieldTextarea label="Alamat (Gunakan Enter untuk memisahkan cabang)" value={config.address} onChange={(v) => setConfig({ ...config, address: v })} />
               <FieldInput label="Instagram" value={config.instagram} onChange={(v) => setConfig({ ...config, instagram: v })} />
               <FieldInput label="TikTok" value={config.tiktok} onChange={(v) => setConfig({ ...config, tiktok: v })} />
-              <FieldInput label="Nomor WhatsApp Display" value={config.whatsappDisplay} onChange={(v) => setConfig({ ...config, whatsappDisplay: v })} />
+              <FieldInput label="Nomor WhatsApp 1 Display" value={config.whatsappDisplay} onChange={(v) => setConfig({ ...config, whatsappDisplay: v })} />
+              <FieldInput label="Nomor WhatsApp 2 Display" value={config.whatsappDisplay2 || ""} onChange={(v) => setConfig({ ...config, whatsappDisplay2: v })} />
               <FieldTextarea label="Teks Tambahan Footer" value={config.footerText} onChange={(v) => setConfig({ ...config, footerText: v })} />
             </div>
             <div style={sectionStyle}>

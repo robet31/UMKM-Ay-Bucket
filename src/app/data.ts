@@ -111,6 +111,8 @@ export interface SiteConfig {
   address: string;
   whatsappNumber: string;
   whatsappDisplay: string;
+  whatsappNumber2?: string;
+  whatsappDisplay2?: string;
   instagram: string;
   tiktok: string;
   navLinks: Array<{ to: string; label: string }>;
@@ -139,9 +141,11 @@ const defaultConfig: SiteConfig = {
   businessName: "Ay Bucket",
   tagline: "Wujudkan Hadiah Impianmu",
   year: "2026",
-  address: "Pertokoan pasar senenan Bangkalan",
+  address: "Toko: Ruko Jambu Raya Perumnas Kamal\nHomestore Madura: Jl Jeruk 6 no 4 Perumnas Kamal Bangkalan\nHomestore Surabaya: Jl Wonorejo 3 Tegalsari Surabaya",
   whatsappNumber: "6285880021020",
   whatsappDisplay: "0858-8002-1020",
+  whatsappNumber2: "6285155455644", // Example number, will be editable by admin
+  whatsappDisplay2: "0851-5545-5644",
   instagram: "@ay.bucket",
   tiktok: "",
   navLinks: [
@@ -500,16 +504,18 @@ export async function saveProducts(prods: Product[]): Promise<void> {
 export function resetProducts() { localStorage.removeItem(PRODUCTS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
 export const products = defaultProducts;
 
-export function getWhatsAppOrderLink(productName: string, price: string): string {
+export function getWhatsAppOrderLink(productName: string, price: string, adminIndex: number = 1): string {
   const config = getSiteConfig();
   const message = encodeURIComponent(`Halo ${config.businessName}! 🌸\n\nSaya tertarik untuk memesan:\n\n📦 Produk: ${productName}\n💰 Harga: ${price}\n\nBisa dibantu untuk proses pemesanannya? Terima kasih! 🙏`);
-  return `https://wa.me/${config.whatsappNumber}?text=${message}`;
+  const num = adminIndex === 2 && config.whatsappNumber2 ? config.whatsappNumber2 : config.whatsappNumber;
+  return `https://wa.me/${num}?text=${message}`;
 }
 
-export function getWhatsAppLink(customMessage?: string): string {
+export function getWhatsAppLink(customMessage?: string, adminIndex: number = 1): string {
   const config = getSiteConfig();
   const message = encodeURIComponent(customMessage || `Halo ${config.businessName}! 🌸 Saya ingin bertanya tentang produk Anda.`);
-  return `https://wa.me/${config.whatsappNumber}?text=${message}`;
+  const num = adminIndex === 2 && config.whatsappNumber2 ? config.whatsappNumber2 : config.whatsappNumber;
+  return `https://wa.me/${num}?text=${message}`;
 }
 
 export type VideoSource = "youtube" | "instagram" | "tiktok" | "file";
