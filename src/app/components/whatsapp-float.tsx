@@ -99,7 +99,13 @@ export function WhatsAppFloat() {
                 marginTop: "8px",
               }}
             >
-              📞 {getSiteConfig().whatsappDisplay}
+              {(() => {
+                const cfg = getSiteConfig();
+                if (cfg.whatsappNumber2) {
+                  return `Pusat: ${cfg.whatsappDisplay} | Sby: ${cfg.whatsappDisplay2}`;
+                }
+                return `📞 ${cfg.whatsappDisplay}`;
+              })()}
             </p>
           </motion.div>
         )}

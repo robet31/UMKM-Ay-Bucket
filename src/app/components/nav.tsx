@@ -140,7 +140,7 @@ export function Nav() {
                 color: "#8a6a52",
               }}
             >
-              {config.address || BRAND_LOGO.location || "Floral Portfolio"}
+              {(config.address || "").split('\n')[0] || BRAND_LOGO.location || "Floral Portfolio"}
             </span>
           </span>
         </Link>
@@ -414,6 +414,7 @@ export function Nav() {
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
                   color: "#bbb",
+                  whiteSpace: "pre-wrap",
                 }}
               >
                 📍 {config.address}

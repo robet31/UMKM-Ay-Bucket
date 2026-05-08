@@ -602,6 +602,7 @@ export function Studio() {
                   color: "#1a1a1a",
                   lineHeight: 1.6,
                   fontWeight: 500,
+                  whiteSpace: "pre-wrap",
                 }}>
                   📍 {config.address}
                 </p>

@@ -140,7 +140,7 @@ export function Contact() {
                 </p>
                 <div style={{ background: "rgba(255, 150, 173, 0.04)", border: "1px solid rgba(255, 150, 173, 0.15)", borderRadius: "8px", padding: "16px", marginBottom: "16px" }}>
                   <p style={{ ...mono, lineHeight: 2.2, marginBottom: 0, color: "#333" }}>
-                    <strong>{config.address || "Pertokoan Pasar Senenan, Bangkalan"}</strong><br />
+                    <strong style={{ whiteSpace: "pre-wrap" }}>{config.address || "Pertokoan Pasar Senenan, Bangkalan"}</strong><br />
                     <span style={{ color: "#999", fontSize: "11px" }}>{language === "id" ? "Buka setiap hari" : "Open daily"}</span>
                   </p>
                 </div>
