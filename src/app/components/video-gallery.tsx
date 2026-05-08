@@ -141,14 +141,16 @@ function VideoCard({ video, index }: { video: VideoItem; index: number }) {
                   <iframe
                     src={`https://www.instagram.com/p/${igId}/embed/`}
                     style={{ 
-                      width: "calc(100% + 16px)", 
-                      height: "calc(100% + 100px)", 
+                      width: "calc(100% + 4px)", 
+                      height: "calc(100% + 230px)", // Extra height to absorb header + footer
                       position: "absolute", 
-                      top: "-50px", 
-                      left: "-8px", 
+                      top: "-58px", // Pushes the header up out of view
+                      left: "-2px", // Hides the side borders
                       border: "none", 
                       pointerEvents: "none",
-                      background: "#fafafa"
+                      background: "#fafafa",
+                      transform: "scale(1.02)", // Slight zoom to hide any subpixel border lines
+                      transformOrigin: "center center"
                     }}
                     scrolling="no"
                   />
