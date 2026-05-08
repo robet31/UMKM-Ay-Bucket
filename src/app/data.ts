@@ -13,7 +13,7 @@ export const BRAND_LOGO = {
   whatsapp: "6285880021020",
   location: "Ruko Jambu Raya Perumnas Kamal",
   instagram: "@ay.bucket",
-  logo: "/assets/ay-logo-5.png",
+  logo: "/assets/logo-fix.png",
 };
 
 // Storage Keys
@@ -158,7 +158,7 @@ const defaultConfig: SiteConfig = {
   heroSubtitle: "Pilihan Hadiah Premium Untuk Momen Spesial Anda.",
   heroFallbackImage: "/assets/Buket Bunga Asli Premium - Rp\u00A0350.000,00.png",
   heroSettings: [],
-  brandLogoUrl: "/assets/ay-logo-5.png",
+  brandLogoUrl: "/assets/logo-fix.png",
   mapsEmbedUrl: "https://maps.google.com/maps?q=Pertokoan+Pasar+Senenan+Bangkalan&t=&z=15&ie=UTF8&iwloc=&output=embed",
   catalogLink: "6285880021020",
   catalogLinkType: "wa",
@@ -335,6 +335,11 @@ export function getSiteConfig(): SiteConfig {
       // Safe local migration to ensure new address is used
       if (merged.address === "Pertokoan pasar senenan Bangkalan") {
         merged.address = defaultConfig.address;
+        try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch(e) {}
+      }
+
+      if (merged.brandLogoUrl === "/assets/ay-logo-5.png") {
+        merged.brandLogoUrl = "/assets/logo-fix.png";
         try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch(e) {}
       }
 
