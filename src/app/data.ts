@@ -127,6 +127,7 @@ export interface SiteConfig {
   catalogLinkType: "wa" | "link" | "pdf";
   adminUsername?: string;
   adminPassword?: string;
+  customCategories?: Category[];
 }
 
 export function getCatalogWhatsAppLink(): string {
@@ -164,6 +165,7 @@ const defaultConfig: SiteConfig = {
   catalogLinkType: "wa",
   adminUsername: "admin",
   adminPassword: "AyBucket2026!",
+  customCategories: [],
 };
 
 export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
@@ -427,7 +429,7 @@ export function mergeProductsByNameAndPrice(products: Product[]): Product[] {
   return Array.from(map.values());
 }
 
-export const categories: Category[] = [
+export const defaultCategories: Category[] = [
   { key: "buckets", label: "Buket Bunga Premium", emoji: "🌸", description: "Rangkaian bunga segar (Fresh) & bunga palsu (Artificial) berkualitas tinggi.", noted: "Bisa request warna bunga & kain pembungkus (wrapping)." },
   { key: "snack-bouquet", label: "Snack & Food Bouquet", emoji: "🍭", description: "Pilihan hadiah unik dengan susunan snack, cokelat, hingga donat favorit.", noted: "Isian snack bisa disesuaikan dengan budget Anda." },
   { key: "money-bouquet", label: "Money Bouquet", emoji: "💸", description: "Hadiah eksklusif berupa buket uang dengan dekorasi bunga yang cantik.", noted: "Jumlah & nominal uang bisa dicustom sesuai keinginan." },
@@ -437,6 +439,8 @@ export const categories: Category[] = [
   { key: "artificial-flower", label: "Bunga Artificial", emoji: "🌼", description: "Rangkaian bunga tiruan premium yang awet dan tetap indah selamanya.", noted: "Sangat cocok untuk pajangan rumah atau hadiah jangka panjang." },
   { key: "sewa", label: "Sewa (Rental)", emoji: "⏱️", description: "Layanan sewa per jam untuk standing dan dekorasi acara.", noted: "Tersedia paket 3 jam, 12 jam, hingga 24 jam." }
 ];
+
+export const categories: Category[] = typeof window !== 'undefined' ? ((getSiteConfig().customCategories && (getSiteConfig().customCategories as Category[]).length > 0) ? (getSiteConfig().customCategories as Category[]) : defaultCategories) : defaultCategories;
 
 export interface GalleryProject { id: string; title: string; category: string; aspect: "3/4" | "1/1" | "16/9"; image: string; }
 

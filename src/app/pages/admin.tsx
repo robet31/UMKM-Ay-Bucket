@@ -86,13 +86,14 @@ const sectionStyle: React.CSSProperties = {
   marginBottom: "40px",
 };
 
-type Tab = "general" | "products" | "navbar" | "footer" | "hero" | "videos" | "gallery";
+type Tab = "general" | "products" | "categories" | "navbar" | "footer" | "hero" | "videos" | "gallery";
 
 export function Admin() {
   const [config, setConfig] = useState<SiteConfig>(getSiteConfig());
   const [products, setProductsList] = useState<Product[]>(() => mergeProductsByNameAndPrice(getProducts()));
   const [videos, setVideosList] = useState<VideoItem[]>(getVideos());
   const [galleryProjects, setGalleryProjectsList] = useState<GalleryProject[]>(getGalleryProjects());
+  const [categoriesList, setCategoriesList] = useState<any[]>(config.customCategories?.length ? config.customCategories : categories);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [saved, setSaved] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -222,6 +223,19 @@ export function Admin() {
       alert("Data Galeri berhasil disimpan!");
     } catch (e: any) {
       alert(e.message || "Gagal menyimpan galeri.");
+    }
+  };
+
+  const handleSaveCategories = async () => {
+    const updatedConfig = { ...config, customCategories: categoriesList };
+    try {
+      await saveSiteConfig(updatedConfig);
+      setConfig(updatedConfig);
+      showSaved();
+      alert("Kategori berhasil disimpan!");
+      window.location.reload(); // Reload to refresh global categories constant
+    } catch (e: any) {
+      alert(e.message || "Gagal menyimpan kategori.");
     }
   };
 
@@ -360,11 +374,33 @@ export function Admin() {
     { key: "general", label: "Umum" },
     { key: "hero", label: "Hero" },
     { key: "navbar", label: "Navbar" },
+    { key: "categories", label: "Kategori" },
     { key: "products", label: "Produk" },
     { key: "gallery", label: "Galeri" },
     { key: "videos", label: "Video" },
     { key: "footer", label: "Footer" },
   ];
+
+  const handleAddCategory = () => {
+    const newCat = {
+      key: `cat-${Date.now()}`,
+      label: "Kategori Baru",
+      emoji: "📦",
+      description: "Deskripsi kategori baru.",
+      noted: "Catatan tambahan."
+    };
+    setCategoriesList([...categoriesList, newCat]);
+  };
+
+  const handleUpdateCategory = (key: string, patch: any) => {
+    setCategoriesList(prev => prev.map(c => c.key === key ? { ...c, ...patch } : c));
+  };
+
+  const handleDeleteCategory = (key: string) => {
+    if (confirm("Hapus kategori ini? Produk yang menggunakan kategori ini mungkin tidak akan muncul di filter.")) {
+      setCategoriesList(prev => prev.filter(c => c.key !== key));
+    }
+  };
 
   if (!authed) {
     const handleLogin = async () => {
@@ -845,6 +881,56 @@ export function Admin() {
               )}
             </div>
             <button onClick={handleSaveConfig} style={btnStyle}>Simpan Footer & Maps</button>
+          </div>
+        )}
+
+        {activeTab === "categories" && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", fontWeight: 400, color: "#1a1a1a", margin: 0 }}>
+                Manajemen Kategori
+              </h2>
+              <button onClick={handleAddCategory} style={btnStyle}>+ Tambah Kategori</button>
+            </div>
+
+            <div style={{ display: 'grid', gap: '20px' }}>
+              {categoriesList.map((cat, idx) => (
+                <motion.div
+                  key={cat.key}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  style={{
+                    backgroundColor: '#fff',
+                    padding: '24px',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                  }}
+                >
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <FieldInput label="Nama Kategori" value={cat.label} onChange={(v) => handleUpdateCategory(cat.key, { label: v })} />
+                    <FieldInput label="Emoji Icon" value={cat.emoji} onChange={(v) => handleUpdateCategory(cat.key, { emoji: v })} />
+                  </div>
+                  <FieldInput label="Key (ID unik, jangan pakai spasi)" value={cat.key} onChange={(v) => handleUpdateCategory(cat.key, { key: v.toLowerCase().replace(/\s+/g, '-') })} />
+                  <FieldTextarea label="Deskripsi" value={cat.description} onChange={(v) => handleUpdateCategory(cat.key, { description: v })} />
+                  <FieldInput label="Catatan Tambahan (Noted)" value={cat.noted} onChange={(v) => handleUpdateCategory(cat.key, { noted: v })} />
+                  
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+                    <button 
+                      onClick={() => handleDeleteCategory(cat.key)}
+                      style={{ ...mono, color: '#d44', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                    >
+                      Hapus Kategori
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+              <button onClick={handleSaveCategories} style={btnStyle}>Simpan Perubahan Kategori</button>
+            </div>
           </div>
         )}
 
