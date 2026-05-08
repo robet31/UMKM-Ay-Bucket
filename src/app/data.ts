@@ -389,7 +389,10 @@ export async function saveSiteConfig(config: Partial<SiteConfig>): Promise<void>
 
 export function resetSiteConfig() { localStorage.removeItem(ADMIN_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
 
-export type ProductCategory = "buket-satin" | "snack-bouquet" | "money-bouquet" | "chocolate-bouquet" | "fresh-flower" | "artificial-flower" | "catalog-home" | "accessories" | "buckets" | "wreaths" | "packaging" | "ribbons" | "sewa";
+export type ProductCategory = "snack-bouquet" | "money-bouquet" | "fresh-flower" | "artificial-flower" | "catalog-home" | "accessories" | "buckets" | "wreaths" | "packaging" | "ribbons" | "sewa" | "bloom-box" | "thumbelina" | "bucket-unik" | "vas-dekorasi";
+
+// Image limit per product (enforced in admin dashboard)
+export const MAX_IMAGES_PER_PRODUCT = 12;
 
 export interface Category {
   key: ProductCategory; label: string; emoji: string; description: string; noted?: string; canvaLink?: string;
@@ -431,13 +434,19 @@ export function mergeProductsByNameAndPrice(products: Product[]): Product[] {
 
 export const defaultCategories: Category[] = [
   { key: "buckets", label: "Buket Bunga Premium", emoji: "🌸", description: "Rangkaian bunga segar (Fresh) & bunga palsu (Artificial) berkualitas tinggi.", noted: "Bisa request warna bunga & kain pembungkus (wrapping)." },
-  { key: "snack-bouquet", label: "Snack & Food Bouquet", emoji: "🍭", description: "Pilihan hadiah unik dengan susunan snack, cokelat, hingga donat favorit.", noted: "Isian snack bisa disesuaikan dengan budget Anda." },
-  { key: "money-bouquet", label: "Money Bouquet", emoji: "💸", description: "Hadiah eksklusif berupa buket uang dengan dekorasi bunga yang cantik.", noted: "Jumlah & nominal uang bisa dicustom sesuai keinginan." },
-  { key: "wreaths", label: "Bunga Papan & Standing", emoji: "🌿", description: "Karangan bunga papan & standing akrilik untuk segala ucapan acara resmi.", noted: "Gratis ongkir untuk wilayah tertentu (Kamal & Telang)." },
-  { key: "accessories", label: "Gift & Accessories", emoji: "✨", description: "Koleksi hadiah pelengkap seperti selempang wisuda, frame akrilik, dan gift box.", noted: "Pengerjaan cepat & hasil rapi." },
+  { key: "bloom-box", label: "Bloom Box", emoji: "🎀", description: "Rangkaian bunga dalam kotak premium, cocok untuk hadiah ulang tahun & anniversary.", noted: "Tersedia berbagai pilihan bunga & warna." },
+  { key: "thumbelina", label: "Thumbelina Series", emoji: "💐", description: "Koleksi buket custom desain Thumbelina dengan variasi tema dan desain unik.", noted: "Setiap desain Thumbelina adalah karya eksklusif Ay Bucket." },
   { key: "fresh-flower", label: "Bunga Segar (Fresh)", emoji: "🌹", description: "Rangkaian bunga mawar, sedap malam, dan asteria yang segar & harum.", noted: "Disarankan pesan H-1 untuk menjaga kesegaran maksimal." },
   { key: "artificial-flower", label: "Bunga Artificial", emoji: "🌼", description: "Rangkaian bunga tiruan premium yang awet dan tetap indah selamanya.", noted: "Sangat cocok untuk pajangan rumah atau hadiah jangka panjang." },
-  { key: "sewa", label: "Sewa (Rental)", emoji: "⏱️", description: "Layanan sewa per jam untuk standing dan dekorasi acara.", noted: "Tersedia paket 3 jam, 12 jam, hingga 24 jam." }
+  { key: "snack-bouquet", label: "Snack & Food Bouquet", emoji: "🍭", description: "Pilihan hadiah unik dengan susunan snack, cokelat, hingga donat favorit.", noted: "Isian snack bisa disesuaikan dengan budget Anda." },
+  { key: "money-bouquet", label: "Money Bouquet", emoji: "💸", description: "Hadiah eksklusif berupa buket uang dengan dekorasi bunga yang cantik.", noted: "Jumlah & nominal uang bisa dicustom sesuai keinginan." },
+  { key: "bucket-unik", label: "Bucket Unik & Kreasi", emoji: "🎁", description: "Kreasi bucket unik & anti-mainstream: bucket rokok, tabung boneka, dan lainnya.", noted: "Beberapa item berstatus Pre Order." },
+  { key: "wreaths", label: "Bunga Papan & Standing", emoji: "🌿", description: "Karangan bunga papan & standing akrilik untuk segala ucapan acara resmi.", noted: "Gratis ongkir untuk wilayah tertentu (Kamal & Telang)." },
+  { key: "accessories", label: "Gift & Accessories", emoji: "✨", description: "Koleksi hadiah pelengkap seperti frame akrilik, dan gift box.", noted: "Pengerjaan cepat & hasil rapi." },
+  { key: "ribbons", label: "Selempang & Pita", emoji: "🎗️", description: "Selempang wisuda & pita premium untuk momen spesial.", noted: "Bisa request tulisan & warna." },
+  { key: "sewa", label: "Sewa (Rental)", emoji: "⏱️", description: "Layanan sewa standing akrilik & kostum untuk segala acara.", noted: "Tersedia paket 3 jam, 12 jam, hingga 24 jam." },
+  { key: "vas-dekorasi", label: "Vas & Dekorasi", emoji: "🏺", description: "Vas bunga premium dan dekorasi ruangan dengan bunga import berkualitas.", noted: "Cocok untuk pajangan rumah atau kantor." },
+  { key: "packaging", label: "Packing & Gift Box", emoji: "📦", description: "Packing premium box + kertas + pita organza untuk melengkapi hadiah.", noted: "Tambahan Rp 25.000 per box." }
 ];
 
 export const categories: Category[] = typeof window !== 'undefined' ? ((getSiteConfig().customCategories && (getSiteConfig().customCategories as Category[]).length > 0) ? (getSiteConfig().customCategories as Category[]) : defaultCategories) : defaultCategories;

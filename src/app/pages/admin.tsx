@@ -27,6 +27,7 @@ import {
   setAdminCredentials,
   cleanMapsUrl,
   compressImage,
+  MAX_IMAGES_PER_PRODUCT,
   type GalleryProject,
   type SiteConfig,
   type Product,
@@ -292,7 +293,7 @@ export function Admin() {
     const newProduct: Product = {
       id: `custom-${Date.now()}`,
       name: "Produk Baru",
-      category: "catalog-home",
+      category: "buckets",
       price: 100000,
       priceLabel: "Rp 100.000",
       image: "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=600&q=80",
@@ -948,8 +949,57 @@ export function Admin() {
               </div>
             </div>
 
+            {/* Stats Dashboard */}
+            {(() => {
+              const totalImages = products.reduce((sum, p) => sum + (p.images?.length || 1), 0);
+              const totalCategories = new Set(products.map(p => p.category)).size;
+              const avgImagesPerProduct = products.length > 0 ? (totalImages / products.length).toFixed(1) : '0';
+              const productsAtLimit = products.filter(p => (p.images?.length || 0) >= MAX_IMAGES_PER_PRODUCT).length;
+              // Rough storage estimate: ~200KB per local asset image, data URLs are larger
+              const estimatedStorageKB = products.reduce((sum, p) => {
+                return sum + (p.images || []).reduce((s, img) => {
+                  if (img.startsWith('data:')) return s + Math.round(img.length * 0.75 / 1024);
+                  return s + 200; // ~200KB per static asset
+                }, 0);
+              }, 0);
+              const storageMB = (estimatedStorageKB / 1024).toFixed(1);
+              return (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                  gap: '12px',
+                  marginBottom: '20px',
+                }}>
+                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>{products.length}</div>
+                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>TOTAL PRODUK</div>
+                  </div>
+                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#b85c3b', fontFamily: "'Inter', sans-serif" }}>{totalImages}</div>
+                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>TOTAL GAMBAR</div>
+                  </div>
+                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#2563eb', fontFamily: "'Inter', sans-serif" }}>{storageMB} MB</div>
+                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>EST. STORAGE</div>
+                  </div>
+                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#059669', fontFamily: "'Inter', sans-serif" }}>{totalCategories}</div>
+                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>KATEGORI AKTIF</div>
+                  </div>
+                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#7c3aed', fontFamily: "'Inter', sans-serif" }}>{avgImagesPerProduct}</div>
+                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>AVG IMG/PRODUK</div>
+                  </div>
+                  <div style={{ background: productsAtLimit > 0 ? '#fef2f2' : '#fff', border: `1px solid ${productsAtLimit > 0 ? '#fecaca' : 'rgba(0,0,0,0.06)'}`, borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 700, color: productsAtLimit > 0 ? '#dc2626' : '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>{MAX_IMAGES_PER_PRODUCT}</div>
+                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>MAKS IMG/PRODUK</div>
+                  </div>
+                </div>
+              );
+            })()}
+
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "14px", lineHeight: 1.7 }}>
-              Gambar pertama pada daftar produk adalah gambar utama (cover) di katalog. Buka <strong>Edit</strong> lalu klik ● pada thumbnail untuk memilih cover produk.
+              Gambar pertama pada daftar produk adalah gambar utama (cover) di katalog. Buka <strong>Edit</strong> lalu klik ● pada thumbnail untuk memilih cover produk. Maks. {MAX_IMAGES_PER_PRODUCT} gambar per produk.
             </p>
 
             {/* Edit Modal */}
@@ -1744,9 +1794,19 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    const currentCount = (form.images || []).length;
+    const remaining = MAX_IMAGES_PER_PRODUCT - currentCount;
+    if (remaining <= 0) {
+      alert(`Sudah mencapai batas maksimal ${MAX_IMAGES_PER_PRODUCT} gambar per produk.`);
+      return;
+    }
     const max = 5 * 1024 * 1024;
+    const filesToProcess = Array.from(files).slice(0, remaining);
+    if (filesToProcess.length < files.length) {
+      alert(`Hanya ${remaining} gambar lagi yang bisa ditambahkan (maks. ${MAX_IMAGES_PER_PRODUCT} per produk).`);
+    }
     const promises: Promise<string>[] = [];
-    Array.from(files).forEach((file) => {
+    filesToProcess.forEach((file) => {
       if (file.size > max) {
         alert("Beberapa gambar lebih dari 5MB dan dilewati");
         return;
@@ -1765,6 +1825,10 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
   const addImageUrl = (url: string) => {
     if (!url) return;
+    if ((form.images || []).length >= MAX_IMAGES_PER_PRODUCT) {
+      alert(`Sudah mencapai batas maksimal ${MAX_IMAGES_PER_PRODUCT} gambar per produk.`);
+      return;
+    }
     setForm({ ...form, images: [...(form.images || []), url] });
     if (urlRef.current) urlRef.current.value = "";
   };
@@ -1850,7 +1914,10 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
         {/* Images manager */}
         <div style={{ marginBottom: "16px" }}>
-          <label style={labelStyle}>Gambar Produk (geser untuk mengurutkan)</label>
+          <label style={labelStyle}>
+            Gambar Produk ({(form.images || []).length}/{MAX_IMAGES_PER_PRODUCT})
+            {(form.images || []).length >= MAX_IMAGES_PER_PRODUCT && <span style={{ color: '#dc2626', marginLeft: 6 }}>⚠ BATAS MAKS</span>}
+          </label>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             {(form.images || []).map((src, i) => (
               <div
