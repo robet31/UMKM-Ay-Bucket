@@ -287,25 +287,6 @@ export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
     const remote = await fetchSiteConfigFromNeon();
     if (remote) { 
       const merged = { ...defaultConfig, ...remote } as SiteConfig;
-      
-      // Auto-migrate old data in Neon DB
-      let needsSave = false;
-      if (merged.address === "Pertokoan pasar senenan Bangkalan" || !merged.address?.includes('\n')) {
-        merged.address = defaultConfig.address;
-        needsSave = true;
-      }
-      if (!merged.whatsappNumber2 || merged.whatsappNumber2 === "6285155455644") {
-        merged.whatsappNumber2 = defaultConfig.whatsappNumber2;
-        merged.whatsappDisplay2 = defaultConfig.whatsappDisplay2;
-        needsSave = true;
-      }
-      
-      // Persist migration back to Neon so it sticks
-      if (needsSave) {
-        const toSave = { ...remote, address: merged.address, whatsappNumber2: merged.whatsappNumber2, whatsappDisplay2: merged.whatsappDisplay2 };
-        saveSiteConfigToNeon(toSave).catch(() => {});
-      }
-
       memoryCache[ADMIN_STORAGE_KEY] = merged;
       try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch (e) { }
       return merged; 
@@ -351,18 +332,7 @@ export function getSiteConfig(): SiteConfig {
       if (!merged.adminUsername) merged.adminUsername = "admin";
       if (!merged.adminPassword || merged.adminPassword === "aybucket") merged.adminPassword = "admin123";
 
-      // Auto-migrate address and WA if they are using the old default or old placeholder number
-      if (merged.address === "Pertokoan pasar senenan Bangkalan" || merged.whatsappNumber2 === "6285155455644" || (!merged.whatsappNumber2 && !merged.whatsappDisplay2)) {
-        merged.address = defaultConfig.address;
-        merged.whatsappNumber2 = defaultConfig.whatsappNumber2;
-        merged.whatsappDisplay2 = defaultConfig.whatsappDisplay2;
-        
-        // Ensure changes persist immediately
-        try { 
-            memoryCache[ADMIN_STORAGE_KEY] = merged;
-            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); 
-        } catch (e) {}
-      }
+
 
       return merged;
     }
