@@ -136,6 +136,8 @@ export function Admin() {
     };
     try {
       await saveSiteConfig(normalizedConfig);
+      // Immediately notify all open tabs/pages that config changed
+      window.dispatchEvent(new Event("siteConfigChanged"));
       showSaved();
       alert("Pengaturan Website berhasil disimpan!");
     } catch (e: any) {
@@ -200,6 +202,8 @@ export function Admin() {
     try {
       await saveProducts(merged);
       setProductsList(merged);
+      // Immediately notify home page
+      window.dispatchEvent(new Event("siteConfigChanged"));
       showSaved();
       alert("Data Produk berhasil disimpan!");
     } catch (e: any) {
@@ -210,6 +214,8 @@ export function Admin() {
   const handleSaveVideos = async () => {
     try {
       await saveVideos(videos);
+      // Immediately notify home page
+      window.dispatchEvent(new Event("siteConfigChanged"));
       showSaved();
       alert("Data Video berhasil disimpan!");
     } catch (e: any) {
@@ -220,6 +226,9 @@ export function Admin() {
   const handleSaveGallery = async () => {
     try {
       await setGalleryProjects(galleryProjects);
+      // Immediately notify home page
+      window.dispatchEvent(new Event("siteConfigChanged"));
+      window.dispatchEvent(new Event("galleryProjectsChanged"));
       showSaved();
       alert("Data Galeri berhasil disimpan!");
     } catch (e: any) {
@@ -557,7 +566,7 @@ export function Admin() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#F9F9F7",
+        backgroundColor: "#FFF0F3",
         padding: "0 clamp(24px, 6vw, 80px)",
       }}
     >
@@ -1882,7 +1891,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: "#F9F9F7",
+          backgroundColor: "#FFF0F3",
           padding: isMobile ? "18px" : "32px",
           maxWidth: "680px",
           width: "100%",
@@ -2128,7 +2137,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: "#F9F9F7",
+          backgroundColor: "#FFF0F3",
           padding: isMobile ? "18px" : "32px",
           maxWidth: "500px",
           width: "100%",

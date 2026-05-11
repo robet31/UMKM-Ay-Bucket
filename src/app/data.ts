@@ -211,7 +211,7 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   }
 }
 
-export async function compressImage(file: File, maxWidth = 1024, quality = 0.7): Promise<string> {
+export async function compressImage(file: File, maxWidth = 1024, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -219,24 +219,56 @@ export async function compressImage(file: File, maxWidth = 1024, quality = 0.7):
       const img = new Image();
       img.src = event.target?.result as string;
       img.onload = () => {
-        const canvas = document.createElement("canvas");
         let width = img.width;
         let height = img.height;
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
+
+        // Multi-step downscaling for better quality (halve dimensions iteratively)
+        let srcCanvas: HTMLCanvasElement | HTMLImageElement = img;
+        let srcWidth = width;
+        let srcHeight = height;
+
+        while (srcWidth > maxWidth * 2) {
+          const stepCanvas = document.createElement("canvas");
+          const halfW = Math.round(srcWidth / 2);
+          const halfH = Math.round(srcHeight / 2);
+          stepCanvas.width = halfW;
+          stepCanvas.height = halfH;
+          const stepCtx = stepCanvas.getContext("2d");
+          if (stepCtx) {
+            stepCtx.imageSmoothingEnabled = true;
+            stepCtx.imageSmoothingQuality = "high";
+            stepCtx.drawImage(srcCanvas, 0, 0, halfW, halfH);
+          }
+          srcCanvas = stepCanvas;
+          srcWidth = halfW;
+          srcHeight = halfH;
         }
+
+        // Final resize to target width
+        if (srcWidth > maxWidth) {
+          height = Math.round((srcHeight * maxWidth) / srcWidth);
+          width = maxWidth;
+        } else {
+          width = srcWidth;
+          height = srcHeight;
+        }
+
+        const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
-        // Use high quality image smoothing
         if (ctx) {
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = "high";
-          ctx.drawImage(img, 0, 0, width, height);
+          ctx.drawImage(srcCanvas, 0, 0, width, height);
         }
-        // WebP is much better for quality/size ratio
-        resolve(canvas.toDataURL('image/webp', quality));
+        // WebP for smaller size + better quality; fallback to JPEG if not supported
+        const webpResult = canvas.toDataURL('image/webp', quality);
+        if (webpResult.startsWith('data:image/webp')) {
+          resolve(webpResult);
+        } else {
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        }
       };
       img.onerror = reject;
     };

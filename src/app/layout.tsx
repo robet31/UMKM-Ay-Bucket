@@ -40,10 +40,10 @@ export function Root() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#F9F9F7",
+        backgroundColor: "#FFF0F3",
         cursor: prefersReducedMotion ? "auto" : "none",
         backgroundImage:
-          "radial-gradient(#e8e6e1 1px, transparent 1px)",
+          "radial-gradient(#f5d5dc 1px, transparent 1px)",
         backgroundSize: "40px 40px",
         backgroundPosition: "0 0, 20px 20px",
         transition: "background 0.5s ease",
@@ -74,7 +74,7 @@ export function Root() {
               width: "600px",
               height: "600px",
               background:
-                "radial-gradient(circle, rgba(168, 182, 209, 0.12) 0%, transparent 60%)",
+                "radial-gradient(circle, rgba(255, 182, 193, 0.18) 0%, transparent 60%)",
               pointerEvents: "none",
               zIndex: 0,
             }}
@@ -95,7 +95,7 @@ export function Root() {
               width: "500px",
               height: "500px",
               background:
-                "radial-gradient(circle, rgba(226, 216, 240, 0.15) 0%, transparent 60%)",
+                "radial-gradient(circle, rgba(255, 192, 203, 0.20) 0%, transparent 60%)",
               pointerEvents: "none",
               zIndex: 0,
             }}

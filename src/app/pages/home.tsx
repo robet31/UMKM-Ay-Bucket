@@ -33,21 +33,28 @@ function useAdminSync() {
     };
 
     window.addEventListener("siteConfigChanged", handler);
+    window.addEventListener("galleryProjectsChanged", handler);
     window.addEventListener("storage", (e) => {
       if (e.key?.includes("aybucket")) handler();
     });
 
-    // Cross-device sync: Poll Neon DB every 15 seconds
+    // Cross-device sync: Poll Neon DB every 8 seconds for faster updates
     const interval = setInterval(() => {
       if (isProduction) {
         syncAllWithNeon().then((changed) => {
           if (changed) handler();
         });
       }
-    }, 15000);
+    }, 8000);
+
+    // Initial sync on mount
+    syncAllWithNeon().then((changed) => {
+      if (changed) handler();
+    }).catch(() => {});
 
     return () => {
       window.removeEventListener("siteConfigChanged", handler);
+      window.removeEventListener("galleryProjectsChanged", handler);
       window.removeEventListener("storage", handler);
       clearInterval(interval);
     };
@@ -66,6 +73,7 @@ export function Home() {
   const [showAll, setShowAll] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(null);
+  const [productSourceCategory, setProductSourceCategory] = useState<ProductCategory | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
 
   const heroRef = useRef<HTMLDivElement>(null);
@@ -94,9 +102,7 @@ export function Home() {
     return () => ctx.revert();
   }, [products]);
 
-  useEffect(() => {
-    syncAllWithNeon().catch(console.error);
-  }, []);
+  // Initial Neon sync is now handled inside useAdminSync hook
 
   useEffect(() => {
     if (selectedProduct || selectedCategory) {
@@ -246,12 +252,12 @@ export function Home() {
 
   return (
     <PageTransition>
-      <div style={{ padding: "0 clamp(24px, 8vw, 120px)", backgroundImage: "linear-gradient(135deg, #b85c3b 0%, #d17047 50%, #c97047 100%)", borderRadius: "20px", marginBottom: "120px", overflow: "hidden", position: "relative" }}>
+      <div className="hero-container" style={{ padding: "0 clamp(16px, 6vw, 120px)", backgroundImage: "linear-gradient(135deg, #e8899a 0%, #f0a0b0 40%, #d4758a 100%)", borderRadius: "20px", marginBottom: "60px", overflow: "hidden", position: "relative" }}>
         <motion.div aria-hidden style={{ position: "absolute", top: "-20%", right: "-15%", width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%)", filter: "blur(80px)" }} animate={{ y: [0, 30, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div aria-hidden style={{ position: "absolute", bottom: "-10%", left: "-10%", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,100,80,0.15) 0%, rgba(200,100,80,0.02) 100%)", filter: "blur(100px)" }} animate={{ y: [0, -40, 0] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
 
         <div ref={heroRef} style={{ paddingTop: "clamp(40px, 6vw, 80px)", paddingBottom: "clamp(96px, 10vw, 140px)", position: "relative", zIndex: 2 }}>
-          <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="grid mx-auto w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }} style={{ maxWidth: "620px" }}>
               <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(249,249,247,0.8)", margin: "0 0 16px 0", fontWeight: 600 }}>
                 🌸 {language === "id" ? "Buket Bunga Premium" : "Premium Flower Bouquets"}
@@ -273,14 +279,14 @@ export function Home() {
                   onClick={() => document.getElementById('hero-section')?.scrollIntoView({ behavior: 'smooth' })}
                   whileHover={{ scale: 1.06, boxShadow: "0 16px 40px rgba(249,249,247,0.3)" }}
                   whileTap={{ scale: 0.94 }}
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", padding: "16px 40px", backgroundColor: "#F9F9F7", color: heroAccent, border: "none", cursor: "pointer", transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)", fontWeight: 800, borderRadius: "12px", boxShadow: "0 12px 30px rgba(0,0,0,0.2)" }}
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(9px, 2vw, 11px)", letterSpacing: "0.14em", textTransform: "uppercase", padding: "14px clamp(20px, 4vw, 40px)", backgroundColor: "#F9F9F7", color: heroAccent, border: "none", cursor: "pointer", transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)", fontWeight: 800, borderRadius: "12px", boxShadow: "0 12px 30px rgba(0,0,0,0.2)" }}
                 >
                   ↓ {language === "id" ? "Scroll untuk Jelajahi" : "Scroll to Explore"}
                 </motion.button>
               </div>
             </motion.div>
 
-            <div style={{ position: "relative", width: "100%", minHeight: "clamp(540px, 58vw, 720px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ position: "relative", width: "100%", minHeight: "clamp(340px, 50vw, 720px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <motion.div aria-hidden initial={{ opacity: 0 }} animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} style={{ position: "absolute", top: "8%", right: "12%", width: "120px", height: "120px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)", filter: "blur(40px)" }} />
               <motion.div aria-hidden initial={{ opacity: 0 }} animate={{ opacity: [0.3, 0.6, 0.3], y: [0, -20, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }} style={{ position: "absolute", bottom: "10%", left: "8%", width: "100px", height: "100px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,200,150,0.15) 0%, transparent 70%)", filter: "blur(50px)" }} />
 
@@ -330,19 +336,19 @@ export function Home() {
                 </motion.div>
               </div>
 
-              <div style={{ position: "absolute", left: "50%", bottom: "-4px", transform: "translateX(-50%)", display: "inline-flex", alignItems: "center", gap: "10px", padding: "10px 14px", borderRadius: "999px", backgroundColor: "rgba(249,249,247,0.16)", backdropFilter: "blur(8px)", color: "#fff", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                <span style={{ width: "28px", height: "1px", backgroundColor: "rgba(255,255,255,0.55)" }} />
+              <div className="hero-scroll-indicator" style={{ position: "absolute", left: "50%", bottom: "-4px", transform: "translateX(-50%)", display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "999px", backgroundColor: "rgba(249,249,247,0.16)", backdropFilter: "blur(8px)", color: "#fff", fontFamily: "'JetBrains Mono', monospace", fontSize: "clamp(8px, 1.8vw, 10px)", letterSpacing: "0.12em", textTransform: "uppercase", whiteSpace: "nowrap", maxWidth: "90vw" }}>
+                <span className="scroll-line" style={{ width: "20px", height: "1px", backgroundColor: "rgba(255,255,255,0.55)", flexShrink: 0 }} />
                 {language === "id" ? "scroll untuk berganti frame" : "scroll to change frame"}
-                <span style={{ width: "28px", height: "1px", backgroundColor: "rgba(255,255,255,0.55)" }} />
+                <span className="scroll-line" style={{ width: "20px", height: "1px", backgroundColor: "rgba(255,255,255,0.55)", flexShrink: 0 }} />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ padding: "0 clamp(24px, 8vw, 120px)" }}>
+      <div className="page-padding" style={{ padding: "0 clamp(16px, 6vw, 120px)" }}>
         <motion.section initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} style={{ marginBottom: "68px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "28px", maxWidth: "860px" }}>
+          <div className="section-header" style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "28px", maxWidth: "860px" }}>
             <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#999", margin: 0 }}>
               {language === "id" ? "Koleksi Pilihan" : "Selected Collection"}
             </p>
@@ -354,7 +360,7 @@ export function Home() {
             </p>
           </div>
 
-          <div style={{ marginBottom: "12px", display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          <div className="category-filters" style={{ marginBottom: "12px", display: "flex", flexWrap: "wrap", gap: "10px" }}>
             <button
               type="button"
               onClick={() => {
@@ -406,11 +412,11 @@ export function Home() {
           </div>
 
           {activeInfo && (
-            <motion.div key={activeInfo.key} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4 }} style={{ padding: "32px 40px", backgroundColor: "rgba(0,0,0,0.02)", borderLeft: `4px solid ${getCategoryAccent(activeInfo.key)}`, borderRadius: "12px" }}>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "32px", fontWeight: 500, color: "#1a1a1a", margin: "0 0 12px 0", letterSpacing: "-0.01em" }}>
+            <motion.div className="category-info-box" key={activeInfo.key} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4 }} style={{ padding: "24px 28px", backgroundColor: "rgba(0,0,0,0.02)", borderLeft: `4px solid ${getCategoryAccent(activeInfo.key)}`, borderRadius: "12px" }}>
+              <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(22px, 5vw, 32px)", fontWeight: 500, color: "#1a1a1a", margin: "0 0 10px 0", letterSpacing: "-0.01em" }}>
                 {activeInfo.emoji} {activeInfo.label}
               </p>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "16px", color: "#555", lineHeight: 1.8, margin: "0 0 16px 0", maxWidth: "800px" }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(13px, 2.5vw, 16px)", color: "#555", lineHeight: 1.8, margin: "0 0 12px 0", maxWidth: "800px" }}>
                 {activeInfo.description}
               </p>
               {activeInfo.noted && <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "#888", margin: "12px 0 0 0", lineHeight: 1.6 }}>💡 {activeInfo.noted}</p>}
@@ -428,7 +434,7 @@ export function Home() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 260px))", justifyContent: "center", justifyItems: "stretch", gap: 18 }}>
+          <div className="product-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", justifyContent: "center", justifyItems: "stretch", gap: 18 }}>
             {displayedProducts && displayedProducts.length > 0 ? (
               displayedProducts.map((p, idx) => {
                 // Calculate if product is on the last row with odd count
@@ -474,7 +480,7 @@ export function Home() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 260px))", justifyContent: "center", justifyItems: "stretch", gap: "22px", alignItems: "start" }}>
+          <div className="polaroid-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", justifyContent: "center", justifyItems: "stretch", gap: "22px", alignItems: "start" }}>
             {polaroidCards.length > 0 ? (
               polaroidCards.map(({ product: p, category, index, rotate, x, y, delay }) => (
                 <motion.button
@@ -493,7 +499,7 @@ export function Home() {
                     cursor: "pointer",
                     position: "relative",
                     width: "100%",
-                    maxWidth: "280px",
+                    maxWidth: "100%",
                     justifySelf: "center",
                   }}
                 >
@@ -565,8 +571,8 @@ export function Home() {
           <ProductDetailModal
             key={selectedProduct.id}
             product={selectedProduct}
-            allProducts={displayedProducts}
-            onClose={() => setSelectedProduct(null)}
+            allProducts={productSourceCategory ? products.filter((p: Product) => p.category === productSourceCategory) : displayedProducts}
+            onClose={() => { setSelectedProduct(null); setProductSourceCategory(null); }}
             onNavigate={setSelectedProduct}
           />
         )}
@@ -578,6 +584,7 @@ export function Home() {
             products={selectedCategoryProducts}
             onClose={() => setSelectedCategory(null)}
             onSelectProduct={(product) => {
+              setProductSourceCategory(product.category as ProductCategory);
               setSelectedProduct(product);
               setSelectedCategory(null);
             }}
@@ -774,59 +781,56 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
             </div>
           )}
         </div>
-        <div style={{ paddingRight: "6px" }}>
+        <div style={{ padding: "6px 4px 0" }}>
           <p
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "9px",
+              fontSize: "8px",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: accent,
-              margin: "0 0 6px 0",
+              margin: "0 0 4px 0",
             }}
           >
             {getCategoryLabel(product.category, product.category, language)}
           </p>
-          <div
+          <h3
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: "12px",
-              alignItems: "baseline",
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(14px, 3.5vw, 18px)",
+              fontWeight: 500,
+              margin: "0 0 4px 0",
+              color: "#1a1a1a",
+              lineHeight: 1.2,
+              wordBreak: "break-word",
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
             }}
           >
-            <h3
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "20px",
-                fontWeight: 500,
-                margin: 0,
-                color: "#1a1a1a",
-                lineHeight: 1.05,
-                flex: "1 1 auto",
-              }}
-            >
-              {displayName}
-            </h3>
-            <div style={{ flex: "0 1 auto" }}>
-              {renderPriceDisplay(product, language)}
-            </div>
+            {displayName}
+          </h3>
+          <div style={{ marginTop: "2px" }}>
+            {renderPriceDisplay(product, language)}
           </div>
           <p
+            className="product-card-desc"
             style={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: "14px",
-              margin: "6px 0 0 0",
-              color: "#555",
+              fontSize: "11px",
+              margin: "4px 0 0 0",
+              color: "#777",
               overflow: "hidden",
               textOverflow: "ellipsis",
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
+              lineHeight: 1.4,
             }}
             title={product.description}
           >
-            {truncateDescription(description, 100) || (language === "id" ? "Hadiah premium untuk momen istimewa." : "Premium gifts for special moments.")}
+            {truncateDescription(description, 80) || (language === "id" ? "Hadiah premium untuk momen istimewa." : "Premium gifts for special moments.")}
           </p>
         </div>
       </div>
@@ -883,19 +887,35 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
   }, [emblaApi]);
 
   return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "8px" : "clamp(16px, 3vw, 32px)", overflow: "hidden" }} onClick={onClose}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "rgba(80,30,40,0.55)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "8px" : "clamp(16px, 3vw, 32px)", overflow: "hidden" }} onClick={onClose}>
       
       {/* Previous Product Silhouette */}
       {!isMobile && onNavigate && prevProduct && (
-        <button onClick={(e) => { e.stopPropagation(); onNavigate(prevProduct); }} style={{ position: "absolute", left: "2vw", top: "50%", transform: "translateY(-50%)", width: "80px", aspectRatio: "4/5", background: `url(${prevProduct.images?.[0] || prevProduct.image}) center/cover`, borderRadius: "12px", border: "2px solid rgba(255,255,255,0.4)", cursor: "pointer", opacity: 0.6, filter: "brightness(0.6) blur(2px)", transition: "all 0.3s ease", zIndex: 10 }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "brightness(1) blur(0px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.9)"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.filter = "brightness(0.6) blur(2px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }} />
+        <motion.button
+          onClick={(e) => { e.stopPropagation(); onNavigate(prevProduct); }}
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 0.7, x: 0 }}
+          whileHover={{ opacity: 1, scale: 1.08, filter: "brightness(1) blur(0px)" }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          style={{ position: "absolute", left: "1vw", top: "50%", transform: "translateY(-50%)", width: "100px", aspectRatio: "4/5", background: `url(${prevProduct.images?.[0] || prevProduct.image}) center/cover`, borderRadius: "14px", border: "2px solid rgba(255,255,255,0.5)", cursor: "pointer", filter: "brightness(0.7) blur(1.5px)", zIndex: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}
+        />
       )}
 
       {/* Next Product Silhouette */}
       {!isMobile && onNavigate && nextProduct && (
-        <button onClick={(e) => { e.stopPropagation(); onNavigate(nextProduct); }} style={{ position: "absolute", right: "2vw", top: "50%", transform: "translateY(-50%)", width: "80px", aspectRatio: "4/5", background: `url(${nextProduct.images?.[0] || nextProduct.image}) center/cover`, borderRadius: "12px", border: "2px solid rgba(255,255,255,0.4)", cursor: "pointer", opacity: 0.6, filter: "brightness(0.6) blur(2px)", transition: "all 0.3s ease", zIndex: 10 }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "brightness(1) blur(0px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.9)"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.filter = "brightness(0.6) blur(2px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }} />
+        <motion.button
+          onClick={(e) => { e.stopPropagation(); onNavigate(nextProduct); }}
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 0.7, x: 0 }}
+          whileHover={{ opacity: 1, scale: 1.08, filter: "brightness(1) blur(0px)" }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          style={{ position: "absolute", right: "1vw", top: "50%", transform: "translateY(-50%)", width: "100px", aspectRatio: "4/5", background: `url(${nextProduct.images?.[0] || nextProduct.image}) center/cover`, borderRadius: "14px", border: "2px solid rgba(255,255,255,0.5)", cursor: "pointer", filter: "brightness(0.7) blur(1.5px)", zIndex: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}
+        />
       )}
 
-      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", maxHeight: isMobile ? "calc(100dvh - 16px)" : "88vh", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.28)", borderRadius: isMobile ? "16px" : "20px", zIndex: 20 }}>
+      <motion.div className="product-modal" initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#FFF0F3", display: "flex", flexDirection: isMobile ? "column" : "row", maxHeight: isMobile ? "95dvh" : "88vh", height: isMobile ? "95dvh" : undefined, overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.28)", borderRadius: isMobile ? "20px 20px 0 0" : "20px", zIndex: 20, marginTop: isMobile ? "auto" : undefined }}>
         {/* Navigation Buttons (Mobile Only) */}
         {isMobile && onNavigate && allProducts && allProducts.length > 1 && (
           <>
@@ -903,7 +923,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
               onClick={() => prevProduct && onNavigate(prevProduct)}
               disabled={!canNavigatePrev}
               aria-label={language === "id" ? "Produk sebelumnya" : "Previous product"}
-              style={{ position: "absolute", top: "14px", left: "14px", zIndex: 12, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: canNavigatePrev ? "pointer" : "not-allowed", fontSize: "20px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", opacity: canNavigatePrev ? 1 : 0.4 }}
+              style={{ position: "absolute", top: "14px", left: "14px", zIndex: 12, width: "34px", height: "34px", borderRadius: "999px", border: "none", background: "rgba(0,0,0,0.5)", color: "#fff", cursor: canNavigatePrev ? "pointer" : "not-allowed", fontSize: "18px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", opacity: canNavigatePrev ? 1 : 0.3, backdropFilter: "blur(4px)" }}
             >
               ‹
             </button>
@@ -911,14 +931,14 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
               onClick={() => nextProduct && onNavigate(nextProduct)}
               disabled={!canNavigateNext}
               aria-label={language === "id" ? "Produk selanjutnya" : "Next product"}
-              style={{ position: "absolute", top: "14px", left: "58px", zIndex: 12, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: canNavigateNext ? "pointer" : "not-allowed", fontSize: "20px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", opacity: canNavigateNext ? 1 : 0.4 }}
+              style={{ position: "absolute", top: "14px", left: "56px", zIndex: 12, width: "34px", height: "34px", borderRadius: "999px", border: "none", background: "rgba(0,0,0,0.5)", color: "#fff", cursor: canNavigateNext ? "pointer" : "not-allowed", fontSize: "18px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", opacity: canNavigateNext ? 1 : 0.3, backdropFilter: "blur(4px)" }}
             >
               ›
             </button>
           </>
         )}
-        <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "14px", right: "14px", zIndex: 12, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: "pointer", fontSize: "20px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-        <div style={{ flex: isMobile ? "0 0 240px" : "1 1 400px", minHeight: isMobile ? "200px" : "300px", aspectRatio: isMobile ? "4 / 3" : undefined, position: "relative", backgroundColor: "#ebebe9", overflow: "hidden", flexShrink: 0 }}>
+        <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "14px", right: "14px", zIndex: 12, width: "34px", height: "34px", borderRadius: "999px", border: "none", background: isMobile ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.9)", color: isMobile ? "#fff" : "#1a1a1a", cursor: "pointer", fontSize: "18px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>×</button>
+        <div style={{ flex: isMobile ? "0 0 auto" : "1 1 400px", height: isMobile ? "45%" : undefined, minHeight: isMobile ? "200px" : "300px", position: "relative", backgroundColor: "#ebebe9", overflow: "hidden", flexShrink: 0 }}>
           <div className="embla" ref={emblaRef} style={{ width: "100%", height: "100%" }}>
             <div className="embla__container" style={{ display: "flex", width: "100%", height: "100%" }}>
               {carouselImages.map((img, index) => (
@@ -935,7 +955,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
                 onClick={() => emblaApi?.scrollPrev()}
                 aria-label={language === "id" ? "Gambar sebelumnya" : "Previous image"}
                 disabled={!canScrollPrev}
-                style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", width: "42px", height: "42px", borderRadius: "999px", border: "1px solid rgba(0,0,0,0.08)", background: "rgba(255,255,255,0.88)", color: "#1a1a1a", cursor: canScrollPrev ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", boxShadow: "0 10px 24px rgba(0,0,0,0.12)", opacity: canScrollPrev ? 1 : 0.35 }}>
+                style={{ position: "absolute", left: isMobile ? "10px" : "16px", top: "50%", transform: "translateY(-50%)", width: isMobile ? "34px" : "42px", height: isMobile ? "34px" : "42px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.88)", color: "#1a1a1a", cursor: canScrollPrev ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? "18px" : "24px", boxShadow: "0 6px 16px rgba(0,0,0,0.12)", opacity: canScrollPrev ? 1 : 0.35 }}>
                 ‹
               </button>
               <button
@@ -943,22 +963,28 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
                 onClick={() => emblaApi?.scrollNext()}
                 aria-label={language === "id" ? "Gambar selanjutnya" : "Next image"}
                 disabled={!canScrollNext}
-                style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", width: "42px", height: "42px", borderRadius: "999px", border: "1px solid rgba(0,0,0,0.08)", background: "rgba(255,255,255,0.88)", color: "#1a1a1a", cursor: canScrollNext ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", boxShadow: "0 10px 24px rgba(0,0,0,0.12)", opacity: canScrollNext ? 1 : 0.35 }}>
+                style={{ position: "absolute", right: isMobile ? "10px" : "16px", top: "50%", transform: "translateY(-50%)", width: isMobile ? "34px" : "42px", height: isMobile ? "34px" : "42px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.88)", color: "#1a1a1a", cursor: canScrollNext ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? "18px" : "24px", boxShadow: "0 6px 16px rgba(0,0,0,0.12)", opacity: canScrollNext ? 1 : 0.35 }}>
                 ›
               </button>
             </>
           )}
+          {/* Image counter badge */}
+          {carouselImages.length > 1 && (
+            <div style={{ position: "absolute", bottom: "10px", left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: "999px", background: "rgba(0,0,0,0.5)", color: "#fff", fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: "0.08em", backdropFilter: "blur(4px)" }}>
+              {(emblaApi?.selectedScrollSnap() ?? 0) + 1} / {carouselImages.length}
+            </div>
+          )}
         </div>
-        <div style={{ flex: "1 1 280px", padding: isMobile ? "16px 18px" : "28px", display: "flex", flexDirection: "column", gap: "12px", justifyContent: "flex-start", overflow: "auto", overscrollBehavior: "contain" }}>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", margin: 0 }}>{getCategoryLabel(product.category, categoryInfo?.label || product.category, language)}</p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(28px, 8vw, 36px)" : "clamp(32px, 4vw, 50px)", lineHeight: 1, margin: 0, color: "#1a1a1a" }}>{displayName}</h2>
-          <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.8, margin: 0 }}>
+        <div style={{ flex: "1 1 auto", padding: isMobile ? "16px 20px 24px" : "28px", display: "flex", flexDirection: "column", gap: isMobile ? "8px" : "12px", justifyContent: "flex-start", overflow: "auto", overscrollBehavior: "contain", minHeight: 0 }}>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "8px", color: "#999", textTransform: "uppercase", margin: 0, letterSpacing: "0.14em" }}>{getCategoryLabel(product.category, categoryInfo?.label || product.category, language)}</p>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(24px, 7vw, 32px)" : "clamp(32px, 4vw, 50px)", lineHeight: 1.1, margin: 0, color: "#1a1a1a", wordBreak: "break-word" }}>{displayName}</h2>
+          <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.7, margin: 0, fontSize: isMobile ? "13px" : "inherit" }}>
             {description || getCategoryDescription(product.category, categoryInfo?.description || "", language) || (language === "id" ? "Detail produk ini tersedia di katalog lengkap dan bisa dibuka dari tombol di bawah." : "This product detail is available in the full catalog and can be opened using the button below.")}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             {renderPriceDisplayWithPromo(product, language)}
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
             {(() => {
               const cfg = getSiteConfig();
               const imgUrl = product.images?.[0] || product.image || "";
@@ -967,7 +993,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
               
               const baseLink1 = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
               const baseLink2 = cfg.whatsappNumber2 ? `https://wa.me/${cfg.whatsappNumber2}?text=${encodeURIComponent(msg)}` : "";
-              const btnStyle = { display: "inline-block", flex: isMobile ? "1 1 100%" : "1 1 0", padding: "14px 22px", backgroundColor: "#25D366", color: "#fff", textDecoration: "none", textAlign: "center" as const, borderRadius: "10px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.08em", textTransform: "uppercase" as const, boxShadow: "0 6px 16px rgba(37,211,102,0.3)", transition: "all 0.2s ease" };
+              const btnStyle = { display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: isMobile ? "14px 16px" : "14px 22px", backgroundColor: "#25D366", color: "#fff", textDecoration: "none", textAlign: "center" as const, borderRadius: "12px", fontFamily: "'JetBrains Mono', monospace", fontSize: isMobile ? "10px" : "11px", letterSpacing: "0.08em", textTransform: "uppercase" as const, boxShadow: "0 6px 16px rgba(37,211,102,0.3)", transition: "all 0.2s ease" };
 
               return (
                 <>
@@ -975,7 +1001,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
                     💬 {cfg.whatsappNumber2 ? (language === "id" ? "Pesan via Pusat/Madura" : "Order via HQ/Madura") : (language === "id" ? "Pesan via WhatsApp" : "Order via WhatsApp")}
                   </a>
                   {cfg.whatsappNumber2 && (
-                    <a href={baseLink2} target="_blank" rel="noopener noreferrer" style={btnStyle}>
+                    <a href={baseLink2} target="_blank" rel="noopener noreferrer" style={{...btnStyle, backgroundColor: "#128C7E"}}>
                       💬 {language === "id" ? "Pesan via Surabaya" : "Order via Surabaya"}
                     </a>
                   )}
@@ -1076,17 +1102,17 @@ function CategoryPreviewModal({
   }, []);
 
   return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "8px" : "clamp(16px, 4vw, 40px)", overflow: "hidden" }} onClick={onClose}>
-    <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", height: isMobile ? "calc(100dvh - 16px)" : "88vh", maxHeight: isMobile ? "calc(100dvh - 16px)" : "900px", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "16px" : "20px" }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "rgba(80,30,40,0.50)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "8px" : "clamp(16px, 4vw, 40px)", overflow: "hidden" }} onClick={onClose}>
+    <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#FFF0F3", display: isMobile ? "flex" : "grid", flexDirection: isMobile ? "column" : undefined, gridTemplateColumns: isMobile ? undefined : "minmax(0, 1.05fr) minmax(280px, 0.95fr)", height: isMobile ? "calc(100dvh - 16px)" : "88vh", maxHeight: isMobile ? "calc(100dvh - 16px)" : "900px", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "14px" : "20px" }}>
         <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.92)", cursor: "pointer" }}>×</button>
-        <div style={{ minHeight: 0, padding: isMobile ? "18px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflow: "auto", overscrollBehavior: "contain" }}>
+        <div style={{ flex: isMobile ? "1 1 auto" : undefined, minHeight: 0, padding: isMobile ? "14px 14px 10px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflow: "auto", overscrollBehavior: "contain" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Preview kategori" : "Category preview"}
           </p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(28px, 8vw, 38px)" : "clamp(32px, 4vw, 52px)", lineHeight: 1, margin: "10px 0 12px 0", color: "#1a1a1a" }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(22px, 6vw, 30px)" : "clamp(32px, 4vw, 52px)", lineHeight: 1.1, margin: "10px 0 12px 0", color: "#1a1a1a", wordBreak: "break-word" }}>
             {category.emoji} {getCategoryLabel(category.key, category.label, language)}
           </h2>
-          <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.8, margin: 0 }}>
+          <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.7, margin: 0, fontSize: isMobile ? "13px" : "inherit" }}>
             {getCategoryDescription(category.key, category.description, language)}
           </p>
           {category.noted && <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "#8a6d3b", margin: "14px 0 0 0", lineHeight: 1.6 }}>💡 {category.noted}</p>}
@@ -1098,7 +1124,7 @@ function CategoryPreviewModal({
 
           </div>
 
-          <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "120px" : "140px"}, 1fr))`, gap: "14px" }}>
+          <div style={{ marginTop: "18px", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "100px" : "140px"}, 1fr))`, gap: isMobile ? "10px" : "14px" }}>
             {previewProducts.map((product) => (
               (() => {
                 const previewName = getProductDisplayName(product, language);
@@ -1110,14 +1136,14 @@ function CategoryPreviewModal({
                     style={{
                       border: "1px solid rgba(0,0,0,0.08)",
                       background: "#fff",
-                      borderRadius: "16px",
-                      padding: "10px",
+                      borderRadius: isMobile ? "12px" : "16px",
+                      padding: isMobile ? "8px" : "10px",
                       textAlign: "left",
                       cursor: "pointer",
                       boxShadow: "0 10px 24px rgba(0,0,0,0.05)",
                     }}
                   >
-                    <div style={{ aspectRatio: "4/5", overflow: "hidden", borderRadius: "12px", background: "#efefec", marginBottom: "10px" }}>
+                    <div style={{ aspectRatio: "4/5", overflow: "hidden", borderRadius: isMobile ? "8px" : "12px", background: "#efefec", marginBottom: "8px" }}>
                       <img
                         src={(product.images && product.images[0]) || product.image}
                         alt={previewName}
@@ -1129,7 +1155,7 @@ function CategoryPreviewModal({
                         }}
                       />
                     </div>
-                    <p style={{ margin: "0 0 4px 0", fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", lineHeight: 1.1, color: "#1a1a1a" }}>{previewName}</p>
+                    <p style={{ margin: "0 0 2px 0", fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "14px" : "18px", lineHeight: 1.1, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{previewName}</p>
                     <p style={{ margin: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.08em", textTransform: "uppercase", color: "#7a7a7a" }}>{product.priceLabel}</p>
                   </button>
                 );
@@ -1138,7 +1164,7 @@ function CategoryPreviewModal({
           </div>
         </div>
 
-        <div style={{ minHeight: 0, padding: isMobile ? "18px" : "28px", background: "#f2ede7", overflow: "auto", overscrollBehavior: "contain", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
+        <div style={{ flex: isMobile ? "0 0 auto" : undefined, maxHeight: isMobile ? "40vh" : undefined, minHeight: 0, padding: isMobile ? "14px" : "28px", background: "#f2ede7", overflow: "auto", overscrollBehavior: "contain", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Ringkasan isi kategori" : "Category content summary"}
           </p>
@@ -1241,11 +1267,12 @@ function renderPriceDisplay(product: Product, language: Language) {
     return (
       <p style={{
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: "11px",
+        fontSize: "clamp(9px, 2.2vw, 11px)",
         fontWeight: 600,
         color: "#b85c3b",
         margin: 0,
-        whiteSpace: "nowrap",
+        lineHeight: 1.2,
+        wordBreak: "break-all",
       }}>
         {getProductPriceLabel(product, language)}
       </p>
@@ -1258,11 +1285,11 @@ function renderPriceDisplay(product: Product, language: Language) {
   const discountPercent = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
         <span style={{
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "10px",
+          fontSize: "clamp(8px, 2vw, 10px)",
           color: "#aaa",
           textDecoration: "line-through",
           fontWeight: 500,
@@ -1271,7 +1298,7 @@ function renderPriceDisplay(product: Product, language: Language) {
         </span>
         <span style={{
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "10px",
+          fontSize: "clamp(7px, 1.8vw, 10px)",
           backgroundColor: "#ff4444",
           color: "#fff",
           padding: "2px 6px",
@@ -1284,11 +1311,11 @@ function renderPriceDisplay(product: Product, language: Language) {
       </div>
       <p style={{
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: "12px",
+        fontSize: "clamp(9px, 2.2vw, 12px)",
         fontWeight: 700,
         color: "#d17047",
         margin: 0,
-        whiteSpace: "nowrap",
+        wordBreak: "break-all" as const,
       }}>
         {currentLabel}
       </p>

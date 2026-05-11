@@ -68,7 +68,7 @@ export function Nav() {
           padding: "20px clamp(16px, 6vw, 120px)",
           fontFamily: "'Inter', sans-serif",
           backdropFilter: "blur(12px)",
-          background: "linear-gradient(180deg, rgba(249,249,247,1) 0%, rgba(249,249,247,0.95) 100%)",
+          background: "linear-gradient(180deg, rgba(255,240,243,1) 0%, rgba(255,240,243,0.95) 100%)",
           borderBottom: "1px solid rgba(184,92,59,0.18)",
           boxShadow: "0 10px 26px rgba(0,0,0,0.06)",
         }}
@@ -94,7 +94,7 @@ export function Nav() {
               src={config.brandLogoUrl || BRAND_LOGO.logo}
               alt={`${config.businessName} logo`}
               onError={() => setLogoFailed(true)}
-              style={{ width: "44px", height: "44px", objectFit: "contain", borderRadius: "12px", mixBlendMode: "multiply", backgroundColor: "transparent" }}
+              style={{ width: "36px", height: "36px", objectFit: "contain", borderRadius: "10px", mixBlendMode: "multiply", backgroundColor: "transparent", flexShrink: 0 }}
             />
           ) : (
             <span
@@ -118,7 +118,7 @@ export function Nav() {
               {brandDisplayName.substring(0, 2).toLowerCase()}
             </span>
           )}
-          <span style={{ display: "flex", flexDirection: "column", marginLeft: 8, lineHeight: 1 }}>
+          <span style={{ display: "flex", flexDirection: "column", marginLeft: 6, lineHeight: 1, minWidth: 0, overflow: "hidden" }}>
             <span
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
@@ -126,11 +126,15 @@ export function Nav() {
                 fontWeight: 600,
                 letterSpacing: "0.02em",
                 textTransform: "none",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {brandDisplayName}
             </span>
             <span
+              className="brand-address"
               style={{
                 marginTop: "2px",
                 fontFamily: "'Inter', sans-serif",
@@ -140,7 +144,10 @@ export function Nav() {
                 color: "#8a6a52",
               }}
             >
-              {(config.address || "").split('\n')[0] || BRAND_LOGO.location || "Floral Portfolio"}
+              {(() => {
+                const rawAddr = (config.address || "").split('\n')[0] || BRAND_LOGO.location || "";
+                return rawAddr.replace(/^toko:\s*/i, "").trim() || "Ruko Jambu Raya Perumnas Kamal";
+              })()}
             </span>
           </span>
         </Link>
@@ -298,7 +305,7 @@ export function Nav() {
               position: "fixed",
               inset: 0,
               zIndex: 45,
-              backgroundColor: "rgba(249, 249, 247, 0.98)",
+              backgroundColor: "rgba(255, 240, 243, 0.98)",
               backdropFilter: "blur(20px)",
               display: "flex",
               flexDirection: "column",

@@ -106,7 +106,7 @@ export function CaseStudy() {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 gap-5 pb-20 md:grid-cols-3 lg:grid-cols-4">
+        <div className="case-study-product-grid grid grid-cols-2 gap-5 pb-20 md:grid-cols-3 lg:grid-cols-4">
           {catProducts.map((product, i) => (
             <motion.div
               key={product.id}
@@ -130,7 +130,7 @@ export function CaseStudy() {
           }}
         >
           <p style={mono}>{language === "id" ? "Kategori Lainnya" : "Other Categories"}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="case-study-categories mt-6 flex flex-wrap gap-3">
             {categories
               .filter((c) => c.key !== catKey)
               .map((c) => (

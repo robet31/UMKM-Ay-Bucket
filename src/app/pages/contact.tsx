@@ -86,7 +86,7 @@ export function Contact() {
             </p>
           </motion.div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", alignItems: "center" }}>
+          <div className="contact-wa-numbers" style={{ display: "flex", flexWrap: "wrap", gap: "24px", alignItems: "center" }}>
             <motion.a
               key="wa1"
               href={`https://wa.me/${(config.whatsappNumber || "6285880021020").replace(/[^0-9]/g, "")}`}
@@ -170,7 +170,7 @@ export function Contact() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9, duration: 0.8 }}
-            className="mt-20 grid gap-8 xl:grid-cols-[1.15fr_0.85fr] items-start"
+            className="contact-info-grid mt-20 grid gap-8 xl:grid-cols-[1.15fr_0.85fr] items-start"
           >
             <div className="grid gap-6 min-w-0">
               {/* Decorative divider */}

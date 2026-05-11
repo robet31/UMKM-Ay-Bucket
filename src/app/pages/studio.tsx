@@ -165,7 +165,7 @@ export function Studio() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1 }}
-          className="grid grid-cols-1 gap-12 md:grid-cols-12"
+          className="studio-intro-grid grid grid-cols-1 gap-12 md:grid-cols-12"
           style={{ paddingBottom: "120px" }}
         >
           <div className="md:col-span-10 md:col-start-2" style={{ marginBottom: "10px" }}>
@@ -333,21 +333,22 @@ export function Studio() {
           </div>
 
           {/* Mobile stack */}
-          <div className="flex flex-col gap-16 pb-8 md:hidden">
+          <div className="gallery-mobile-grid flex flex-col gap-16 pb-8 md:hidden">
             {galleryProjects.map((project, i) => (
               <motion.div
                 key={project.id}
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: i * 0.05 }}
+                transition={{ duration: 0.6, delay: i * 0.04 }}
               >
                 <div
                   style={{
-                    aspectRatio: project.aspect,
+                    aspectRatio: "1/1",
                     overflow: "hidden",
                     backgroundColor: "#eee",
-                    boxShadow: "0 8px 40px rgba(0,0,0,0.06)",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
                   }}
                 >
                   <img
@@ -365,9 +366,9 @@ export function Studio() {
                     }}
                   />
                 </div>
-                <div className="mt-3">
-                  <span style={{ ...mono, fontSize: "9px", color: "#999" }}>{project.category}</span>
-                  <h3 style={{ ...serif, fontSize: "22px", fontWeight: 400, color: "#1a1a1a", marginTop: "4px", letterSpacing: "-0.02em" }}>
+                <div className="mt-2">
+                  <span style={{ ...mono, fontSize: "8px", color: "#999" }}>{project.category}</span>
+                  <h3 style={{ ...serif, fontSize: "14px", fontWeight: 400, color: "#1a1a1a", marginTop: "2px", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
                     {project.title}
                   </h3>
                 </div>
@@ -384,7 +385,7 @@ export function Studio() {
           style={{ borderColor: "rgba(0,0,0,0.08)", marginTop: "80px", paddingTop: "80px", paddingBottom: "120px" }}
         >
           <p style={{ ...mono, marginBottom: "60px" }}>{language === "id" ? "Cara Pemesanan" : "Ordering Process"}</p>
-          <div className="flex flex-col gap-20 md:ml-[16.6%]" style={{ maxWidth: "520px" }}>
+          <div className="studio-steps-container flex flex-col gap-20 md:ml-[16.6%]" style={{ maxWidth: "520px" }}>
             {steps.map((step, i) => {
               const stepIcons = ["📋", "🎨", "💬", "🌸"];
               const stepColors = ["#d48a6a", "#c98b3f", "#7d5ba6", "#c05d5d"];
