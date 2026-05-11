@@ -784,6 +784,7 @@ export function Admin() {
 
         {activeTab === "gallery" && (
           <GalleryManager
+            products={products}
             items={galleryProjects}
             onUpdate={setGalleryProjectsList}
             onSave={handleSaveGallery}
@@ -1544,6 +1545,7 @@ function HeroSlotManager({
 
 // GalleryManager component dengan drag-and-drop
 interface GalleryManagerProps {
+  products: Product[];
   items: GalleryProject[];
   onUpdate: (items: GalleryProject[]) => void;
   onSave: () => void;
@@ -1553,6 +1555,7 @@ interface GalleryManagerProps {
 }
 
 function GalleryManager({
+  products,
   items,
   onUpdate,
   onSave,
@@ -1642,6 +1645,35 @@ function GalleryManager({
               </span>
             </div>
             <div style={{ display: "grid", gap: "10px" }}>
+              <div>
+                <label style={labelStyle}>Tautkan ke Produk</label>
+                <select
+                  style={inputStyle}
+                  value={item.productId || ""}
+                  onChange={(e) => {
+                    const prodId = e.target.value;
+                    const prod = products.find(p => p.id === prodId);
+                    const newItems = items.map((i) => {
+                      if (i.id === item.id) {
+                        const updated = { ...i, productId: prodId };
+                        if (prod) {
+                          if (!updated.title) updated.title = prod.name;
+                          if (!updated.category) updated.category = prod.category;
+                          if (!updated.image) updated.image = prod.image;
+                        }
+                        return updated;
+                      }
+                      return i;
+                    });
+                    onUpdate(newItems);
+                  }}
+                >
+                  <option value="">-- Tidak ditautkan --</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} — {formatRupiah(p.price)}</option>
+                  ))}
+                </select>
+              </div>
               <FieldInput label="Judul" value={item.title} onChange={(v) => handleFieldChange(item.id, "title", v)} />
               <FieldInput label="Kategori" value={item.category} onChange={(v) => handleFieldChange(item.id, "category", v)} />
               <div>

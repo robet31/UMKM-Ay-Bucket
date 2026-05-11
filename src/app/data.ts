@@ -383,6 +383,7 @@ export function getSiteConfig(): SiteConfig {
 export function formatRupiah(value: number | string): string {
   const parsed = typeof value === "number" ? value : parseInt(String(value).replace(/\D/g, ""), 10);
   const amount = Number.isFinite(parsed) ? parsed : 0;
+  if (amount === 0) return "Chat Admin";
   return `Rp ${amount.toLocaleString("id-ID")}`;
 }
 
@@ -480,7 +481,7 @@ export const defaultCategories: Category[] = [
 
 export const categories: Category[] = typeof window !== 'undefined' ? ((getSiteConfig().customCategories && (getSiteConfig().customCategories as Category[]).length > 0) ? (getSiteConfig().customCategories as Category[]) : defaultCategories) : defaultCategories;
 
-export interface GalleryProject { id: string; title: string; category: string; aspect: "3/4" | "1/1" | "16/9"; image: string; }
+export interface GalleryProject { id: string; title: string; category: string; aspect: "3/4" | "1/1" | "16/9"; image: string; productId?: string; }
 
 export const defaultGalleryProjects: GalleryProject[] = [
   { id: "gallery-1", title: "Premium Satin Bouquet", category: "Buket Satin", aspect: "3/4", image: "/assets/Round Pita Satin - Rp 100.00000.png", },
