@@ -1368,9 +1368,9 @@ function renderPriceDisplayWithPromo(product: Product, language: Language) {
 }
 
 function getProductPriceLabel(product: Product, language: Language) {
-  if (language === "id") return product.priceLabel || formatRupiah(product.price || 0);
   const amount = Number.isFinite(product.price) ? product.price : parseInt(String(product.priceLabel || "").replace(/\D/g, ""), 10) || 0;
   if (amount === 0) return "Chat Admin";
+  if (language === "id") return product.priceLabel || formatRupiah(product.price || 0);
   return `Rp ${amount.toLocaleString("en-US")}`;
 }
 
