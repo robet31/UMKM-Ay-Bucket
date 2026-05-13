@@ -38,14 +38,12 @@ function useAdminSync() {
       if (e.key?.includes("aybucket")) handler();
     });
 
-    // Cross-device sync: Poll Neon DB every 8 seconds for faster updates
+    // Cross-device sync: Poll Google Sheets setiap 5 detik untuk update real-time
     const interval = setInterval(() => {
-      if (isProduction) {
-        syncAllWithNeon().then((changed) => {
-          if (changed) handler();
-        });
-      }
-    }, 8000);
+      syncAllWithNeon().then((changed) => {
+        if (changed) handler();
+      });
+    }, 5000);
 
     // Initial sync on mount
     syncAllWithNeon().then((changed) => {
@@ -75,8 +73,16 @@ export function Home() {
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(null);
   const [productSourceCategory, setProductSourceCategory] = useState<ProductCategory | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-to-top visibility
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -592,6 +598,43 @@ export function Home() {
         )}
       </AnimatePresence>
       <Footer />
+
+      {/* Scroll-to-top button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: 20 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Kembali ke atas"
+            style={{
+              position: 'fixed',
+              bottom: '100px',
+              right: '24px',
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #c6857a 0%, #b85c3b 100%)',
+              color: '#fff',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '22px',
+              boxShadow: '0 4px 16px rgba(184,92,59,0.4)',
+              zIndex: 999,
+              transition: 'transform 0.2s',
+            }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            ↑
+          </motion.button>
+        )}
+      </AnimatePresence>
     </PageTransition>
   );
 }

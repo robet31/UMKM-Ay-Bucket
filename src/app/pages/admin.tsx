@@ -111,6 +111,11 @@ export function Admin() {
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  // Track whether the component has been initialized (to prevent auto-save on first mount)
+  const isInitialized = useRef(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!authed) {
@@ -124,6 +129,70 @@ export function Admin() {
         htmlElem.style.overflow = prevHtmlOverflow;
         bodyElem.style.overflow = prevBodyOverflow;
       };
+    }
+  }, [authed]);
+
+  // ====== AUTO-SAVE SYSTEM ======
+  // Setiap perubahan config, products, videos, gallery → otomatis simpan ke cloud setelah 2 detik idle
+  const triggerAutoSave = (saveFn: () => Promise<void>) => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    setAutoSaveStatus('saving');
+    autoSaveTimerRef.current = setTimeout(async () => {
+      try {
+        await saveFn();
+        setAutoSaveStatus('saved');
+        setTimeout(() => setAutoSaveStatus('idle'), 2000);
+      } catch {
+        setAutoSaveStatus('error');
+        setTimeout(() => setAutoSaveStatus('idle'), 3000);
+      }
+    }, 2000);
+  };
+
+  // Auto-save config (Umum, Hero, Navbar, Footer)
+  useEffect(() => {
+    if (!authed || !isInitialized.current) return;
+    const normalizedConfig = {
+      ...config,
+      instagram: config.instagram?.startsWith('@@') ? config.instagram.substring(1) : config.instagram,
+      tiktok: config.tiktok?.startsWith('@@') ? config.tiktok.substring(1) : config.tiktok,
+      customCategories: categoriesList,
+    };
+    triggerAutoSave(async () => {
+      await saveSiteConfig(normalizedConfig);
+      window.dispatchEvent(new Event("siteConfigChanged"));
+    });
+  }, [config, categoriesList]);
+
+  // Auto-save products
+  useEffect(() => {
+    if (!authed || !isInitialized.current) return;
+    triggerAutoSave(async () => {
+      await saveProducts(products);
+    });
+  }, [products]);
+
+  // Auto-save videos
+  useEffect(() => {
+    if (!authed || !isInitialized.current) return;
+    triggerAutoSave(async () => {
+      await saveVideos(videos);
+    });
+  }, [videos]);
+
+  // Auto-save gallery
+  useEffect(() => {
+    if (!authed || !isInitialized.current) return;
+    triggerAutoSave(async () => {
+      await setGalleryProjects(galleryProjects);
+    });
+  }, [galleryProjects]);
+
+  // Mark as initialized after first render (prevents auto-save on mount)
+  useEffect(() => {
+    if (authed) {
+      const timer = setTimeout(() => { isInitialized.current = true; }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [authed]);
 
@@ -618,6 +687,25 @@ export function Admin() {
           >
             🛠️ Pengaturan Website
           </h1>
+          {/* Auto-save status indicator */}
+          {autoSaveStatus !== 'idle' && (
+            <span style={{
+              fontSize: '11px',
+              fontFamily: "'JetBrains Mono', monospace",
+              padding: '4px 12px',
+              borderRadius: '20px',
+              marginLeft: '12px',
+              verticalAlign: 'middle',
+              animation: autoSaveStatus === 'saving' ? 'pulse 1.5s infinite' : 'none',
+              ...(autoSaveStatus === 'saving' ? { background: '#FFF3CD', color: '#856404' } : {}),
+              ...(autoSaveStatus === 'saved' ? { background: '#D4EDDA', color: '#155724' } : {}),
+              ...(autoSaveStatus === 'error' ? { background: '#F8D7DA', color: '#721C24' } : {}),
+            }}>
+              {autoSaveStatus === 'saving' && '⏳ Menyimpan...'}
+              {autoSaveStatus === 'saved' && '✅ Tersimpan ke Cloud!'}
+              {autoSaveStatus === 'error' && '❌ Gagal simpan'}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <Link
