@@ -213,104 +213,39 @@ export function setAdminCredentials(user: string, pass: string) {
 }
 
 // saveToCloud — menyimpan data ke Google Sheets
-// Semua data dikirim via GET karena CORS-free dan paling reliable
-// Untuk data besar (>8KB), data dipecah jadi chunks dan disimpan terpisah
+// Untuk menghindari CORS error dan limitasi URL length pada GET,
+// kita gunakan POST dengan form-urlencoded (diizinkan di mode no-cors).
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
     console.log(`[Cloud Sync] Menyimpan ke ${key}...`);
 
     if (USE_GSHEET) {
-      const dataStr = JSON.stringify(data);
-      
-      // Cek apakah data cukup kecil untuk 1x GET
-      const testPayload = JSON.stringify({
+      const payloadObj = {
         action: "set", key, data,
         username: activeAdminUsername || "admin",
         password: activeAdminPassword || "AyBucket2026!"
-      });
-      const testUrl = `${NEON_API_URL}?action=set&key=${key}&payload=${encodeURIComponent(testPayload)}`;
+      };
+      const payloadStr = JSON.stringify(payloadObj);
+      const encodedData = `payload=${encodeURIComponent(payloadStr)}`;
       
-      if (testUrl.length <= 7500) {
-        // Data kecil — langsung kirim via GET
-        const res = await fetch(testUrl, { method: "GET", redirect: "follow" });
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.success) {
-            console.log(`✅ [Cloud Sync] ${key} berhasil disimpan (GET)!`);
-            return true;
-          }
-        }
-      } else {
-        // Data besar — chunking: pecah array/object jadi beberapa bagian
-        console.log(`[Cloud Sync] ${key} besar (${dataStr.length} chars), chunking...`);
+      console.log(`[Cloud Sync] Mengirim ${key} (${payloadStr.length} chars) via form-encoded POST...`);
+      
+      try {
+        // Mode no-cors mengizinkan Content-Type: application/x-www-form-urlencoded
+        // Ini adalah cara paling reliable untuk kirim data besar ke Apps Script tanpa error CORS
+        await fetch(NEON_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: encodedData
+        });
         
-        if (Array.isArray(data)) {
-          // Untuk array (products, videos, gallery): simpan per chunk ~20 item
-          const CHUNK_SIZE = 15;
-          const totalChunks = Math.ceil(data.length / CHUNK_SIZE);
-          
-          // Simpan metadata dulu
-          const metaPayload = JSON.stringify({
-            action: "set", key: `${key}__meta`,
-            data: { totalChunks, totalItems: data.length, updatedAt: new Date().toISOString() },
-            username: activeAdminUsername || "admin",
-            password: activeAdminPassword || "AyBucket2026!"
-          });
-          await fetch(`${NEON_API_URL}?action=set&key=${key}__meta&payload=${encodeURIComponent(metaPayload)}`, 
-            { method: "GET", redirect: "follow" });
-          
-          // Simpan setiap chunk
-          let allSuccess = true;
-          for (let i = 0; i < totalChunks; i++) {
-            const chunk = data.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-            const chunkKey = `${key}__chunk_${i}`;
-            const chunkPayload = JSON.stringify({
-              action: "set", key: chunkKey,
-              data: chunk,
-              username: activeAdminUsername || "admin",
-              password: activeAdminPassword || "AyBucket2026!"
-            });
-            const chunkUrl = `${NEON_API_URL}?action=set&key=${chunkKey}&payload=${encodeURIComponent(chunkPayload)}`;
-            
-            try {
-              const res = await fetch(chunkUrl, { method: "GET", redirect: "follow" });
-              if (res.ok) {
-                const json = await res.json();
-                if (json?.success) {
-                  console.log(`✅ [Cloud Sync] ${key} chunk ${i+1}/${totalChunks} tersimpan.`);
-                } else { allSuccess = false; }
-              } else { allSuccess = false; }
-            } catch {
-              allSuccess = false;
-            }
-          }
-          
-          // Juga simpan full data sebagai single key (reassembled) via POST no-cors
-          // Ini sebagai fallback agar get_bundle tetap mereturn data lengkap
-          const fullPayload = JSON.stringify({
-            action: "set", key, data,
-            username: activeAdminUsername || "admin",
-            password: activeAdminPassword || "AyBucket2026!"
-          });
-          try {
-            await fetch(NEON_API_URL, { method: "POST", mode: "no-cors", body: fullPayload });
-          } catch {}
-          
-          if (allSuccess) {
-            console.log(`✅ [Cloud Sync] ${key} semua ${totalChunks} chunks tersimpan!`);
-            return true;
-          }
-        } else {
-          // Object besar — coba POST no-cors
-          const fullPayload = JSON.stringify({
-            action: "set", key, data,
-            username: activeAdminUsername || "admin",
-            password: activeAdminPassword || "AyBucket2026!"
-          });
-          await fetch(NEON_API_URL, { method: "POST", mode: "no-cors", body: fullPayload });
-          console.log(`⚡ [Cloud Sync] ${key} dikirim via POST no-cors.`);
-          return true;
-        }
+        console.log(`✅ [Cloud Sync] ${key} berhasil dikirim ke antrean server!`);
+        return true;
+      } catch (postErr) {
+        console.warn(`[Cloud Sync] POST gagal untuk ${key}:`, postErr);
       }
     } else {
       // Non-GSheet: Vercel API
@@ -600,35 +535,6 @@ export async function syncAllWithNeon(): Promise<boolean> {
         fetchFromNeon("videos"),
         fetchFromNeon("gallery_projects")
       ]);
-    }
-
-    // Jika products bukan array (corrupt/string), coba baca dari chunks
-    if (USE_GSHEET && (!Array.isArray(prods) || prods.length === 0)) {
-      console.log("[Cloud Sync] Products bukan array, mencoba baca chunks...");
-      try {
-        const metaRes = await fetch(`${NEON_API_URL}?action=get&key=products__meta`, { method: "GET", redirect: "follow" });
-        if (metaRes.ok) {
-          const metaJson = await metaRes.json();
-          if (metaJson?.data?.totalChunks) {
-            const totalChunks = metaJson.data.totalChunks;
-            const chunkPromises = [];
-            for (let i = 0; i < totalChunks; i++) {
-              chunkPromises.push(fetchFromNeon(`products__chunk_${i}` as any));
-            }
-            const chunks = await Promise.all(chunkPromises);
-            const reassembled: any[] = [];
-            chunks.forEach((chunk: any) => {
-              if (Array.isArray(chunk)) reassembled.push(...chunk);
-            });
-            if (reassembled.length > 0) {
-              prods = reassembled;
-              console.log(`✅ [Cloud Sync] Products reassembled dari ${totalChunks} chunks (${reassembled.length} items)`);
-            }
-          }
-        }
-      } catch (chunkErr) {
-        console.warn("[Cloud Sync] Gagal baca product chunks:", chunkErr);
-      }
     }
 
     let synced = false;
