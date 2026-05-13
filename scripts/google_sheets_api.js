@@ -1,5 +1,5 @@
 // ============================================================
-// Google Apps Script — Ay Bucket Cloud Database
+// Google Apps Script — Ay Bucket Cloud Database v2 (CORS-Fixed)
 // ============================================================
 // CARA SETUP:
 // 1. Buka https://sheets.google.com → Buat Spreadsheet baru
@@ -15,14 +15,34 @@
 // 8. Tambahkan URL tersebut ke Vercel Environment Variables:
 //    Nama: VITE_GSHEET_API_URL
 //    Nilai: https://script.google.com/macros/s/xxxxx/exec
+//
+// ⚠️ PENTING: Setiap kali kode diubah, klik Deploy → Manage Deployments
+//    → Edit (ikon pensil) → Version: "New version" → Deploy
 // ============================================================
 
 const SHEET_NAME = 'Data';
 
+// ---- doGet: Handle GET requests (READ + WRITE) ----
+// Browser mengirim GET request untuk baca data DAN tulis data
+// Ini menghindari masalah CORS yang terjadi pada POST requests
 function doGet(e) {
-  return handleRequest(e.parameter);
+  const params = e.parameter || {};
+  
+  // Jika ada parameter "payload" (JSON string), parse dan gunakan sebagai params
+  if (params.payload) {
+    try {
+      const parsed = JSON.parse(params.payload);
+      // Merge parsed payload dengan params
+      Object.keys(parsed).forEach(k => { params[k] = parsed[k]; });
+    } catch(err) {
+      // payload bukan JSON valid, lanjutkan dengan params biasa
+    }
+  }
+  
+  return handleRequest(params);
 }
 
+// ---- doPost: Handle POST requests (backup method) ----
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
@@ -63,7 +83,12 @@ function handleRequest(params) {
     if (!isAuthorized(params.username || '', params.password || '')) {
       return jsonResponse({ success: false, error: 'Unauthorized' });
     }
-    setData(params.key, params.data);
+    // Pastikan "data" di-parse jika masih berbentuk string
+    let dataToSave = params.data;
+    if (typeof dataToSave === 'string') {
+      try { dataToSave = JSON.parse(dataToSave); } catch(e) { /* biarkan sebagai string */ }
+    }
+    setData(params.key, dataToSave);
     return jsonResponse({ success: true });
   }
   
@@ -72,7 +97,10 @@ function handleRequest(params) {
     if (!isAuthorized(params.username || '', params.password || '')) {
       return jsonResponse({ success: false, error: 'Unauthorized' });
     }
-    const payload = params.payload || {};
+    let payload = params.payload || {};
+    if (typeof payload === 'string') {
+      try { payload = JSON.parse(payload); } catch(e) { payload = {}; }
+    }
     const keys = ['site_config', 'products', 'videos', 'gallery_projects'];
     keys.forEach(k => {
       if (payload[k] !== undefined) {
@@ -82,7 +110,7 @@ function handleRequest(params) {
     return jsonResponse({ success: true });
   }
   
-  return jsonResponse({ success: false, error: 'Invalid action' });
+  return jsonResponse({ success: false, error: 'Invalid action. Valid: get, get_bundle, set, set_bundle, auth' });
 }
 
 // ---- Helper: Baca data dari Google Sheet ----

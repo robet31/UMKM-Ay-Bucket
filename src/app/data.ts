@@ -212,47 +212,61 @@ export function setAdminCredentials(user: string, pass: string) {
   activeAdminPassword = pass;
 }
 
-// saveToCloud — menyimpan JSON ringan (URL ImgBB pendek, bukan Base64 berat) ke Google Sheets / Vercel API
+// saveToCloud — menyimpan data ke Google Sheets via GET (menghindari CORS!)
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
-    const payload = JSON.stringify({ 
-      action: "set", 
-      key, 
-      data,
-      username: activeAdminUsername || "admin",
-      password: activeAdminPassword || "AyBucket2026!"
-    });
-    
     console.log(`[Cloud Sync] Menyimpan ke ${key}...`);
 
-    try {
-      const res = await fetch(NEON_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: payload,
-        redirect: "follow",
+    if (USE_GSHEET) {
+      // GOOGLE SHEETS: Kirim data via GET request (CORS-free!)
+      const payload = JSON.stringify({
+        action: "set",
+        key,
+        data,
+        username: activeAdminUsername || "admin",
+        password: activeAdminPassword || "AyBucket2026!"
       });
-      if (res.ok) {
-        console.log(`[Cloud Sync] ${key} berhasil disimpan.`);
+      
+      const encodedPayload = encodeURIComponent(payload);
+      const url = `${NEON_API_URL}?action=set&key=${key}&payload=${encodedPayload}`;
+      
+      if (url.length > 8000) {
+        // Data terlalu besar untuk GET, gunakan POST no-cors
+        console.log(`[Cloud Sync] Data ${key} besar (${url.length} chars), pakai POST...`);
+        await fetch(NEON_API_URL, { method: "POST", mode: "no-cors", body: payload });
+        console.log(`⚡ [Cloud Sync] ${key} dikirim via POST no-cors.`);
         return true;
       }
-    } catch (e) {
-      if (USE_GSHEET) {
-        // Blind-write fallback: tetap kirim data meskipun respons diblokir CORS.
-        // Google Sheets akan tetap menerima dan memproses datanya.
-        fetch(NEON_API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain" },
-          body: payload,
-        });
-        console.warn(`[Cloud Sync] ${key} dikirim via blind-write (CORS bypass).`);
-        return true; 
+      
+      try {
+        const res = await fetch(url, { method: "GET", redirect: "follow" });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.success) {
+            console.log(`✅ [Cloud Sync] ${key} berhasil disimpan ke Google Sheets!`);
+            return true;
+          } else {
+            console.warn(`⚠️ [Cloud Sync] Response:`, json);
+          }
+        }
+      } catch (fetchErr) {
+        console.warn(`[Cloud Sync] GET gagal, fallback POST...`, fetchErr);
+        await fetch(NEON_API_URL, { method: "POST", mode: "no-cors", body: payload });
+        return true;
       }
-      throw e;
+    } else {
+      const res = await fetch(NEON_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set", key, data }),
+      });
+      if (res.ok) {
+        console.log(`✅ [Cloud Sync] ${key} berhasil disimpan.`);
+        return true;
+      }
     }
   } catch (err) {
-    console.warn(`[Cloud Sync] Gagal menyimpan ${key}, data tetap aman di lokal:`, err);
+    console.warn(`❌ [Cloud Sync] Gagal menyimpan ${key}:`, err);
   }
   return false;
 }
