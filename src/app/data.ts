@@ -25,10 +25,10 @@ const GALLERY_STORAGE_KEY = "aybucket_gallery_v1";
 export type AllowedKey = "site_config" | "products" | "videos" | "gallery_projects";
 
 // Cloud API URL — Google Sheets sebagai database gratis dan unlimited
-// Prioritas: VITE_GSHEET_API_URL (Google Sheets) → /api/config (Vercel/Neon fallback)
-const GSHEET_API_URL = import.meta.env.VITE_GSHEET_API_URL || '';
-export const NEON_API_URL = GSHEET_API_URL || '/api/config';
-const USE_GSHEET = !!GSHEET_API_URL;
+// Hardcoded URL untuk memastikan selalu menggunakan Google Sheets dan menghindari Neon DB Quota Exceeded
+const GSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzlqawXDkQnkL0ACaNIqmueeGK_zqgJ24JyDNlhGqLpB8ISVQBPj_T3syG3NObSegRq/exec";
+export const NEON_API_URL = GSHEET_API_URL;
+const USE_GSHEET = true;
 
 // Developer Contact Information (shown when storage is full)
 export const DEVELOPER_CONTACT = {
