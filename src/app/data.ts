@@ -183,7 +183,9 @@ export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
     });
     if (res.ok) {
       const json = await res.json();
-      if (json && json.value) return json.value;
+      // Perbaikan kritis: backend Vercel (api/config.ts) mengembalikan { success: true, data: [...] }
+      if (json && json.data !== undefined) return json.data;
+      if (json && json.value !== undefined) return json.value;
     }
   } catch (err) {
     console.warn("Gagal mengambil dari Neon DB eksternal:", err);
@@ -204,8 +206,19 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
     const res = await fetch(NEON_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "set", key, value: data }),
+      headers: { 
+        "Content-Type": "application/json",
+        "X-Admin-Username": activeAdminUsername || "admin",
+        "X-Admin-Password": activeAdminPassword || "AyBucket2026!"
+      },
+      // Perbaikan kritis: backend Vercel (api/config.ts) mengekstrak req.body.data untuk operasi 'set' dan memvalidasi kredensial
+      body: JSON.stringify({ 
+        action: "set", 
+        key, 
+        data,
+        username: activeAdminUsername || "admin",
+        password: activeAdminPassword || "AyBucket2026!"
+      }),
     });
     return res.ok;
   } catch (err) {
