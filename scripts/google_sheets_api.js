@@ -42,13 +42,34 @@ function doGet(e) {
   return handleRequest(params);
 }
 
-// ---- doPost: Handle POST requests (backup method) ----
+// ---- doPost: Handle POST requests (form POST + raw JSON) ----
 function doPost(e) {
   try {
-    const body = JSON.parse(e.postData.contents);
+    var contents = e.postData.contents || '';
+    var contentType = e.postData.type || '';
+    var body = {};
+    
+    // Case 1: Form submission dari iframe (application/x-www-form-urlencoded)
+    // Data dikirim sebagai: payload=<URL-encoded JSON>
+    if (contentType.indexOf('form') >= 0 || contents.indexOf('payload=') === 0) {
+      var parts = contents.split('&');
+      for (var i = 0; i < parts.length; i++) {
+        var kv = parts[i].split('=');
+        if (kv[0] === 'payload' && kv.length > 1) {
+          var decoded = decodeURIComponent(kv.slice(1).join('='));
+          body = JSON.parse(decoded);
+          break;
+        }
+      }
+    }
+    // Case 2: Raw JSON POST (fetch API)
+    else {
+      body = JSON.parse(contents);
+    }
+    
     return handleRequest(body);
   } catch (err) {
-    return jsonResponse({ success: false, error: err.message });
+    return jsonResponse({ success: false, error: 'POST parse error: ' + err.message });
   }
 }
 
