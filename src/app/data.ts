@@ -25,8 +25,11 @@ const GALLERY_STORAGE_KEY = "aybucket_gallery_v1";
 
 export type AllowedKey = "site_config" | "products" | "videos" | "gallery_projects";
 
-// Legacy API URL (kept for backward compatibility, no longer used)
-export const NEON_API_URL = '/api/config';
+// Cloud API URL — Google Sheets sebagai database gratis dan unlimited
+// Prioritas: VITE_GSHEET_API_URL (Google Sheets) → /api/config (Vercel/Neon fallback)
+const GSHEET_API_URL = (import.meta as any).env?.VITE_GSHEET_API_URL || '';
+export const NEON_API_URL = GSHEET_API_URL || '/api/config';
+const USE_GSHEET = !!GSHEET_API_URL;
 
 // Developer Contact Information (shown when storage is full)
 export const DEVELOPER_CONTACT = {
@@ -173,22 +176,25 @@ const defaultConfig: SiteConfig = {
   customCategories: [],
 };
 
-// fetchFromNeon — takes lightweight text/JSON from remote DB to keep all user devices synced
+// fetchFromCloud — mengambil data ringan dari Google Sheets / Vercel API untuk sinkronisasi lintas perangkat
 export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
   try {
+    const payload = JSON.stringify({ action: "get", key });
     const res = await fetch(NEON_API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "get", key }),
+      // Google Apps Script memerlukan text/plain agar tidak trigger CORS preflight
+      headers: { "Content-Type": USE_GSHEET ? "text/plain" : "application/json" },
+      body: payload,
+      redirect: "follow",
     });
     if (res.ok) {
       const json = await res.json();
-      // Perbaikan kritis: backend Vercel (api/config.ts) mengembalikan { success: true, data: [...] }
+      if (json && json.success && json.data !== undefined) return json.data;
       if (json && json.data !== undefined) return json.data;
       if (json && json.value !== undefined) return json.value;
     }
   } catch (err) {
-    console.warn("Gagal mengambil dari Neon DB eksternal:", err);
+    console.warn("Gagal mengambil dari Cloud DB:", err);
   }
   return null;
 }
@@ -201,28 +207,36 @@ export function setAdminCredentials(user: string, pass: string) {
   activeAdminPassword = pass;
 }
 
-// saveToNeon — pushes extremely lightweight JSON strings (now using short ImgBB URLs instead of heavy Base64) to Neon DB
+// saveToCloud — menyimpan JSON ringan (URL ImgBB pendek, bukan Base64 berat) ke Google Sheets / Vercel API
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
+    const payload = JSON.stringify({ 
+      action: "set", 
+      key, 
+      data,
+      username: activeAdminUsername || "admin",
+      password: activeAdminPassword || "AyBucket2026!"
+    });
+    const headers: Record<string, string> = USE_GSHEET
+      ? { "Content-Type": "text/plain" }
+      : { 
+          "Content-Type": "application/json",
+          "X-Admin-Username": activeAdminUsername || "admin",
+          "X-Admin-Password": activeAdminPassword || "AyBucket2026!"
+        };
     const res = await fetch(NEON_API_URL, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "X-Admin-Username": activeAdminUsername || "admin",
-        "X-Admin-Password": activeAdminPassword || "AyBucket2026!"
-      },
-      // Perbaikan kritis: backend Vercel (api/config.ts) mengekstrak req.body.data untuk operasi 'set' dan memvalidasi kredensial
-      body: JSON.stringify({ 
-        action: "set", 
-        key, 
-        data,
-        username: activeAdminUsername || "admin",
-        password: activeAdminPassword || "AyBucket2026!"
-      }),
+      headers,
+      body: payload,
+      redirect: "follow",
     });
-    return res.ok;
+    if (res.ok) {
+      const json = await res.json();
+      return json.success === true;
+    }
+    return false;
   } catch (err) {
-    console.warn("Gagal menyimpan ke Neon DB eksternal, data tetap aman di lokal:", err);
+    console.warn("Gagal menyimpan ke Cloud DB, data tetap aman di lokal:", err);
     return false;
   }
 }
@@ -497,22 +511,53 @@ export const isProduction =
 
 let memoryCache: Record<string, any> = {};
 
-// syncAllWithNeon — sinkronisasi data dari Neon DB ke memori lokal di latar belakang
+// syncAllWithCloud — sinkronisasi data dari Google Sheets ke memori lokal
+// Data cloud SELALU menimpa data lokal untuk memastikan konsistensi lintas perangkat
 export async function syncAllWithNeon(): Promise<boolean> {
   try {
-    const [cfg, prods, vids, gal] = await Promise.all([
-      fetchFromNeon("site_config"),
-      fetchFromNeon("products"),
-      fetchFromNeon("videos"),
-      fetchFromNeon("gallery_projects")
-    ]);
+    // Coba bundle fetch dulu (lebih efisien, 1 request)
+    let bundleData: Record<string, any> | null = null;
+    try {
+      const res = await fetch(NEON_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": USE_GSHEET ? "text/plain" : "application/json" },
+        body: JSON.stringify({ action: "get_bundle" }),
+        redirect: "follow",
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.success && json?.data) bundleData = json.data;
+      }
+    } catch {
+      // Fallback: fetch individual keys
+    }
+
+    let cfg: any = null, prods: any = null, vids: any = null, gal: any = null;
+
+    if (bundleData) {
+      cfg = bundleData.site_config ?? null;
+      prods = bundleData.products ?? null;
+      vids = bundleData.videos ?? null;
+      gal = bundleData.gallery_projects ?? null;
+    } else {
+      // Fallback: fetch each key individually
+      [cfg, prods, vids, gal] = await Promise.all([
+        fetchFromNeon("site_config"),
+        fetchFromNeon("products"),
+        fetchFromNeon("videos"),
+        fetchFromNeon("gallery_projects")
+      ]);
+    }
+
     let synced = false;
-    if (cfg) {
-      memoryCache[ADMIN_STORAGE_KEY] = cfg;
-      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(cfg)); } catch {}
+    // Cloud data SELALU menimpa lokal — ini kunci sinkronisasi lintas device
+    if (cfg && typeof cfg === 'object') {
+      const merged = { ...defaultConfig, ...cfg };
+      memoryCache[ADMIN_STORAGE_KEY] = merged;
+      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch {}
       synced = true;
     }
-    if (prods && Array.isArray(prods)) {
+    if (prods && Array.isArray(prods) && prods.length > 0) {
       memoryCache[PRODUCTS_STORAGE_KEY] = prods;
       try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(prods)); } catch {}
       synced = true;
@@ -528,12 +573,15 @@ export async function syncAllWithNeon(): Promise<boolean> {
       synced = true;
     }
     if (synced) {
+      console.log("✅ Cloud sync berhasil — data terbaru dimuat dari Google Sheets");
       window.dispatchEvent(new Event("siteConfigChanged"));
       window.dispatchEvent(new Event("galleryProjectsChanged"));
       return true;
+    } else {
+      console.warn("⚠️ Cloud sync: tidak ada data baru dari server (mungkin belum diisi)");
     }
   } catch (err) {
-    console.warn("Gagal sinkronisasi dengan Neon DB:", err);
+    console.warn("❌ Gagal sinkronisasi dengan Cloud DB:", err);
   }
   window.dispatchEvent(new Event("siteConfigChanged"));
   window.dispatchEvent(new Event("galleryProjectsChanged"));
