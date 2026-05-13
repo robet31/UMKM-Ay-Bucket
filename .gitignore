@@ -6,3 +6,4 @@ dist/
 .env.local
 ASSETS-AY BUCKET/
 tmp/
+.env*.local

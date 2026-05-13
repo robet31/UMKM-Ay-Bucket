@@ -333,7 +333,7 @@ const handler: VercelApiHandler = async (req, res) => {
         res.status(429).json({ success: false, error: "Rate limit exceeded." });
         return;
       }
-      if (!isAuthorized(req)) {
+      if (!(await isAuthorized(req))) {
         res.status(401).json({ success: false, error: "Unauthorized" });
         return;
       }
@@ -368,7 +368,19 @@ const handler: VercelApiHandler = async (req, res) => {
     res.status(400).json({ success: false, error: "Invalid action" });
   } catch (error: any) {
     console.error("API Error:", error);
-    // Don't expose internal error details
+    
+    // Detect Neon quota exceeded errors
+    const errMsg = String(error?.message || error || "");
+    if (errMsg.includes("402") || errMsg.includes("exceeded") || errMsg.includes("data transfer quota") || errMsg.includes("quota")) {
+      res.status(503).json({ 
+        success: false, 
+        error: "Database Neon telah melebihi kuota transfer data (Free Tier). Silakan upgrade plan Neon Anda di https://console.neon.tech atau tunggu sampai kuota direset bulan depan.",
+        errorCode: "NEON_QUOTA_EXCEEDED"
+      });
+      return;
+    }
+    
+    // Don't expose internal error details for other errors
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 };

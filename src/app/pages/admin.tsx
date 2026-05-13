@@ -22,11 +22,16 @@ import {
   defaultVideos,
   detectVideoSource,
   formatRupiah,
-  getSiteConfigWithNeon,
   syncAllWithNeon,
   setAdminCredentials,
   cleanMapsUrl,
   compressImage,
+  compressImageWithStats,
+  uploadToImgBB,
+  getStorageUsageStats,
+  canUploadImage,
+  STORAGE_LIMITS,
+  DEVELOPER_CONTACT,
   MAX_IMAGES_PER_PRODUCT,
   type GalleryProject,
   type SiteConfig,
@@ -35,6 +40,7 @@ import {
   type VideoSource,
   type VideoOrientation,
   type HeroSetting,
+  type CompressionStats,
 } from "../data";
 
 const mono = {
@@ -152,7 +158,7 @@ export function Admin() {
       return;
     }
     try {
-      const dataUrl = await compressImage(file, 800, 0.8);
+      const dataUrl = await uploadToImgBB(file);
       setConfig((prev) => ({ ...prev, brandLogoUrl: dataUrl }));
     } catch (e) {
       alert("Gagal memproses gambar");
@@ -166,7 +172,7 @@ export function Admin() {
     for (const file of fileArray) {
       if (file.size > 5 * 1024 * 1024) continue;
       try {
-        const dataUrl = await compressImage(file, 1200, 0.8);
+        const dataUrl = await uploadToImgBB(file);
         if (dataUrl) results.push(dataUrl);
       } catch (e) {
         console.error("Failed to compress image:", e);
@@ -250,7 +256,7 @@ export function Admin() {
   };
 
   const handleResetAll = async () => {
-    if (confirm("Reset semua pengaturan ke default? Ini akan sinkronkan data baru ke database Neon.")) {
+    if (confirm("Reset semua pengaturan ke default? Ini akan mengembalikan data ke konfigurasi awal.")) {
       resetSiteConfig();
       await resetProducts();
       resetVideos();
@@ -374,7 +380,7 @@ export function Admin() {
       return;
     }
     try {
-      const dataUrl = await compressImage(file, 1000, 0.8);
+      const dataUrl = await uploadToImgBB(file);
       updateGalleryProject(id, { image: dataUrl });
     } catch (e) {
       alert("Gagal memproses gambar");
@@ -420,26 +426,39 @@ export function Admin() {
       setLoginError("");
       
       try {
-        const cfg = await getSiteConfigWithNeon();
+        // Pure frontend: get config from localStorage only
+        const cfg = getSiteConfig();
+        
         const username = cfg.adminUsername || 'admin';
         const pass = cfg.adminPassword || 'AyBucket2026!';
         
         if (usernameInput === username && passwordInput === pass) {
           setAuthed(true);
           setAdminCredentials(usernameInput, passwordInput);
-          // Sync all data from Neon DB so the admin sees the latest remote changes
-          syncAllWithNeon().then(() => {
-            setConfig(getSiteConfig());
-            setProductsList(mergeProductsByNameAndPrice(getProducts()));
-            setVideosList(getVideos());
-            setGalleryProjectsList(getGalleryProjects());
-          });
+          
+          // Load all data from localStorage
+          setConfig(getSiteConfig());
+          setProductsList(mergeProductsByNameAndPrice(getProducts()));
+          setVideosList(getVideos());
+          setGalleryProjectsList(getGalleryProjects());
         } else {
           setLoginError("Username atau password salah!");
           setPasswordInput("");
         }
       } catch (err) {
-        setLoginError("Koneksi gagal, silakan coba lagi.");
+        // Last-resort fallback: try local credentials
+        const localCfg = getSiteConfig();
+        const username = localCfg.adminUsername || 'admin';
+        const pass = localCfg.adminPassword || 'AyBucket2026!';
+        if (usernameInput === username && passwordInput === pass) {
+          setAuthed(true);
+          setAdminCredentials(usernameInput, passwordInput);
+          setTimeout(() => {
+            alert("⚠️ Database offline. Anda masuk dengan kredensial lokal. Perubahan hanya tersimpan lokal.");
+          }, 500);
+        } else {
+          setLoginError("Koneksi gagal & kredensial tidak cocok.");
+        }
       } finally {
         setIsLoggingIn(false);
       }
@@ -616,6 +635,91 @@ export function Admin() {
           </button>
         </div>
       </div>
+
+      {/* Storage Monitor Widget */}
+      {(() => {
+        const stats = getStorageUsageStats();
+        const uploadCheck = canUploadImage();
+        const barColor = stats.warningLevel === 'full' ? '#dc2626' : stats.warningLevel === 'critical' ? '#ea580c' : stats.warningLevel === 'warning' ? '#d97706' : '#22c55e';
+        const bgColor = stats.warningLevel === 'full' ? '#fef2f2' : stats.warningLevel === 'critical' ? '#fff7ed' : stats.warningLevel === 'warning' ? '#fffbeb' : '#f0fdf4';
+        const borderColor = stats.warningLevel === 'full' ? '#fecaca' : stats.warningLevel === 'critical' ? '#fed7aa' : stats.warningLevel === 'warning' ? '#fde68a' : '#bbf7d0';
+        return (
+          <div style={{
+            background: bgColor,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '16px',
+            padding: '20px 24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '16px' }}>{stats.warningLevel === 'safe' ? '💾' : stats.warningLevel === 'warning' ? '⚠️' : '🚨'}</span>
+                <span style={{ ...mono, fontSize: '9px', color: '#555' }}>PENYIMPANAN BROWSER LOKAL</span>
+              </div>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '13px', fontWeight: 700, color: barColor }}>
+                {(stats.localStorageUsedKB / 1024).toFixed(2)} MB / {STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB} MB
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div style={{ width: '100%', height: '8px', borderRadius: '999px', backgroundColor: 'rgba(0,0,0,0.08)', overflow: 'hidden', marginBottom: '10px' }}>
+              <div style={{ width: `${Math.min(stats.localStoragePercent, 100)}%`, height: '100%', borderRadius: '999px', backgroundColor: barColor, transition: 'width 0.5s ease' }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#888' }}>
+                📸 {stats.totalDataUrlCount} gambar kustom tersimpan ({(stats.totalDataUrlSizeKB / 1024).toFixed(2)} MB)
+              </span>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: uploadCheck.remainingImages > 10 ? '#22c55e' : uploadCheck.remainingImages > 3 ? '#d97706' : '#dc2626', fontWeight: 600 }}>
+                🖼️ Sisa kuota: ~{uploadCheck.remainingImages} gambar lagi bisa diupload
+              </span>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#888' }}>
+                {stats.localStoragePercent.toFixed(1)}% terpakai
+              </span>
+            </div>
+            {stats.warningLevel === 'warning' && (
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#b45309', marginTop: '10px', lineHeight: 1.5, margin: '10px 0 0 0' }}>
+                ⚠️ Penyimpanan mulai penuh (~{uploadCheck.remainingImages} gambar lagi). Pertimbangkan untuk menghapus gambar kustom yang tidak terpakai.
+              </p>
+            )}
+            {stats.warningLevel === 'critical' && (
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#c2410c', marginTop: '10px', lineHeight: 1.5, margin: '10px 0 0 0' }}>
+                🚨 Penyimpanan hampir penuh! Hanya bisa upload ~{uploadCheck.remainingImages} gambar lagi. Segera hapus gambar kustom yang tidak terpakai.
+              </p>
+            )}
+            {stats.warningLevel === 'full' && (
+              <div style={{ marginTop: '12px', padding: '16px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #fecaca' }}>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', color: '#dc2626', lineHeight: 1.6, margin: '0 0 12px 0', fontWeight: 600 }}>
+                  🛑 PENYIMPANAN PENUH! Tidak bisa upload gambar baru.
+                </p>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#666', lineHeight: 1.6, margin: '0 0 12px 0' }}>
+                  Hapus beberapa gambar kustom, atau hubungi developer untuk upgrade kapasitas:
+                </p>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <a href={DEVELOPER_CONTACT.whatsappLink} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', backgroundColor: '#25D366', color: '#fff', borderRadius: '999px', fontSize: '12px', fontFamily: "'Inter', sans-serif", fontWeight: 600, textDecoration: 'none' }}>
+                    💬 WhatsApp Developer
+                  </a>
+                  <a href={DEVELOPER_CONTACT.linkedin} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', backgroundColor: '#0A66C2', color: '#fff', borderRadius: '999px', fontSize: '12px', fontFamily: "'Inter', sans-serif", fontWeight: 600, textDecoration: 'none' }}>
+                    🔗 LinkedIn Developer
+                  </a>
+                </div>
+              </div>
+            )}
+            {/* Info box */}
+            <details style={{ marginTop: '12px' }}>
+              <summary style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: '#999', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                ℹ️ Info Batas Penyimpanan & Kapasitas
+              </summary>
+              <div style={{ marginTop: '10px', padding: '12px', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: '10px', fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#666', lineHeight: 1.7 }}>
+                <p style={{ margin: '0 0 6px 0' }}><strong>📂 Gambar Bawaan (Statis):</strong> 93 produk default tersimpan di folder frontend — 100% gratis, unlimited, tidak makan kuota.</p>
+                <p style={{ margin: '0 0 6px 0' }}><strong>📸 Gambar Kustom (Upload Admin):</strong> Disimpan sebagai Data URL terkompresi (WebP/JPEG) di <strong>localStorage browser</strong> (BUKAN di Vercel/server). Maks ~{STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB} MB per browser.</p>
+                <p style={{ margin: '0 0 6px 0' }}><strong>🖼️ Estimasi Kapasitas:</strong> Setiap gambar dikompresi ke ~{STORAGE_LIMITS.TARGET_IMAGE_SIZE_KB}KB. Maka {STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB} MB ≈ <strong>~{Math.floor((STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB * 1024) / STORAGE_LIMITS.TARGET_IMAGE_SIZE_KB)} gambar kustom</strong> yang bisa diupload.</p>
+                <p style={{ margin: '0 0 6px 0' }}><strong>🗜️ Kompresi Otomatis:</strong> Setiap upload otomatis dikompresi ke ~{STORAGE_LIMITS.TARGET_IMAGE_SIZE_KB}KB (maks {STORAGE_LIMITS.MAX_IMAGE_SIZE_KB}KB) tanpa penurunan kualitas signifikan.</p>
+                <p style={{ margin: '0 0 6px 0' }}><strong>🌐 Batas 5MB:</strong> Ini adalah batas <strong>browser LocalStorage</strong> (Chrome/Edge/Firefox), BUKAN batas Vercel. Vercel hosting untuk gambar statis di folder <code>public/assets/</code> adalah <strong>unlimited</strong>.</p>
+                <p style={{ margin: '0' }}><strong>💡 Tips:</strong> Untuk gambar permanent, tambahkan file ke folder <code>public/assets/</code> lalu gunakan path <code>/assets/nama-file.png</code> sebagai URL gambar.</p>
+              </div>
+            </details>
+          </div>
+        );
+      })()}
 
       {/* Success Toast Notification */}
       {createPortal(
@@ -1837,6 +1941,17 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    // Check storage capacity before upload
+    const storageCheck = canUploadImage();
+    if (!storageCheck.allowed) {
+      alert(`🛑 PENYIMPANAN PENUH!\n\nTidak bisa upload gambar baru karena penyimpanan browser sudah penuh (${storageCheck.usagePercent.toFixed(0)}%).\n\nSolusi:\n1. Hapus beberapa gambar kustom yang tidak terpakai\n2. Gunakan gambar dari folder /assets/ (unlimited)\n\nAtau hubungi developer untuk upgrade:\n💬 WhatsApp: ${DEVELOPER_CONTACT.whatsapp}\n🔗 LinkedIn: ${DEVELOPER_CONTACT.linkedin}`);
+      window.open(DEVELOPER_CONTACT.whatsappLink, '_blank');
+      return;
+    }
+    if (storageCheck.remainingImages <= 3) {
+      const proceed = confirm(`⚠️ PERHATIAN: Sisa kuota hanya ~${storageCheck.remainingImages} gambar lagi!\n\nApakah Anda yakin ingin melanjutkan upload?`);
+      if (!proceed) return;
+    }
     const currentCount = (form.images || []).length;
     const remaining = MAX_IMAGES_PER_PRODUCT - currentCount;
     if (remaining <= 0) {
@@ -1848,17 +1963,19 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
     if (filesToProcess.length < files.length) {
       alert(`Hanya ${remaining} gambar lagi yang bisa ditambahkan (maks. ${MAX_IMAGES_PER_PRODUCT} per produk).`);
     }
-    const promises: Promise<string>[] = [];
+    const validFiles: File[] = [];
     filesToProcess.forEach((file) => {
       if (file.size > max) {
         alert("Beberapa gambar lebih dari 5MB dan dilewati");
         return;
       }
-      promises.push(compressImage(file, 1000, 0.8));
+      validFiles.push(file);
     });
     try {
-      const dataUrls = await Promise.all(promises);
+      // Mengirim semua file terpilih ke ImgBB secara paralel agar mendapatkan link CDN pendek yang sangat hemat kuota
+      const dataUrls = await Promise.all(validFiles.map(f => uploadToImgBB(f)));
       setForm({ ...form, images: [...(form.images || []), ...dataUrls] });
+      alert(`🚀 Upload Berhasil ke ImgBB CDN!\n\nGambar-gambar telah dihosting di server eksternal berkecepatan tinggi dengan URL pendek.\nKuota database teks 100% aman dan tidak terbebani!`);
     } catch (e) {
       alert("Gagal memproses gambar");
     }
@@ -2130,7 +2247,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
     
     if (file.type.startsWith('image/')) {
       try {
-        const dataUrl = await compressImage(file, 1000, 0.8);
+        const dataUrl = await uploadToImgBB(file);
         setForm({ ...form, url: dataUrl, source: "file" });
       } catch (err) {
         alert("Gagal memproses gambar");

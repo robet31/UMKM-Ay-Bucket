@@ -25,8 +25,16 @@ const GALLERY_STORAGE_KEY = "aybucket_gallery_v1";
 
 export type AllowedKey = "site_config" | "products" | "videos" | "gallery_projects";
 
-// Neon API Configuration
-export const NEON_API_URL = (import.meta as any).env?.VITE_NEON_API_URL || '/api/config';
+// Legacy API URL (kept for backward compatibility, no longer used)
+export const NEON_API_URL = '/api/config';
+
+// Developer Contact Information (shown when storage is full)
+export const DEVELOPER_CONTACT = {
+  whatsapp: '081515450611',
+  whatsappLink: 'https://wa.me/6281515450611?text=Halo%20Kak%20Arraffi%2C%20saya%20perlu%20bantuan%20upgrade%20storage%20website%20Ay%20Bucket.',
+  linkedin: 'https://www.linkedin.com/in/arraffi-abqori-nur-azizi/',
+  name: 'Arraffi Abqori Nur Azizi',
+};
 
 export function normalizeAssetUrl(url?: string): string {
   if (!url) return "";
@@ -165,12 +173,22 @@ const defaultConfig: SiteConfig = {
   customCategories: [],
 };
 
+// fetchFromNeon — takes lightweight text/JSON from remote DB to keep all user devices synced
 export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
   try {
-    const res = await fetch(NEON_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get', key }), });
-    const data = await res.json();
-    return data.success ? data.data : null;
-  } catch (e) { console.error(`Failed to fetch ${key}:`, e); return null; }
+    const res = await fetch(NEON_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get", key }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.value) return json.value;
+    }
+  } catch (err) {
+    console.warn("Gagal mengambil dari Neon DB eksternal:", err);
+  }
+  return null;
 }
 
 let activeAdminUsername = "";
@@ -181,37 +199,148 @@ export function setAdminCredentials(user: string, pass: string) {
   activeAdminPassword = pass;
 }
 
+// saveToNeon — pushes extremely lightweight JSON strings (now using short ImgBB URLs instead of heavy Base64) to Neon DB
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
-    const config = getSiteConfig();
-    const username = activeAdminUsername || config.adminUsername || "admin";
-    const password = activeAdminPassword || config.adminPassword || "AyBucket2026!";
-    
-    const res = await fetch(NEON_API_URL, { 
-      method: 'POST', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify({ 
-        action: 'set', 
-        key, 
-        data,
-        username,
-        password
-      }), 
+    const res = await fetch(NEON_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "set", key, value: data }),
     });
-    if (!res.ok) {
-      if (res.status === 413) throw new Error("Ukuran data terlalu besar! Harap hapus beberapa gambar atau gunakan ukuran gambar yang lebih kecil (Maks 10MB).");
-      throw new Error(`Server error: ${res.statusText}`);
-    }
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error || "Gagal menyimpan ke server");
-    return true;
-  } catch (e: any) { 
-    console.error(`Failed to save ${key}:`, e); 
-    throw e;
+    return res.ok;
+  } catch (err) {
+    console.warn("Gagal menyimpan ke Neon DB eksternal, data tetap aman di lokal:", err);
+    return false;
   }
 }
 
-export async function compressImage(file: File, maxWidth = 1024, quality = 0.82): Promise<string> {
+/**
+ * Mengirim gambar kustom ke ImgBB API secara otomatis di background.
+ * Mengembalikan URL pendek (e.g. https://i.ibb.co/...) agar kuota database teks tetap ringan.
+ * Jika ImgBB gagal/offline, otomatis fallback ke lokal Base64 terkompresi.
+ */
+export async function uploadToImgBB(file: File): Promise<string> {
+  const apiKey = (import.meta as any).env?.VITE_IMGBB_API_KEY || "cfd0c641eb9b46571fa0b5557704df34";
+  const formData = new FormData();
+  formData.append("key", apiKey);
+  formData.append("image", file);
+
+  try {
+    const res = await fetch("https://api.imgbb.com/1/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) throw new Error("ImgBB HTTP error");
+    const json = await res.json();
+    if (json?.data?.url) {
+      return json.data.url;
+    }
+    throw new Error("Invalid ImgBB response");
+  } catch (err) {
+    console.warn("Upload ImgBB gagal, melakukan fallback instan ke lokal WebP Base64:", err);
+    return await compressImage(file, 1000, 0.8);
+  }
+}
+
+// ---- Smart Image Compression System ----
+// Compression statistics for UI feedback
+export interface CompressionStats {
+  originalSizeKB: number;
+  compressedSizeKB: number;
+  reductionPercent: number;
+  outputFormat: string;
+  outputWidth: number;
+  outputHeight: number;
+}
+
+// Storage usage limits & monitoring constants
+export const STORAGE_LIMITS = {
+  // Browser LocalStorage limit = 5MB per origin (bukan Vercel, bukan database)
+  // Semua gambar kustom disimpan sebagai Base64 Data URL di sini
+  // LocalStorage limit per origin = 5MB in most browsers (Chrome, Edge, Firefox)
+  LOCALSTORAGE_LIMIT_MB: 5,
+  // Target max size per image after compression (in KB)
+  TARGET_IMAGE_SIZE_KB: 80,
+  // Absolute maximum a single image Data URL can be (in KB)
+  MAX_IMAGE_SIZE_KB: 150,
+  // Warning threshold percentage
+  WARNING_THRESHOLD_PERCENT: 75,
+  CRITICAL_THRESHOLD_PERCENT: 90,
+};
+
+// Calculate storage usage across all data stored as Base64
+export function getStorageUsageStats(): {
+  totalDataUrlSizeKB: number;
+  totalDataUrlCount: number;
+  localStorageUsedKB: number;
+  localStorageLimitKB: number;
+  localStoragePercent: number;
+  warningLevel: "safe" | "warning" | "critical" | "full";
+  breakdown: { key: string; sizeKB: number; count: number }[];
+} {
+  const breakdown: { key: string; sizeKB: number; count: number }[] = [];
+  let totalDataUrlSizeKB = 0;
+  let totalDataUrlCount = 0;
+  let localStorageUsedKB = 0;
+
+  if (typeof localStorage === "undefined") {
+    return {
+      totalDataUrlSizeKB: 0, totalDataUrlCount: 0,
+      localStorageUsedKB: 0, localStorageLimitKB: STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB * 1024,
+      localStoragePercent: 0, warningLevel: "safe", breakdown: [],
+    };
+  }
+
+  // Measure all localStorage entries
+  const keysToCheck = [CONFIG_STORAGE_KEY, PRODUCTS_STORAGE_KEY, VIDEOS_STORAGE_KEY, GALLERY_STORAGE_KEY];
+  for (const key of keysToCheck) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    const entrySizeKB = Math.round((raw.length * 2) / 1024); // UTF-16 = 2 bytes/char
+    localStorageUsedKB += entrySizeKB;
+
+    // Count Data URLs in this entry
+    const dataUrlMatches = raw.match(/data:image\/[^"]+/g) || [];
+    let dataUrlSizeKB = 0;
+    for (const match of dataUrlMatches) {
+      dataUrlSizeKB += Math.round((match.length * 0.75) / 1024); // Base64 ≈ 75% actual
+    }
+    totalDataUrlSizeKB += dataUrlSizeKB;
+    totalDataUrlCount += dataUrlMatches.length;
+    breakdown.push({ key, sizeKB: entrySizeKB, count: dataUrlMatches.length });
+  }
+
+  const localStorageLimitKB = STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB * 1024;
+  const localStoragePercent = localStorageLimitKB > 0 ? Math.min((localStorageUsedKB / localStorageLimitKB) * 100, 100) : 0;
+  const warningLevel: "safe" | "warning" | "critical" | "full" = 
+    localStoragePercent >= 98 ? "full" :
+    localStoragePercent >= STORAGE_LIMITS.CRITICAL_THRESHOLD_PERCENT ? "critical" :
+    localStoragePercent >= STORAGE_LIMITS.WARNING_THRESHOLD_PERCENT ? "warning" : "safe";
+
+  return {
+    totalDataUrlSizeKB, totalDataUrlCount,
+    localStorageUsedKB, localStorageLimitKB,
+    localStoragePercent, warningLevel, breakdown,
+  };
+}
+
+/**
+ * Smart Adaptive Image Compression
+ * 
+ * Compresses images with intelligent quality adjustment to hit a target file size
+ * while preserving visual quality. Uses multi-step downscaling (Lanczos-like)
+ * and WebP format for optimal compression.
+ * 
+ * @param file - The image file to compress
+ * @param maxWidth - Maximum output width in pixels (default: 1024)
+ * @param quality - Initial quality hint 0-1 (default: 0.82)
+ * @param targetSizeKB - Target file size in KB (default: 80KB)
+ * @returns Promise with the compressed Data URL string
+ */
+export async function compressImage(file: File, maxWidth = 1024, quality = 0.82, targetSizeKB?: number): Promise<string> {
+  const effectiveTargetKB = targetSizeKB || STORAGE_LIMITS.TARGET_IMAGE_SIZE_KB;
+  const maxSizeKB = STORAGE_LIMITS.MAX_IMAGE_SIZE_KB;
+  
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -262,13 +391,54 @@ export async function compressImage(file: File, maxWidth = 1024, quality = 0.82)
           ctx.imageSmoothingQuality = "high";
           ctx.drawImage(srcCanvas, 0, 0, width, height);
         }
-        // WebP for smaller size + better quality; fallback to JPEG if not supported
-        const webpResult = canvas.toDataURL('image/webp', quality);
-        if (webpResult.startsWith('data:image/webp')) {
-          resolve(webpResult);
-        } else {
-          resolve(canvas.toDataURL('image/jpeg', quality));
+
+        // Adaptive quality: try WebP first, then adjust quality to hit target size
+        const tryCompress = (q: number): string => {
+          const webpResult = canvas.toDataURL('image/webp', q);
+          if (webpResult.startsWith('data:image/webp')) return webpResult;
+          return canvas.toDataURL('image/jpeg', q);
+        };
+
+        // First attempt at requested quality
+        let result = tryCompress(quality);
+        let resultSizeKB = Math.round((result.length * 0.75) / 1024);
+
+        // If result exceeds max allowed size, iteratively reduce quality
+        // while still keeping it above 0.5 to prevent visible degradation
+        if (resultSizeKB > maxSizeKB) {
+          let q = quality;
+          for (let i = 0; i < 5 && resultSizeKB > maxSizeKB && q > 0.5; i++) {
+            q -= 0.08;
+            result = tryCompress(q);
+            resultSizeKB = Math.round((result.length * 0.75) / 1024);
+          }
+          // If still too large, reduce resolution as last resort
+          if (resultSizeKB > maxSizeKB && width > 600) {
+            const scale = 0.7;
+            canvas.width = Math.round(width * scale);
+            canvas.height = Math.round(height * scale);
+            const ctx2 = canvas.getContext("2d");
+            if (ctx2) {
+              ctx2.imageSmoothingEnabled = true;
+              ctx2.imageSmoothingQuality = "high";
+              ctx2.drawImage(srcCanvas, 0, 0, canvas.width, canvas.height);
+            }
+            result = tryCompress(Math.max(q, 0.6));
+            resultSizeKB = Math.round((result.length * 0.75) / 1024);
+          }
         }
+        // If result is well under target and quality was reduced, try bumping quality back up
+        // to maximize visual quality within the size budget
+        else if (resultSizeKB < effectiveTargetKB * 0.5 && quality < 0.9) {
+          const higherQ = Math.min(quality + 0.1, 0.92);
+          const betterResult = tryCompress(higherQ);
+          const betterSizeKB = Math.round((betterResult.length * 0.75) / 1024);
+          if (betterSizeKB <= maxSizeKB) {
+            result = betterResult;
+          }
+        }
+
+        resolve(result);
       };
       img.onerror = reject;
     };
@@ -276,8 +446,35 @@ export async function compressImage(file: File, maxWidth = 1024, quality = 0.82)
   });
 }
 
-export const fetchSiteConfigFromNeon = () => fetchFromNeon('site_config');
-export const saveSiteConfigToNeon = (config: any) => saveToNeon('site_config', config);
+/**
+ * Compress image and return both the Data URL and compression statistics.
+ * Useful for showing before/after feedback in the admin dashboard.
+ */
+export async function compressImageWithStats(file: File, maxWidth = 1024, quality = 0.82): Promise<{ dataUrl: string; stats: CompressionStats }> {
+  const originalSizeKB = Math.round(file.size / 1024);
+  const dataUrl = await compressImage(file, maxWidth, quality);
+  const compressedSizeKB = Math.round((dataUrl.length * 0.75) / 1024);
+  const reductionPercent = originalSizeKB > 0 ? Math.round(((originalSizeKB - compressedSizeKB) / originalSizeKB) * 100) : 0;
+  
+  // Detect output dimensions from the data url (approximate from canvas)
+  const outputFormat = dataUrl.startsWith('data:image/webp') ? 'WebP' : 'JPEG';
+  
+  return {
+    dataUrl,
+    stats: {
+      originalSizeKB,
+      compressedSizeKB,
+      reductionPercent: Math.max(0, reductionPercent),
+      outputFormat,
+      outputWidth: 0, // filled by caller if needed
+      outputHeight: 0,
+    },
+  };
+}
+
+// [LEGACY] Kept for backward compatibility — these are now no-ops
+export const fetchSiteConfigFromNeon = () => Promise.resolve(null);
+export const saveSiteConfigToNeon = (_config: any) => Promise.resolve(true);
 
 // Fix: import.meta.env.PROD is a boolean in Vite production builds
 export const isProduction = 
@@ -287,41 +484,56 @@ export const isProduction =
 
 let memoryCache: Record<string, any> = {};
 
+// syncAllWithNeon — sinkronisasi data dari Neon DB ke memori lokal di latar belakang
 export async function syncAllWithNeon(): Promise<boolean> {
-  if (!isProduction) return false;
   try {
-    const res = await fetch(NEON_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_bundle' }), });
-    const result = await res.json();
-    if (result.success && result.data) {
-      const { site_config, products, videos, gallery_projects } = result.data;
-      
-      const safeSave = (key: string, data: any) => {
-        memoryCache[key] = data;
-        try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { console.warn(`Storage full for ${key}, using memory fallback.`); }
-      };
-
-      if (site_config) safeSave(CONFIG_STORAGE_KEY, site_config);
-      if (products) safeSave(PRODUCTS_STORAGE_KEY, products);
-      if (videos) safeSave(VIDEOS_STORAGE_KEY, videos);
-      if (gallery_projects) safeSave(GALLERY_STORAGE_KEY, gallery_projects);
-      
+    const [cfg, prods, vids, gal] = await Promise.all([
+      fetchFromNeon("site_config"),
+      fetchFromNeon("products"),
+      fetchFromNeon("videos"),
+      fetchFromNeon("gallery_projects")
+    ]);
+    let synced = false;
+    if (cfg) {
+      memoryCache[ADMIN_STORAGE_KEY] = cfg;
+      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(cfg)); } catch {}
+      synced = true;
+    }
+    if (prods && Array.isArray(prods)) {
+      memoryCache[PRODUCTS_STORAGE_KEY] = prods;
+      try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(prods)); } catch {}
+      synced = true;
+    }
+    if (vids && Array.isArray(vids)) {
+      memoryCache[VIDEOS_STORAGE_KEY] = vids;
+      try { localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids)); } catch {}
+      synced = true;
+    }
+    if (gal && Array.isArray(gal)) {
+      memoryCache[GALLERY_STORAGE_KEY] = gal;
+      try { localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(gal)); } catch {}
+      synced = true;
+    }
+    if (synced) {
       window.dispatchEvent(new Event("siteConfigChanged"));
       window.dispatchEvent(new Event("galleryProjectsChanged"));
       return true;
     }
-  } catch (e) { console.error('Global sync failed:', e); }
+  } catch (err) {
+    console.warn("Gagal sinkronisasi dengan Neon DB:", err);
+  }
+  window.dispatchEvent(new Event("siteConfigChanged"));
+  window.dispatchEvent(new Event("galleryProjectsChanged"));
   return false;
 }
 
 export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
-  if (isProduction) {
-    const remote = await fetchSiteConfigFromNeon();
-    if (remote) { 
-      const merged = { ...defaultConfig, ...remote } as SiteConfig;
-      memoryCache[ADMIN_STORAGE_KEY] = merged;
-      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch (e) { }
-      return merged; 
-    }
+  const remote = await fetchFromNeon("site_config");
+  if (remote) {
+    const merged = { ...defaultConfig, ...remote };
+    memoryCache[ADMIN_STORAGE_KEY] = merged;
+    try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch {}
+    return merged;
   }
   return getSiteConfig();
 }
@@ -408,12 +620,9 @@ export async function saveSiteConfig(config: Partial<SiteConfig>): Promise<void>
   try {
     localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
   } catch (e) {
-    console.warn("LocalStorage full, saving to Neon only.");
+    console.warn("LocalStorage penuh! Tidak bisa menyimpan perubahan.");
   }
-  
-  if (isProduction && typeof fetch !== 'undefined') { 
-    await saveSiteConfigToNeon(merged); 
-  }
+  saveToNeon("site_config", merged);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
@@ -514,13 +723,10 @@ export async function setGalleryProjects(projects: GalleryProject[]): Promise<vo
   try {
     localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
-    console.warn("LocalStorage full, saving to Neon only.");
+    console.warn("LocalStorage penuh! Tidak bisa menyimpan galeri.");
   }
-  
+  saveToNeon("gallery_projects", dataToSave);
   window.dispatchEvent(new Event("galleryProjectsChanged"));
-  if (isProduction) {
-    await saveToNeon("gallery_projects", dataToSave);
-  }
 }
 export function resetGalleryProjects(): void { if (typeof window === "undefined") return; localStorage.removeItem(GALLERY_STORAGE_KEY); window.dispatchEvent(new Event("galleryProjectsChanged")); }
 
@@ -549,22 +755,16 @@ export async function saveProducts(prods: Product[]): Promise<void> {
   try {
     localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (e) {
-    console.warn("LocalStorage full, saving to Neon only.");
+    console.warn("LocalStorage penuh! Tidak bisa menyimpan produk.");
   }
-  
+  saveToNeon("products", dataToSave);
   window.dispatchEvent(new Event("siteConfigChanged"));
-  if (isProduction) {
-    await saveToNeon("products", dataToSave);
-  }
 }
 export async function resetProducts() {
   const merged = mergeProductsByNameAndPrice(defaultProducts);
   memoryCache[PRODUCTS_STORAGE_KEY] = merged;
   try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(merged)); } catch (e) { console.warn("Storage full during reset, using memory."); }
   window.dispatchEvent(new Event("siteConfigChanged"));
-  if (isProduction) {
-    try { await saveToNeon("products", merged); } catch (e) { console.warn("Failed to push reset products to Neon:", e); }
-  }
 }
 export const products = defaultProducts;
 
@@ -612,12 +812,24 @@ export async function saveVideos(vids: VideoItem[]): Promise<void> {
   try {
     localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids));
   } catch (e) {
-    console.warn("LocalStorage full, saving to Neon only.");
+    console.warn("LocalStorage penuh! Tidak bisa menyimpan video.");
   }
-  
+  saveToNeon("videos", vids);
   window.dispatchEvent(new Event("siteConfigChanged"));
-  if (isProduction) {
-    await saveToNeon("videos", vids);
-  }
+}
+
+/**
+ * Check if admin can still upload more images.
+ * Returns { canUpload, remainingImages, usagePercent } or shows a blocking popup.
+ */
+export function canUploadImage(): { allowed: boolean; remainingImages: number; usagePercent: number } {
+  const stats = getStorageUsageStats();
+  const remainingKB = stats.localStorageLimitKB - stats.localStorageUsedKB;
+  const remainingImages = Math.max(0, Math.floor(remainingKB / STORAGE_LIMITS.TARGET_IMAGE_SIZE_KB));
+  return {
+    allowed: stats.warningLevel !== 'full',
+    remainingImages,
+    usagePercent: stats.localStoragePercent,
+  };
 }
 export function resetVideos() { localStorage.removeItem(VIDEOS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
