@@ -213,72 +213,107 @@ export function setAdminCredentials(user: string, pass: string) {
 }
 
 // saveToCloud — menyimpan data ke Google Sheets
-// Strategi: GET untuk data kecil (< 8000 chars), iframe form POST untuk data besar
+// Semua data dikirim via GET karena CORS-free dan paling reliable
+// Untuk data besar (>8KB), data dipecah jadi chunks dan disimpan terpisah
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
     console.log(`[Cloud Sync] Menyimpan ke ${key}...`);
 
     if (USE_GSHEET) {
-      const payloadObj = {
-        action: "set",
-        key,
-        data,
+      const dataStr = JSON.stringify(data);
+      
+      // Cek apakah data cukup kecil untuk 1x GET
+      const testPayload = JSON.stringify({
+        action: "set", key, data,
         username: activeAdminUsername || "admin",
         password: activeAdminPassword || "AyBucket2026!"
-      };
-      const payload = JSON.stringify(payloadObj);
-      const encodedPayload = encodeURIComponent(payload);
-      const url = `${NEON_API_URL}?action=set&key=${key}&payload=${encodedPayload}`;
+      });
+      const testUrl = `${NEON_API_URL}?action=set&key=${key}&payload=${encodeURIComponent(testPayload)}`;
       
-      if (url.length <= 8000) {
-        // Data kecil: GET request (CORS-free, paling reliable)
-        try {
-          const res = await fetch(url, { method: "GET", redirect: "follow" });
-          if (res.ok) {
-            const json = await res.json();
-            if (json?.success) {
-              console.log(`✅ [Cloud Sync] ${key} berhasil disimpan (GET)!`);
-              return true;
+      if (testUrl.length <= 7500) {
+        // Data kecil — langsung kirim via GET
+        const res = await fetch(testUrl, { method: "GET", redirect: "follow" });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.success) {
+            console.log(`✅ [Cloud Sync] ${key} berhasil disimpan (GET)!`);
+            return true;
+          }
+        }
+      } else {
+        // Data besar — chunking: pecah array/object jadi beberapa bagian
+        console.log(`[Cloud Sync] ${key} besar (${dataStr.length} chars), chunking...`);
+        
+        if (Array.isArray(data)) {
+          // Untuk array (products, videos, gallery): simpan per chunk ~20 item
+          const CHUNK_SIZE = 15;
+          const totalChunks = Math.ceil(data.length / CHUNK_SIZE);
+          
+          // Simpan metadata dulu
+          const metaPayload = JSON.stringify({
+            action: "set", key: `${key}__meta`,
+            data: { totalChunks, totalItems: data.length, updatedAt: new Date().toISOString() },
+            username: activeAdminUsername || "admin",
+            password: activeAdminPassword || "AyBucket2026!"
+          });
+          await fetch(`${NEON_API_URL}?action=set&key=${key}__meta&payload=${encodeURIComponent(metaPayload)}`, 
+            { method: "GET", redirect: "follow" });
+          
+          // Simpan setiap chunk
+          let allSuccess = true;
+          for (let i = 0; i < totalChunks; i++) {
+            const chunk = data.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+            const chunkKey = `${key}__chunk_${i}`;
+            const chunkPayload = JSON.stringify({
+              action: "set", key: chunkKey,
+              data: chunk,
+              username: activeAdminUsername || "admin",
+              password: activeAdminPassword || "AyBucket2026!"
+            });
+            const chunkUrl = `${NEON_API_URL}?action=set&key=${chunkKey}&payload=${encodeURIComponent(chunkPayload)}`;
+            
+            try {
+              const res = await fetch(chunkUrl, { method: "GET", redirect: "follow" });
+              if (res.ok) {
+                const json = await res.json();
+                if (json?.success) {
+                  console.log(`✅ [Cloud Sync] ${key} chunk ${i+1}/${totalChunks} tersimpan.`);
+                } else { allSuccess = false; }
+              } else { allSuccess = false; }
+            } catch {
+              allSuccess = false;
             }
           }
-        } catch (fetchErr) {
-          console.warn(`[Cloud Sync] GET gagal untuk ${key}:`, fetchErr);
+          
+          // Juga simpan full data sebagai single key (reassembled) via POST no-cors
+          // Ini sebagai fallback agar get_bundle tetap mereturn data lengkap
+          const fullPayload = JSON.stringify({
+            action: "set", key, data,
+            username: activeAdminUsername || "admin",
+            password: activeAdminPassword || "AyBucket2026!"
+          });
+          try {
+            await fetch(NEON_API_URL, { method: "POST", mode: "no-cors", body: fullPayload });
+          } catch {}
+          
+          if (allSuccess) {
+            console.log(`✅ [Cloud Sync] ${key} semua ${totalChunks} chunks tersimpan!`);
+            return true;
+          }
+        } else {
+          // Object besar — coba POST no-cors
+          const fullPayload = JSON.stringify({
+            action: "set", key, data,
+            username: activeAdminUsername || "admin",
+            password: activeAdminPassword || "AyBucket2026!"
+          });
+          await fetch(NEON_API_URL, { method: "POST", mode: "no-cors", body: fullPayload });
+          console.log(`⚡ [Cloud Sync] ${key} dikirim via POST no-cors.`);
+          return true;
         }
       }
-      
-      // Data besar: Hidden form POST via iframe (bypass CORS 100%)
-      console.log(`[Cloud Sync] ${key} menggunakan form POST (${payload.length} chars)...`);
-      try {
-        await postViaHiddenForm(NEON_API_URL, payload);
-        
-        // Verifikasi setelah 3 detik apakah data benar tersimpan
-        return new Promise((resolve) => {
-          setTimeout(async () => {
-            try {
-              const verifyUrl = `${NEON_API_URL}?action=get&key=${key}`;
-              const verifyRes = await fetch(verifyUrl, { method: "GET", redirect: "follow" });
-              if (verifyRes.ok) {
-                const verifyJson = await verifyRes.json();
-                if (verifyJson?.data) {
-                  console.log(`✅ [Cloud Sync] ${key} terverifikasi tersimpan di Google Sheets!`);
-                  resolve(true);
-                  return;
-                }
-              }
-              console.warn(`⚠️ [Cloud Sync] ${key} belum terverifikasi, mencoba retry...`);
-              // Retry sekali
-              await postViaHiddenForm(NEON_API_URL, payload);
-              resolve(true);
-            } catch {
-              resolve(true); // Tetap optimis
-            }
-          }, 3000);
-        });
-      } catch (formErr) {
-        console.warn(`[Cloud Sync] Form POST gagal:`, formErr);
-      }
     } else {
-      // Non-GSheet: Vercel API / Neon DB
+      // Non-GSheet: Vercel API
       const res = await fetch(NEON_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -293,50 +328,6 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
     console.warn(`❌ [Cloud Sync] Gagal menyimpan ${key}:`, err);
   }
   return false;
-}
-
-// Helper: POST data besar ke Google Apps Script via hidden form + iframe
-// Ini bypass CORS karena form submission TIDAK terkena same-origin policy
-function postViaHiddenForm(url: string, jsonPayload: string): Promise<void> {
-  return new Promise((resolve) => {
-    const iframeId = `__gsheet_iframe_${Date.now()}`;
-    const formId = `__gsheet_form_${Date.now()}`;
-    
-    // Buat hidden iframe
-    const iframe = document.createElement("iframe");
-    iframe.name = iframeId;
-    iframe.id = iframeId;
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-    
-    // Buat hidden form
-    const form = document.createElement("form");
-    form.id = formId;
-    form.method = "POST";
-    form.action = url;
-    form.target = iframeId; // Submit ke iframe, bukan halaman utama
-    form.style.display = "none";
-    
-    // Input field untuk payload
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "payload";
-    input.value = jsonPayload;
-    form.appendChild(input);
-    
-    document.body.appendChild(form);
-    
-    // Submit form
-    form.submit();
-    console.log(`📤 [Cloud Sync] Form POST submitted ke Google Sheets.`);
-    
-    // Cleanup setelah 5 detik
-    setTimeout(() => {
-      try { document.body.removeChild(iframe); } catch {}
-      try { document.body.removeChild(form); } catch {}
-      resolve();
-    }, 5000);
-  });
 }
 
 /**
@@ -573,7 +564,6 @@ export async function syncAllWithNeon(): Promise<boolean> {
     let bundleData: Record<string, any> | null = null;
     try {
       if (USE_GSHEET) {
-        // Gunakan GET untuk Google Sheets agar terhindar dari masalah CORS
         const url = `${NEON_API_URL}?action=get_bundle`;
         const res = await fetch(url, { method: "GET", redirect: "follow" });
         if (res.ok) {
@@ -610,6 +600,35 @@ export async function syncAllWithNeon(): Promise<boolean> {
         fetchFromNeon("videos"),
         fetchFromNeon("gallery_projects")
       ]);
+    }
+
+    // Jika products bukan array (corrupt/string), coba baca dari chunks
+    if (USE_GSHEET && (!Array.isArray(prods) || prods.length === 0)) {
+      console.log("[Cloud Sync] Products bukan array, mencoba baca chunks...");
+      try {
+        const metaRes = await fetch(`${NEON_API_URL}?action=get&key=products__meta`, { method: "GET", redirect: "follow" });
+        if (metaRes.ok) {
+          const metaJson = await metaRes.json();
+          if (metaJson?.data?.totalChunks) {
+            const totalChunks = metaJson.data.totalChunks;
+            const chunkPromises = [];
+            for (let i = 0; i < totalChunks; i++) {
+              chunkPromises.push(fetchFromNeon(`products__chunk_${i}` as any));
+            }
+            const chunks = await Promise.all(chunkPromises);
+            const reassembled: any[] = [];
+            chunks.forEach((chunk: any) => {
+              if (Array.isArray(chunk)) reassembled.push(...chunk);
+            });
+            if (reassembled.length > 0) {
+              prods = reassembled;
+              console.log(`✅ [Cloud Sync] Products reassembled dari ${totalChunks} chunks (${reassembled.length} items)`);
+            }
+          }
+        }
+      } catch (chunkErr) {
+        console.warn("[Cloud Sync] Gagal baca product chunks:", chunkErr);
+      }
     }
 
     let synced = false;
@@ -704,7 +723,11 @@ export async function saveSiteConfig(config: Partial<SiteConfig>): Promise<void>
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
-export function resetSiteConfig() { delete memoryCache[ADMIN_STORAGE_KEY]; window.dispatchEvent(new Event("siteConfigChanged")); }
+export function resetSiteConfig() {
+  memoryCache[ADMIN_STORAGE_KEY] = { ...defaultConfig };
+  saveToNeon("site_config", defaultConfig);
+  window.dispatchEvent(new Event("siteConfigChanged"));
+}
 
 export type ProductCategory = "snack-bouquet" | "money-bouquet" | "fresh-flower" | "artificial-flower" | "catalog-home" | "accessories" | "buckets" | "wreaths" | "packaging" | "ribbons" | "sewa" | "bloom-box" | "thumbelina" | "bucket-unik" | "vas-dekorasi";
 
@@ -793,7 +816,12 @@ export async function setGalleryProjects(projects: GalleryProject[]): Promise<vo
   saveToNeon("gallery_projects", dataToSave);
   window.dispatchEvent(new Event("galleryProjectsChanged"));
 }
-export function resetGalleryProjects(): void { if (typeof window === "undefined") return; delete memoryCache[GALLERY_STORAGE_KEY]; window.dispatchEvent(new Event("galleryProjectsChanged")); }
+export function resetGalleryProjects(): void {
+  if (typeof window === "undefined") return;
+  memoryCache[GALLERY_STORAGE_KEY] = defaultGalleryProjects;
+  saveToNeon("gallery_projects", defaultGalleryProjects);
+  window.dispatchEvent(new Event("galleryProjectsChanged"));
+}
 
 const initialProducts: Product[] = generatedInitialProducts as any;
 export const defaultProducts: Product[] = initialProducts.map((p) => ({ ...p, image: migrateLegacyAssetUrl(p.image), images: Array.from(new Set([...(Array.isArray((p as any).images) ? (p as any).images : []), p.image].filter(Boolean).map((item) => migrateLegacyAssetUrl(item as string)))), })).map((product) => enrichProductWithMatchedAssets(product));
@@ -815,6 +843,7 @@ export async function saveProducts(prods: Product[]): Promise<void> {
 export async function resetProducts() {
   const merged = mergeProductsByNameAndPrice(defaultProducts);
   memoryCache[PRODUCTS_STORAGE_KEY] = merged;
+  await saveToNeon("products", merged);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 export const products = defaultProducts;
@@ -872,4 +901,8 @@ export function canUploadImage(): { allowed: boolean; remainingImages: number; u
     usagePercent: 0,
   };
 }
-export function resetVideos() { delete memoryCache[VIDEOS_STORAGE_KEY]; window.dispatchEvent(new Event("siteConfigChanged")); }
+export function resetVideos() {
+  memoryCache[VIDEOS_STORAGE_KEY] = defaultVideos;
+  saveToNeon("videos", defaultVideos);
+  window.dispatchEvent(new Event("siteConfigChanged"));
+}
