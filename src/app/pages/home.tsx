@@ -172,8 +172,8 @@ export function Home() {
     delay: number;
   }>;
 
-  const getCategoryAccent = (category: ProductCategory) => {
-    const accentMap: Record<ProductCategory, string> = {
+  const getCategoryAccent = (category: string) => {
+    const accentMap: Record<string, string> = {
       "buket-satin": "#d48a6a",
       "snack-bouquet": "#c98b3f",
       "money-bouquet": "#7d5ba6",
@@ -187,6 +187,10 @@ export function Home() {
       "packaging": "#6f6f8d",
       "ribbons": "#b66aa0",
       "sewa": "#5a8fa6",
+      "bloom-box": "#c67a9a",
+      "bucket-unik": "#a37c5f",
+      "thumbelina": "#e08888",
+      "vas-dekorasi": "#6a8f6f",
     };
     return accentMap[category] || "#b85c3b";
   };
@@ -730,7 +734,7 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
   const hasMultipleImages = images.length > 1;
   const currentImage = images[currentImageIndex] || product.image;
 
-  const accent = {
+  const accent = ({
     "buket-satin": "#d48a6a",
     "snack-bouquet": "#c98b3f",
     "money-bouquet": "#7d5ba6",
@@ -744,7 +748,11 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
     "packaging": "#6f6f8d",
     "ribbons": "#b66aa0",
     "sewa": "#5a8fa6",
-  }[product.category] || "#999";
+    "bloom-box": "#c67a9a",
+    "bucket-unik": "#a37c5f",
+    "thumbelina": "#e08888",
+    "vas-dekorasi": "#6a8f6f",
+  } as Record<string, string>)[product.category] || "#999";
 
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
