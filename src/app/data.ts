@@ -231,21 +231,44 @@ export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
       console.log(`[Cloud Sync] Mengirim ${key} (${payloadStr.length} chars) via form-encoded POST...`);
       
       try {
-        // Mode no-cors mengizinkan Content-Type: application/x-www-form-urlencoded
-        // Ini adalah cara paling reliable untuk kirim data besar ke Apps Script tanpa error CORS
-        await fetch(NEON_API_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: encodedData
+        // Mode no-cors dengan fetch() sering gagal karena body POST di-drop saat Google melakukan 302 Redirect.
+        // Solusi paling kuat (bulletproof) adalah menggunakan hidden <form> submission ke <iframe>.
+        await new Promise<void>((resolve) => {
+          const iframeName = "hidden_iframe_" + Date.now();
+          const iframe = document.createElement("iframe");
+          iframe.name = iframeName;
+          iframe.style.display = "none";
+          document.body.appendChild(iframe);
+
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = NEON_API_URL;
+          form.target = iframeName;
+          form.style.display = "none";
+
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = "payload";
+          input.value = payloadStr;
+          form.appendChild(input);
+
+          document.body.appendChild(form);
+
+          iframe.onload = () => {
+            setTimeout(() => {
+              document.body.removeChild(form);
+              document.body.removeChild(iframe);
+              resolve();
+            }, 500);
+          };
+
+          form.submit();
         });
         
-        console.log(`✅ [Cloud Sync] ${key} berhasil dikirim ke antrean server!`);
+        console.log(`✅ [Cloud Sync] ${key} berhasil dikirim ke antrean server (via hidden form)!`);
         return true;
       } catch (postErr) {
-        console.warn(`[Cloud Sync] POST gagal untuk ${key}:`, postErr);
+        console.warn(`[Cloud Sync] Form POST gagal untuk ${key}:`, postErr);
       }
     } else {
       // Non-GSheet: Vercel API
