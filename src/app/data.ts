@@ -16,7 +16,7 @@ export const BRAND_LOGO = {
   logo: "/assets/logo-fix.png",
 };
 
-// Memory-only cache keys (NO localStorage — semua data dari cloud Google Sheets)
+// Memory-only cache keys — semua data dari Turso DB via Vercel API
 const ADMIN_STORAGE_KEY = "aybucket_config_v1";
 const PRODUCTS_STORAGE_KEY = "aybucket_products_v1";
 const VIDEOS_STORAGE_KEY = "aybucket_videos_v1";
@@ -24,11 +24,9 @@ const GALLERY_STORAGE_KEY = "aybucket_gallery_v1";
 
 export type AllowedKey = "site_config" | "products" | "videos" | "gallery_projects";
 
-// Cloud API URL — Google Sheets sebagai database gratis dan unlimited
-// Hardcoded URL untuk memastikan selalu menggunakan Google Sheets dan menghindari Neon DB Quota Exceeded
-const GSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzlqawXDkQnkL0ACaNIqmueeGK_zqgJ24JyDNlhGqLpB8ISVQBPj_T3syG3NObSegRq/exec";
-export const NEON_API_URL = GSHEET_API_URL;
-const USE_GSHEET = true;
+// Cloud API URL — Turso DB via Vercel Serverless API
+// Semua data disimpan di Turso (LibSQL), gambar di ImgBB
+export const NEON_API_URL = '/api/config';
 
 // Developer Contact Information (shown when storage is full)
 export const DEVELOPER_CONTACT = {
@@ -175,28 +173,17 @@ const defaultConfig: SiteConfig = {
   customCategories: [],
 };
 
-// fetchFromCloud — mengambil data ringan dari Google Sheets / Vercel API untuk sinkronisasi lintas perangkat
+// fetchFromCloud — mengambil data dari Turso DB via Vercel API
 export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
   try {
-    if (USE_GSHEET) {
-      // Untuk Google Sheets, gunakan GET agar lebih lancar menghindari CORS
-      const url = `${NEON_API_URL}?action=get&key=${key}`;
-      const res = await fetch(url, { method: "GET", redirect: "follow" });
-      if (res.ok) {
-        const json = await res.json();
-        if (json?.success && json?.data !== undefined) return json.data;
-      }
-    } else {
-      // Fallback untuk Neon/Vercel API
-      const res = await fetch(NEON_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get", key }),
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json?.success && json?.data !== undefined) return json.data;
-      }
+    const res = await fetch(NEON_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get", key }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.success && json?.data !== undefined) return json.data;
     }
   } catch (err) {
     console.warn(`[Cloud Sync] Gagal mengambil ${key}:`, err);
@@ -212,75 +199,33 @@ export function setAdminCredentials(user: string, pass: string) {
   activeAdminPassword = pass;
 }
 
-// saveToCloud — menyimpan data ke Google Sheets
-// Untuk menghindari CORS error dan limitasi URL length pada GET,
-// kita gunakan POST dengan form-urlencoded (diizinkan di mode no-cors).
+// saveToCloud — menyimpan data ke Turso DB via Vercel API
 export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
   try {
     console.log(`[Cloud Sync] Menyimpan ke ${key}...`);
-
-    if (USE_GSHEET) {
-      const payloadObj = {
-        action: "set", key, data,
+    const res = await fetch(NEON_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Username": activeAdminUsername || "admin",
+        "X-Admin-Password": activeAdminPassword || "AyBucket2026!",
+      },
+      body: JSON.stringify({ action: "set", key, data,
         username: activeAdminUsername || "admin",
-        password: activeAdminPassword || "AyBucket2026!"
-      };
-      const payloadStr = JSON.stringify(payloadObj);
-      const encodedData = `payload=${encodeURIComponent(payloadStr)}`;
-      
-      console.log(`[Cloud Sync] Mengirim ${key} (${payloadStr.length} chars) via form-encoded POST...`);
-      
-      try {
-        // Mode no-cors dengan fetch() sering gagal karena body POST di-drop saat Google melakukan 302 Redirect.
-        // Solusi paling kuat (bulletproof) adalah menggunakan hidden <form> submission ke <iframe>.
-        await new Promise<void>((resolve) => {
-          const iframeName = "hidden_iframe_" + Date.now();
-          const iframe = document.createElement("iframe");
-          iframe.name = iframeName;
-          iframe.style.display = "none";
-          document.body.appendChild(iframe);
-
-          const form = document.createElement("form");
-          form.method = "POST";
-          form.action = NEON_API_URL;
-          form.target = iframeName;
-          form.style.display = "none";
-
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = "payload";
-          input.value = payloadStr;
-          form.appendChild(input);
-
-          document.body.appendChild(form);
-
-          iframe.onload = () => {
-            setTimeout(() => {
-              document.body.removeChild(form);
-              document.body.removeChild(iframe);
-              resolve();
-            }, 500);
-          };
-
-          form.submit();
-        });
-        
-        console.log(`✅ [Cloud Sync] ${key} berhasil dikirim ke antrean server (via hidden form)!`);
+        password: activeAdminPassword || "AyBucket2026!",
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.success) {
+        console.log(`✅ [Cloud Sync] ${key} berhasil disimpan ke Turso DB.`);
         return true;
-      } catch (postErr) {
-        console.warn(`[Cloud Sync] Form POST gagal untuk ${key}:`, postErr);
+      } else {
+        console.warn(`⚠️ [Cloud Sync] Server menolak ${key}:`, json?.error);
       }
     } else {
-      // Non-GSheet: Vercel API
-      const res = await fetch(NEON_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "set", key, data }),
-      });
-      if (res.ok) {
-        console.log(`✅ [Cloud Sync] ${key} berhasil disimpan.`);
-        return true;
-      }
+      const text = await res.text().catch(() => '');
+      console.warn(`⚠️ [Cloud Sync] HTTP ${res.status} saat menyimpan ${key}:`, text);
     }
   } catch (err) {
     console.warn(`❌ [Cloud Sync] Gagal menyimpan ${key}:`, err);
@@ -514,57 +459,31 @@ export const isProduction =
 
 let memoryCache: Record<string, any> = {};
 
-// syncAllWithCloud — sinkronisasi data dari Google Sheets ke memori lokal
+// syncAllWithCloud — sinkronisasi data dari Turso DB ke memori lokal
 // Data cloud SELALU menimpa data lokal untuk memastikan konsistensi lintas perangkat
 export async function syncAllWithNeon(): Promise<boolean> {
   try {
-    // Coba bundle fetch dulu (lebih efisien, 1 request)
-    let bundleData: Record<string, any> | null = null;
-    try {
-      if (USE_GSHEET) {
-        const url = `${NEON_API_URL}?action=get_bundle`;
-        const res = await fetch(url, { method: "GET", redirect: "follow" });
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.success && json?.data) bundleData = json.data;
-        }
-      } else {
-        const res = await fetch(NEON_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "get_bundle" }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.success && json?.data) bundleData = json.data;
-        }
-      }
-    } catch (err) {
-      console.warn("[Cloud Sync] Bundle fetch gagal, mencoba fetch satuan:", err);
-    }
+    // Bundle fetch (1 request untuk semua data)
+    const res = await fetch(NEON_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get_bundle" }),
+    });
+    if (!res.ok) return false;
+    const json = await res.json();
+    if (!json?.success || !json?.data) return false;
 
-    let cfg: any = null, prods: any = null, vids: any = null, gal: any = null;
-
-    if (bundleData) {
-      cfg = bundleData.site_config ?? null;
-      prods = bundleData.products ?? null;
-      vids = bundleData.videos ?? null;
-      gal = bundleData.gallery_projects ?? null;
-    } else {
-      // Fallback: fetch each key individually
-      [cfg, prods, vids, gal] = await Promise.all([
-        fetchFromNeon("site_config"),
-        fetchFromNeon("products"),
-        fetchFromNeon("videos"),
-        fetchFromNeon("gallery_projects")
-      ]);
-    }
-
+    const bundleData = json.data;
     let synced = false;
+
     // Cloud data → langsung ke memoryCache (TANPA localStorage)
+    const cfg = bundleData.site_config ?? null;
+    const prods = bundleData.products ?? null;
+    const vids = bundleData.videos ?? null;
+    const gal = bundleData.gallery_projects ?? null;
+
     if (cfg && typeof cfg === 'object') {
-      const merged = { ...defaultConfig, ...cfg };
-      memoryCache[ADMIN_STORAGE_KEY] = merged;
+      memoryCache[ADMIN_STORAGE_KEY] = { ...defaultConfig, ...cfg };
       synced = true;
     }
     if (prods && Array.isArray(prods) && prods.length > 0) {
@@ -580,18 +499,14 @@ export async function syncAllWithNeon(): Promise<boolean> {
       synced = true;
     }
     if (synced) {
-      console.log("✅ Cloud sync berhasil — data terbaru dimuat dari Google Sheets");
+      console.log("✅ Cloud sync berhasil — data terbaru dimuat dari Turso DB");
       window.dispatchEvent(new Event("siteConfigChanged"));
       window.dispatchEvent(new Event("galleryProjectsChanged"));
       return true;
-    } else {
-      console.warn("⚠️ Cloud sync: tidak ada data baru dari server (mungkin belum diisi)");
     }
   } catch (err) {
-    console.warn("❌ Gagal sinkronisasi dengan Cloud DB:", err);
+    console.warn("❌ Gagal sinkronisasi dengan Turso DB:", err);
   }
-  window.dispatchEvent(new Event("siteConfigChanged"));
-  window.dispatchEvent(new Event("galleryProjectsChanged"));
   return false;
 }
 
