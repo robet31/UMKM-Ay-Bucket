@@ -16,9 +16,8 @@ export const BRAND_LOGO = {
   logo: "/assets/logo-fix.png",
 };
 
-// Storage Keys
-const CONFIG_STORAGE_KEY = "aybucket_config_v1";
-const ADMIN_STORAGE_KEY = "aybucket_config_v1"; // Consolidated
+// Memory-only cache keys (NO localStorage — semua data dari cloud Google Sheets)
+const ADMIN_STORAGE_KEY = "aybucket_config_v1";
 const PRODUCTS_STORAGE_KEY = "aybucket_products_v1";
 const VIDEOS_STORAGE_KEY = "aybucket_videos_v1";
 const GALLERY_STORAGE_KEY = "aybucket_gallery_v1";
@@ -297,22 +296,16 @@ export interface CompressionStats {
   outputHeight: number;
 }
 
-// Storage usage limits & monitoring constants
+// Cloud storage — semua gambar di-upload ke ImgBB, URL pendek disimpan di Google Sheets
 export const STORAGE_LIMITS = {
-  // Browser LocalStorage limit = 5MB per origin (bukan Vercel, bukan database)
-  // Semua gambar kustom disimpan sebagai Base64 Data URL di sini
-  // LocalStorage limit per origin = 5MB in most browsers (Chrome, Edge, Firefox)
-  LOCALSTORAGE_LIMIT_MB: 5,
-  // Target max size per image after compression (in KB)
+  LOCALSTORAGE_LIMIT_MB: 999, // Unlimited — data di cloud, bukan localStorage
   TARGET_IMAGE_SIZE_KB: 80,
-  // Absolute maximum a single image Data URL can be (in KB)
   MAX_IMAGE_SIZE_KB: 150,
-  // Warning threshold percentage
   WARNING_THRESHOLD_PERCENT: 75,
   CRITICAL_THRESHOLD_PERCENT: 90,
 };
 
-// Calculate storage usage across all data stored as Base64
+// Cloud-based storage stats (no longer localStorage dependent)
 export function getStorageUsageStats(): {
   totalDataUrlSizeKB: number;
   totalDataUrlCount: number;
@@ -322,49 +315,11 @@ export function getStorageUsageStats(): {
   warningLevel: "safe" | "warning" | "critical" | "full";
   breakdown: { key: string; sizeKB: number; count: number }[];
 } {
-  const breakdown: { key: string; sizeKB: number; count: number }[] = [];
-  let totalDataUrlSizeKB = 0;
-  let totalDataUrlCount = 0;
-  let localStorageUsedKB = 0;
-
-  if (typeof localStorage === "undefined") {
-    return {
-      totalDataUrlSizeKB: 0, totalDataUrlCount: 0,
-      localStorageUsedKB: 0, localStorageLimitKB: STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB * 1024,
-      localStoragePercent: 0, warningLevel: "safe", breakdown: [],
-    };
-  }
-
-  // Measure all localStorage entries
-  const keysToCheck = [CONFIG_STORAGE_KEY, PRODUCTS_STORAGE_KEY, VIDEOS_STORAGE_KEY, GALLERY_STORAGE_KEY];
-  for (const key of keysToCheck) {
-    const raw = localStorage.getItem(key);
-    if (!raw) continue;
-    const entrySizeKB = Math.round((raw.length * 2) / 1024); // UTF-16 = 2 bytes/char
-    localStorageUsedKB += entrySizeKB;
-
-    // Count Data URLs in this entry
-    const dataUrlMatches = raw.match(/data:image\/[^"]+/g) || [];
-    let dataUrlSizeKB = 0;
-    for (const match of dataUrlMatches) {
-      dataUrlSizeKB += Math.round((match.length * 0.75) / 1024); // Base64 ≈ 75% actual
-    }
-    totalDataUrlSizeKB += dataUrlSizeKB;
-    totalDataUrlCount += dataUrlMatches.length;
-    breakdown.push({ key, sizeKB: entrySizeKB, count: dataUrlMatches.length });
-  }
-
-  const localStorageLimitKB = STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB * 1024;
-  const localStoragePercent = localStorageLimitKB > 0 ? Math.min((localStorageUsedKB / localStorageLimitKB) * 100, 100) : 0;
-  const warningLevel: "safe" | "warning" | "critical" | "full" = 
-    localStoragePercent >= 98 ? "full" :
-    localStoragePercent >= STORAGE_LIMITS.CRITICAL_THRESHOLD_PERCENT ? "critical" :
-    localStoragePercent >= STORAGE_LIMITS.WARNING_THRESHOLD_PERCENT ? "warning" : "safe";
-
+  // Semua data tersimpan di Google Sheets (cloud), bukan localStorage
   return {
-    totalDataUrlSizeKB, totalDataUrlCount,
-    localStorageUsedKB, localStorageLimitKB,
-    localStoragePercent, warningLevel, breakdown,
+    totalDataUrlSizeKB: 0, totalDataUrlCount: 0,
+    localStorageUsedKB: 0, localStorageLimitKB: STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB * 1024,
+    localStoragePercent: 0, warningLevel: "safe", breakdown: [],
   };
 }
 
@@ -576,26 +531,22 @@ export async function syncAllWithNeon(): Promise<boolean> {
     }
 
     let synced = false;
-    // Cloud data SELALU menimpa lokal — ini kunci sinkronisasi lintas device
+    // Cloud data → langsung ke memoryCache (TANPA localStorage)
     if (cfg && typeof cfg === 'object') {
       const merged = { ...defaultConfig, ...cfg };
       memoryCache[ADMIN_STORAGE_KEY] = merged;
-      try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch {}
       synced = true;
     }
     if (prods && Array.isArray(prods) && prods.length > 0) {
       memoryCache[PRODUCTS_STORAGE_KEY] = prods;
-      try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(prods)); } catch {}
       synced = true;
     }
     if (vids && Array.isArray(vids)) {
       memoryCache[VIDEOS_STORAGE_KEY] = vids;
-      try { localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids)); } catch {}
       synced = true;
     }
     if (gal && Array.isArray(gal)) {
       memoryCache[GALLERY_STORAGE_KEY] = gal;
-      try { localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(gal)); } catch {}
       synced = true;
     }
     if (synced) {
@@ -619,7 +570,6 @@ export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
   if (remote) {
     const merged = { ...defaultConfig, ...remote };
     memoryCache[ADMIN_STORAGE_KEY] = merged;
-    try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch {}
     return merged;
   }
   return getSiteConfig();
@@ -628,51 +578,15 @@ export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
 export function getSiteConfig(): SiteConfig {
   try {
     const cached = memoryCache[ADMIN_STORAGE_KEY];
-    if (cached) return { ...defaultConfig, ...cached } as SiteConfig;
-    
-    const stored = localStorage.getItem(ADMIN_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<SiteConfig>;
-      const merged = { ...defaultConfig, ...parsed } as SiteConfig;
-      
-      // Fix: if mapsEmbedUrl was saved as empty string, use default, otherwise clean it
-      if (!merged.mapsEmbedUrl) {
-        merged.mapsEmbedUrl = defaultConfig.mapsEmbedUrl;
-      } else {
-        merged.mapsEmbedUrl = cleanMapsUrl(merged.mapsEmbedUrl);
-      }
-
-      // Migration: Convert comma-separated heroFallbackImage to |SEP| if it contains data URLs or multiple items
-      if (merged.heroFallbackImage && !merged.heroFallbackImage.includes("|SEP|")) {
-        const value = merged.heroFallbackImage;
-        // If it starts with data: and has multiple commas, it's likely a list
-        if (value.includes("data:") && (value.match(/,/g) || []).length > 1) {
-           // This is tricky to split accurately by comma if data URLs are involved,
-           // but since we only supported max 3 images, we can try to find 'data:' prefixes
-           const parts = value.split(/,(?=data:)/);
-           merged.heroFallbackImage = parts.join("|SEP|");
-        } else if (!value.includes("data:") && value.includes(",")) {
-           // Regular URLs separated by comma
-           merged.heroFallbackImage = value.split(",").join("|SEP|");
-        }
-      }
-
+    if (cached) {
+      const merged = { ...defaultConfig, ...cached } as SiteConfig;
+      if (!merged.mapsEmbedUrl) merged.mapsEmbedUrl = defaultConfig.mapsEmbedUrl;
+      else merged.mapsEmbedUrl = cleanMapsUrl(merged.mapsEmbedUrl);
       merged.heroFallbackImage = migrateLegacyAssetUrl(merged.heroFallbackImage);
       merged.brandLogoUrl = migrateLegacyAssetUrl(merged.brandLogoUrl || defaultConfig.brandLogoUrl);
       if (!merged.adminUsername) merged.adminUsername = "admin";
       if (!merged.adminPassword || merged.adminPassword === "aybucket") merged.adminPassword = "admin123";
-
-      // Safe local migration to ensure new address is used
-      if (merged.address === "Pertokoan pasar senenan Bangkalan") {
-        merged.address = defaultConfig.address;
-        try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch(e) {}
-      }
-
-      if (merged.brandLogoUrl === "/assets/ay-logo-5.png") {
-        merged.brandLogoUrl = "/assets/logo-fix.png";
-        try { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged)); } catch(e) {}
-      }
-
+      if (merged.brandLogoUrl === "/assets/ay-logo-5.png") merged.brandLogoUrl = "/assets/logo-fix.png";
       return merged;
     }
   } catch { }
@@ -704,16 +618,11 @@ export async function saveSiteConfig(config: Partial<SiteConfig>): Promise<void>
   const merged = { ...current, ...config, heroFallbackImage: migrateLegacyAssetUrl(config.heroFallbackImage ?? current.heroFallbackImage), brandLogoUrl: migrateLegacyAssetUrl(config.brandLogoUrl ?? current.brandLogoUrl ?? defaultConfig.brandLogoUrl), };
   
   memoryCache[ADMIN_STORAGE_KEY] = merged;
-  try {
-    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(merged));
-  } catch (e) {
-    console.warn("LocalStorage penuh! Tidak bisa menyimpan perubahan.");
-  }
   saveToNeon("site_config", merged);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
-export function resetSiteConfig() { localStorage.removeItem(ADMIN_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
+export function resetSiteConfig() { delete memoryCache[ADMIN_STORAGE_KEY]; window.dispatchEvent(new Event("siteConfigChanged")); }
 
 export type ProductCategory = "snack-bouquet" | "money-bouquet" | "fresh-flower" | "artificial-flower" | "catalog-home" | "accessories" | "buckets" | "wreaths" | "packaging" | "ribbons" | "sewa" | "bloom-box" | "thumbelina" | "bucket-unik" | "vas-dekorasi";
 
@@ -790,32 +699,19 @@ export const defaultGalleryProjects: GalleryProject[] = [
 
 export function getGalleryProjects(): GalleryProject[] {
   if (typeof window === "undefined") return defaultGalleryProjects;
-  
   const cached = memoryCache[GALLERY_STORAGE_KEY];
   if (cached) return cached;
-
-  const stored = localStorage.getItem(GALLERY_STORAGE_KEY);
-  if (!stored) return defaultGalleryProjects;
-  try {
-    const parsed = JSON.parse(stored) as GalleryProject[];
-    return parsed.map((item, index) => ({ ...item, image: migrateLegacyAssetUrl(item.image) || defaultGalleryProjects[index % defaultGalleryProjects.length].image, }));
-  } catch { return defaultGalleryProjects; }
+  return defaultGalleryProjects;
 }
 
 export async function setGalleryProjects(projects: GalleryProject[]): Promise<void> {
   if (typeof window === "undefined") return;
   const dataToSave = projects.map(p => ({ ...p, image: migrateLegacyAssetUrl(p.image) }));
-  
   memoryCache[GALLERY_STORAGE_KEY] = dataToSave;
-  try {
-    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(dataToSave));
-  } catch (e) {
-    console.warn("LocalStorage penuh! Tidak bisa menyimpan galeri.");
-  }
   saveToNeon("gallery_projects", dataToSave);
   window.dispatchEvent(new Event("galleryProjectsChanged"));
 }
-export function resetGalleryProjects(): void { if (typeof window === "undefined") return; localStorage.removeItem(GALLERY_STORAGE_KEY); window.dispatchEvent(new Event("galleryProjectsChanged")); }
+export function resetGalleryProjects(): void { if (typeof window === "undefined") return; delete memoryCache[GALLERY_STORAGE_KEY]; window.dispatchEvent(new Event("galleryProjectsChanged")); }
 
 const initialProducts: Product[] = generatedInitialProducts as any;
 export const defaultProducts: Product[] = initialProducts.map((p) => ({ ...p, image: migrateLegacyAssetUrl(p.image), images: Array.from(new Set([...(Array.isArray((p as any).images) ? (p as any).images : []), p.image].filter(Boolean).map((item) => migrateLegacyAssetUrl(item as string)))), })).map((product) => enrichProductWithMatchedAssets(product));
@@ -824,33 +720,19 @@ export function getProducts(): Product[] {
   try {
     const cached = memoryCache[PRODUCTS_STORAGE_KEY];
     if (cached) return cached;
-
-    const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-    if (stored) {
-      const parsed: any[] = JSON.parse(stored);
-      const merged = enrichProductsWithMatchedAssets(mergeProductsByNameAndPrice(normalizeStoredProducts(parsed)));
-      return merged as Product[];
-    }
   } catch { }
   return mergeProductsByNameAndPrice(defaultProducts);
 }
 
 export async function saveProducts(prods: Product[]): Promise<void> {
   const dataToSave = mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[]));
-  
   memoryCache[PRODUCTS_STORAGE_KEY] = dataToSave;
-  try {
-    localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(dataToSave));
-  } catch (e) {
-    console.warn("LocalStorage penuh! Tidak bisa menyimpan produk.");
-  }
   saveToNeon("products", dataToSave);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 export async function resetProducts() {
   const merged = mergeProductsByNameAndPrice(defaultProducts);
   memoryCache[PRODUCTS_STORAGE_KEY] = merged;
-  try { localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(merged)); } catch (e) { console.warn("Storage full during reset, using memory."); }
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 export const products = defaultProducts;
@@ -888,35 +770,24 @@ export function getVideos(): VideoItem[] {
   try { 
     const cached = memoryCache[VIDEOS_STORAGE_KEY];
     if (cached) return cached;
-    
-    const stored = localStorage.getItem(VIDEOS_STORAGE_KEY); 
-    if (stored) return JSON.parse(stored); 
   } catch { } 
   return defaultVideos; 
 }
 export async function saveVideos(vids: VideoItem[]): Promise<void> {
   memoryCache[VIDEOS_STORAGE_KEY] = vids;
-  try {
-    localStorage.setItem(VIDEOS_STORAGE_KEY, JSON.stringify(vids));
-  } catch (e) {
-    console.warn("LocalStorage penuh! Tidak bisa menyimpan video.");
-  }
   saveToNeon("videos", vids);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
 /**
  * Check if admin can still upload more images.
- * Returns { canUpload, remainingImages, usagePercent } or shows a blocking popup.
+ * Cloud-based: always allowed (ImgBB handles images, Google Sheets stores URLs)
  */
 export function canUploadImage(): { allowed: boolean; remainingImages: number; usagePercent: number } {
-  const stats = getStorageUsageStats();
-  const remainingKB = stats.localStorageLimitKB - stats.localStorageUsedKB;
-  const remainingImages = Math.max(0, Math.floor(remainingKB / STORAGE_LIMITS.TARGET_IMAGE_SIZE_KB));
   return {
-    allowed: stats.warningLevel !== 'full',
-    remainingImages,
-    usagePercent: stats.localStoragePercent,
+    allowed: true,
+    remainingImages: 9999,
+    usagePercent: 0,
   };
 }
-export function resetVideos() { localStorage.removeItem(VIDEOS_STORAGE_KEY); window.dispatchEvent(new Event("siteConfigChanged")); }
+export function resetVideos() { delete memoryCache[VIDEOS_STORAGE_KEY]; window.dispatchEvent(new Event("siteConfigChanged")); }

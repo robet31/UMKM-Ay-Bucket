@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
 import { PageTransition } from "../components/page-transition";
-import { getSiteConfig, getWhatsAppLink } from "../data";
+import { getSiteConfig, getWhatsAppLink, syncAllWithNeon } from "../data";
 
 const getCatalogLink = () => {
   const config = getSiteConfig();
@@ -45,7 +45,17 @@ export function Contact() {
   useEffect(() => {
     const handler = () => setTick((t) => t + 1);
     window.addEventListener("siteConfigChanged", handler);
-    return () => window.removeEventListener("siteConfigChanged", handler);
+
+    // Cloud sync polling setiap 5 detik
+    syncAllWithNeon().then((changed) => { if (changed) handler(); });
+    const interval = setInterval(() => {
+      syncAllWithNeon().then((changed) => { if (changed) handler(); });
+    }, 5000);
+
+    return () => {
+      window.removeEventListener("siteConfigChanged", handler);
+      clearInterval(interval);
+    };
   }, []);
   const config = getSiteConfig();
   const testimonials = useMemo(
