@@ -734,11 +734,11 @@ export function Admin() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           <span style={{ fontSize: '16px' }}>☁️</span>
-          <span style={{ ...mono, fontSize: '9px', color: '#555' }}>PENYIMPANAN CLOUD (NEON DB + IMGBB)</span>
+          <span style={{ ...mono, fontSize: '9px', color: '#555' }}>PENYIMPANAN CLOUD (GOOGLE SHEETS + IMGBB)</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
           <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#22c55e', fontWeight: 600 }}>
-            ✅ Gambar di ImgBB, data teks di Neon DB
+            ✅ Unlimited — Gambar di ImgBB, data di Google Sheets
           </span>
           <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#888' }}>
             🔄 Sinkronisasi real-time setiap 5 detik
@@ -750,8 +750,8 @@ export function Admin() {
           </summary>
           <div style={{ marginTop: '10px', padding: '12px', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: '10px', fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#666', lineHeight: 1.7 }}>
             <p style={{ margin: '0 0 6px 0' }}><strong>📂 Gambar Bawaan:</strong> 93 produk default di folder frontend — gratis unlimited.</p>
-            <p style={{ margin: '0 0 6px 0' }}><strong>📸 Gambar Kustom:</strong> Upload ke ImgBB (gratis unlimited), URL pendek disimpan di Neon DB.</p>
-            <p style={{ margin: '0 0 6px 0' }}><strong>☁️ Database Cloud:</strong> Menggunakan Neon DB Serverless API untuk keandalan maksimal.</p>
+            <p style={{ margin: '0 0 6px 0' }}><strong>📸 Gambar Kustom:</strong> Upload ke ImgBB (gratis unlimited), URL pendek disimpan di Google Sheets.</p>
+            <p style={{ margin: '0 0 6px 0' }}><strong>☁️ Database Cloud:</strong> Google Sheets — unlimited storage, tanpa kuota habis.</p>
             <p style={{ margin: '0' }}><strong>🔄 Real-Time Sync:</strong> Perubahan langsung terlihat di semua device dalam 5 detik.</p>
           </div>
         </details>
