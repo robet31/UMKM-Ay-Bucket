@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { BRAND_LOGO, getSiteConfig, getCatalogWhatsAppLink } from "../data";
 import { useLanguage } from "../language";
 
-export function Nav() {
+export function Nav({ scrolled = false }: { scrolled?: boolean }) {
   const location = useLocation();
   const [, setTick] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);

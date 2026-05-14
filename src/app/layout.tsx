@@ -112,7 +112,6 @@ export function Root() {
           <Outlet key={location.pathname} />
         </AnimatePresence>
       </main>
-      <WhatsAppFloat />
       <ScrollToTop />
     </div>
   );
