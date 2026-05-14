@@ -273,16 +273,16 @@ export function Home() {
         <div ref={heroRef} style={{ paddingTop: "clamp(40px, 6vw, 80px)", paddingBottom: "clamp(96px, 10vw, 140px)", position: "relative", zIndex: 2 }}>
           <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }} style={{ maxWidth: "620px" }}>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(249,249,247,0.8)", margin: "0 0 16px 0", fontWeight: 600 }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(0,0,0,0.5)", margin: "0 0 16px 0", fontWeight: 600 }}>
                 🌸 {language === "id" ? "Buket Bunga Premium" : "Premium Flower Bouquets"}
               </p>
-              <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(42px, 8vw, 80px)", fontWeight: 300, color: "#F9F9F7", letterSpacing: "-0.02em", margin: "0 0 8px 0", lineHeight: 1.05, textShadow: "2px 2px 4px rgba(0,0,0,0.15)" }}>
+              <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(42px, 8vw, 80px)", fontWeight: 300, color: "#1a1a1a", letterSpacing: "-0.02em", margin: "0 0 8px 0", lineHeight: 1.05 }}>
                 {heroTitleText}
               </h1>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(16px, 2.5vw, 22px)", fontWeight: 400, color: "rgba(249,249,247,0.92)", margin: "0 0 20px 0", letterSpacing: "0.02em", lineHeight: 1.5 }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(16px, 2.5vw, 22px)", fontWeight: 400, color: "rgba(0,0,0,0.7)", margin: "0 0 20px 0", letterSpacing: "0.02em", lineHeight: 1.5 }}>
                 {heroSubtitleText}
               </p>
-              <p style={{ maxWidth: "540px", color: "rgba(249,249,247,0.85)", fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.8, margin: "0 0 20px 0" }}>
+              <p style={{ maxWidth: "540px", color: "rgba(0,0,0,0.6)", fontFamily: "'Inter', sans-serif", fontSize: "14px", lineHeight: 1.8, margin: "0 0 20px 0" }}>
                 {language === "id"
                   ? "Hadiah terbaik untuk momen spesial — dari buket bunga segar, bucket premium, hingga karangan bunga eksklusif."
                   : "The finest gifts for your special moments — from fresh bouquets, premium buckets, to exclusive flower arrangements."}
@@ -701,20 +701,6 @@ function ScrollToTop() {
               }}
             />
           </div>
-          <span style={{ 
-            fontFamily: "'JetBrains Mono', monospace", 
-            fontSize: "9px", 
-            color: "#fff", 
-            textTransform: "uppercase", 
-            letterSpacing: "0.1em",
-            textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-            backgroundColor: "rgba(0,0,0,0.2)",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            backdropFilter: "blur(4px)"
-          }}>
-            Back to Top
-          </span>
         </motion.div>
       )}
     </AnimatePresence>
