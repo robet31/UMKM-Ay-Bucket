@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { categories, formatRupiah, getProducts, getSiteConfig, mergeProductsByNameAndPrice, syncAllWithTurso, isProduction, getGalleryProjects, getVideos, defaultGalleryProjects, type Product, type ProductCategory, type Category } from "../data";
+import { categories, formatRupiah, getProducts, getSiteConfig, mergeProductsByNameAndPrice, syncAllWithTurso, isProduction, getGalleryProjects, getVideos, defaultGalleryProjects, migrateLegacyAssetUrl, type Product, type ProductCategory, type Category } from "../data";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
@@ -276,7 +276,7 @@ export function Home() {
               <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(0,0,0,0.5)", margin: "0 0 16px 0", fontWeight: 600 }}>
                 🌸 {language === "id" ? "Buket Bunga Premium" : "Premium Flower Bouquets"}
               </p>
-              <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(42px, 8vw, 80px)", fontWeight: 300, color: "#1a1a1a", letterSpacing: "-0.02em", margin: "0 0 8px 0", lineHeight: 1.05 }}>
+              <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(42px, 8vw, 80px)", fontWeight: 800, color: "#1a1a1a", letterSpacing: "-0.01em", margin: "0 0 8px 0", lineHeight: 1.05 }}>
                 {heroTitleText}
               </h1>
               <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(16px, 2.5vw, 22px)", fontWeight: 400, color: "rgba(0,0,0,0.7)", margin: "0 0 20px 0", letterSpacing: "0.02em", lineHeight: 1.5 }}>
@@ -734,7 +734,7 @@ function PolaroidCard({ product, accent, compact = false, loading = "lazy" }: { 
         }}
       >
         <img
-          src={(product.images && product.images[0]) || product.image}
+          src={migrateLegacyAssetUrl((product.images && product.images[0]) || product.image)}
           alt={displayName}
           loading={loading}
           decoding={loading === "eager" ? "sync" : "async"}
@@ -858,7 +858,7 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
           }}
         >
           <img
-            src={currentImage}
+            src={migrateLegacyAssetUrl(currentImage)}
             alt={displayName}
             loading="lazy"
             decoding="async"

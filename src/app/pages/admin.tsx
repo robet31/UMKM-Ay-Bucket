@@ -1232,7 +1232,7 @@ export function Admin() {
                     {/* Image */}
                     <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", backgroundColor: "#f3f0eb", overflow: "hidden" }}>
                       <img
-                        src={product.image}
+                        src={migrateLegacyAssetUrl(product.image)}
                         alt={product.name}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
@@ -1874,7 +1874,7 @@ function GalleryManager({
                   title="Klik untuk melihat detail gambar"
                 >
                   <img
-                    src={item.image}
+                    src={migrateLegacyAssetUrl(item.image)}
                     alt={item.title}
                     style={{ width: "100%", maxWidth: "280px", height: "160px", objectFit: "cover", border: "1px solid rgba(0,0,0,0.06)" }}
                   />
@@ -2134,7 +2134,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
                   transition: 'opacity 0.2s',
                 }}
               >
-                <img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`img-${i}`} />
+                <img src={migrateLegacyAssetUrl(src)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`img-${i}`} />
                 <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 6 }}>
                   <button type="button" onClick={(e) => { e.stopPropagation(); setPrimary(i); }} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff' }} title="Set primary">●</button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); removeImageAt(i); }} style={{ fontSize: 11, padding: '4px 6px', borderRadius: 6, border: 'none', background: '#d44', color: '#fff' }} title="Hapus">✕</button>

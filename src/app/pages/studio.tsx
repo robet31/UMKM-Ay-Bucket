@@ -4,7 +4,7 @@ import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
 import { StudioVideoSection } from "../components/video-gallery";
-import { getSiteConfig, categories, getWhatsAppLink, BRAND_LOGO, getGalleryProjects, normalizeAssetUrl, syncAllWithTurso, type GalleryProject } from "../data";
+import { getSiteConfig, categories, getWhatsAppLink, BRAND_LOGO, getGalleryProjects, normalizeAssetUrl, migrateLegacyAssetUrl, syncAllWithTurso, type GalleryProject } from "../data";
 import { useLanguage } from "../language";
 
 const mono = {
@@ -302,7 +302,7 @@ export function Studio() {
                       }}
                     >
                       <img
-                        src={normalizeAssetUrl(project.image)}
+                        src={migrateLegacyAssetUrl(project.image)}
                         alt={project.title}
                         loading="lazy"
                         decoding="async"
@@ -360,7 +360,7 @@ export function Studio() {
                   }}
                 >
                   <img
-                    src={normalizeAssetUrl(project.image)}
+                    src={migrateLegacyAssetUrl(project.image)}
                     alt={project.title}
                     loading="lazy"
                     decoding="async"
