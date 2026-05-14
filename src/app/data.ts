@@ -487,7 +487,7 @@ export async function syncAllWithTurso(): Promise<boolean> {
       synced = true;
     }
     if (prods && Array.isArray(prods) && prods.length > 0) {
-      memoryCache[PRODUCTS_STORAGE_KEY] = prods;
+      memoryCache[PRODUCTS_STORAGE_KEY] = mergeProductsByNameAndPrice(normalizeStoredProducts(prods));
       synced = true;
     }
     if (vids && Array.isArray(vids)) {
@@ -587,13 +587,30 @@ export interface Product {
 }
 
 export function normalizeProductRecord(product: any): Product {
-  const numericPrice = typeof product?.price === "number" ? product.price : parseInt(String(product?.price || 0).replace(/\D/g, ""), 10) || 0;
-  const normalizedLabel = typeof product?.priceLabel === "string" && product.priceLabel.trim().length > 0 ? (product.priceLabel.toLowerCase().includes("rp") ? product.priceLabel : formatRupiah(product.priceLabel)) : formatRupiah(numericPrice);
-  const images = Array.isArray(product?.images) ? product.images.filter(Boolean).map((item: string) => migrateLegacyAssetUrl(item)) : product?.image ? [migrateLegacyAssetUrl(product.image)] : [];
-  return { ...product, price: numericPrice, priceLabel: normalizedLabel, image: migrateLegacyAssetUrl(product?.image) || images[0] || "", images, } as Product;
+  const source = product && typeof product === "object" ? product : {};
+  const numericPrice = typeof source.price === "number" ? source.price : parseInt(String(source.price || 0).replace(/\D/g, ""), 10) || 0;
+  const normalizedLabel = typeof source.priceLabel === "string" && source.priceLabel.trim().length > 0 ? (source.priceLabel.toLowerCase().includes("rp") ? source.priceLabel : formatRupiah(source.priceLabel)) : formatRupiah(numericPrice);
+  const images = Array.isArray(source.images) ? source.images.filter(Boolean).map((item: string) => migrateLegacyAssetUrl(item)) : source.image ? [migrateLegacyAssetUrl(source.image)] : [];
+  const fallbackName = typeof source.name === "string" && source.name.trim().length > 0 ? source.name.trim() : "Untitled Product";
+  const fallbackCategory = typeof source.category === "string" && source.category.trim().length > 0 ? source.category : "accessories";
+  const fallbackId = typeof source.id === "string" && source.id.trim().length > 0 ? source.id.trim() : `product-${toMergeableName(fallbackName) || "item"}-${numericPrice || images[0] || "0"}`;
+
+  return {
+    ...source,
+    id: fallbackId,
+    name: fallbackName,
+    category: fallbackCategory,
+    price: numericPrice,
+    priceLabel: normalizedLabel,
+    image: migrateLegacyAssetUrl(source?.image) || images[0] || "",
+    images,
+  } as Product;
 }
 
-export function normalizeStoredProducts(stored: any[]): Product[] { return stored.map((product) => normalizeProductRecord(product)); }
+export function normalizeStoredProducts(stored: any[]): Product[] {
+  if (!Array.isArray(stored)) return [];
+  return stored.filter(Boolean).map((product) => normalizeProductRecord(product));
+}
 
 function toMergeableName(name: string | undefined): string { return String(name || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " "); }
 function toMergeablePrice(product: Partial<Product>): number { if (typeof product.price === "number" && Number.isFinite(product.price)) return product.price; return parseInt(String(product.priceLabel || "").replace(/\D/g, ""), 10) || 0; }
@@ -601,17 +618,31 @@ function getMergeKey(product: Partial<Product>): string { return `${toMergeableN
 
 export function mergeProductsByNameAndPrice(products: Product[]): Product[] {
   const map = new Map<string, Product>();
-  for (const product of products) {
+  for (const rawProduct of products) {
+    if (!rawProduct) continue;
+    const product = normalizeProductRecord(rawProduct);
+    if (!product.id) continue;
+
     const key = getMergeKey(product);
     const incomingImages = (product.images || (product.image ? [product.image] : [])).filter(Boolean).map((item) => migrateLegacyAssetUrl(item));
-    if (!map.has(key)) { map.set(key, { ...product, image: migrateLegacyAssetUrl(product.image) || incomingImages[0] || "", images: Array.from(new Set(incomingImages)), }); continue; }
+    if (!map.has(key)) {
+      map.set(key, {
+        ...product,
+        image: migrateLegacyAssetUrl(product.image) || incomingImages[0] || "",
+        images: Array.from(new Set(incomingImages)),
+      });
+      continue;
+    }
+
     const existing = map.get(key)!;
     const existingImages = (existing.images || (existing.image ? [existing.image] : [])).filter(Boolean).map((item) => migrateLegacyAssetUrl(item));
     const mergedImages = Array.from(new Set([...existingImages, ...incomingImages]));
-    existing.images = mergedImages; existing.image = mergedImages[0] || existing.image || product.image;
+    existing.images = mergedImages;
+    existing.image = mergedImages[0] || existing.image || product.image;
     if ((!existing.description || existing.description.length < (product.description || "").length) && product.description) { existing.description = product.description; }
     if (!existing.tag && product.tag) existing.tag = product.tag;
     if (!existing.variant && product.variant) existing.variant = product.variant;
+    if (!existing.id) existing.id = product.id;
   }
   return Array.from(map.values());
 }
@@ -673,7 +704,7 @@ export const defaultProducts: Product[] = initialProducts.map((p) => ({ ...p, im
 export function getProducts(): Product[] {
   try {
     const cached = memoryCache[PRODUCTS_STORAGE_KEY];
-    if (cached) return cached;
+    if (cached) return mergeProductsByNameAndPrice(normalizeStoredProducts(cached));
   } catch { }
   return mergeProductsByNameAndPrice(defaultProducts);
 }
