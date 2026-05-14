@@ -26,8 +26,8 @@ import {
   syncAllWithTurso,
   setAdminCredentials,
   cleanMapsUrl,
-  compressImage,
   compressImageWithStats,
+  uploadToImgBB,
   migrateLegacyAssetUrl,
   DEVELOPER_CONTACT,
   type GalleryProject,
@@ -114,55 +114,36 @@ export function Admin() {
     MAX_FILE_SIZE_MB: 5,
     MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024,
     RECOMMENDED_SIZE_MB: 2,
-    COMPRESSION_QUALITY: 0.8,
-    MAX_TOTAL_MB: 50, // Maximum total database size in MB
-    WARNING_THRESHOLD_MB: 40, // Warning when reaching 40MB
-    ESTIMATED_SIZE_PER_IMAGE_KB: 100, // Average size per optimized image
+    MAX_IMAGE_STRING_KB: 500, // Max characters per image string (prevents corrupt Base64, ~500KB)
   };
 
-  // Calculate precise storage size (reactive with useMemo)
-  const { estimatedStorageMB, isAtWarningLevel, isAtLimit } = useMemo(() => {
-    let totalBytes = 0;
+  // Calculate storage stats for all image strings in database
+  const { totalImageStrings, imageStringCount, isBase64Heavy } = useMemo(() => {
+    let totalChars = 0;
+    let count = 0;
 
-    // Calculate actual bytes used by Base64 images
     products.forEach(p => {
-      if (p.image && p.image.startsWith('data:image')) totalBytes += p.image.length;
-      if (p.images) {
-        p.images.forEach(img => {
-          if (img && img.startsWith('data:image')) totalBytes += img.length;
-        });
-      }
+      if (p.image) { totalChars += p.image.length; count++; }
+      (p.images || []).forEach(img => { totalChars += img.length; count++; });
     });
 
     config.heroSettings?.forEach(h => {
-      if (h.image && h.image.startsWith('data:image')) totalBytes += h.image.length;
+      if (h.image) { totalChars += h.image.length; count++; }
     });
 
     galleryProjects.forEach(g => {
-      if (g.image && g.image.startsWith('data:image')) totalBytes += g.image.length;
+      if (g.image) { totalChars += g.image.length; count++; }
     });
 
-    // Convert Base64 length to approximate actual bytes (length * 0.75)
-    const actualBytes = totalBytes * 0.75;
-    const actualMB = actualBytes / (1024 * 1024);
-
-    const productImages = products.reduce((sum, p) => sum + (p.images?.length || (p.image ? 1 : 0)), 0);
-    const heroImages = config.heroSettings?.length || 0;
-    const galleryImages = galleryProjects.filter(g => g.image).length;
-    const count = productImages + heroImages + galleryImages;
-    
-    // Use actual MB if available, otherwise estimate
-    const storageMB = actualMB > 0 ? actualMB : (count * UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB) / 1024;
+    // Estimate actual KB (Base64 is ~75% of string length, ImgBB URLs are full length)
+    const estimatedKB = totalChars * 0.75 / 1024;
 
     return {
-      estimatedStorageMB: storageMB,
-      isAtWarningLevel: storageMB >= UPLOAD_LIMITS.WARNING_THRESHOLD_MB,
-      isAtLimit: storageMB >= UPLOAD_LIMITS.MAX_TOTAL_MB,
+      totalImageStrings: estimatedKB,
+      imageStringCount: count,
+      isBase64Heavy: estimatedKB > 100, // Warn if using too much Base64 storage
     };
   }, [products, config.heroSettings, galleryProjects]);
-
-  // Show developer contact warning when limit exceeded
-  const showDeveloperWarning = isAtLimit;
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -219,13 +200,7 @@ export function Admin() {
 
   const uploadBrandLogo = async (file: File | null) => {
     if (!file) return;
-    
-    // Check image limit
-    if (isAtLimit) {
-      alert(`⚠️ MENCAPAI BATAS PENYIMPANAN MAKSIMAL!\n\n📊 Penggunaan Database:\n- Ukuran Database: ${estimatedStorageMB.toFixed(1)} MB / ${UPLOAD_LIMITS.MAX_TOTAL_MB} MB\n- Perkiraan Sisa: ${Math.max(0, Math.floor((UPLOAD_LIMITS.MAX_TOTAL_MB - estimatedStorageMB) / (UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB / 1024)))} gambar lagi\n\n💡 Info: Batas penyimpanan diukur menggunakan hitungan Megabyte (MB) secara akurat.\n(Tiap upload akan dikompres ke format WebP, rata-rata ${UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB}KB/gambar)\n\nUntuk menambah kapasitas memori database, silakan hubungi developer untuk upgrade:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
-      return;
-    }
-    
+
     const sizeCheck = checkFileSize(file);
     if (!sizeCheck.allowed) {
       alert(`⚠️ ${sizeCheck.message}\n\n💡 Tips: Compress gambar sebelum upload untuk hasil lebih optimal.`);
@@ -233,37 +208,25 @@ export function Admin() {
     }
     try {
       setUploadProgress({ fileName: file.name, status: 'compressing', originalSize: file.size });
-      const { dataUrl, stats } = await compressImageWithStats(file, 800, 0.8);
-      setConfig((prev) => ({ ...prev, brandLogoUrl: dataUrl }));
+      const imgUrl = await uploadToImgBB(file);
+      setConfig((prev) => ({ ...prev, brandLogoUrl: imgUrl }));
       setUploadProgress({ 
         fileName: file.name, 
         status: 'done', 
-        originalSize: stats.originalSizeKB * 1024, 
-        compressedSize: stats.compressedSizeKB * 1024,
-        reduction: stats.reductionPercent 
       });
       setTimeout(() => setUploadProgress(null), 3000);
     } catch (e) {
       setUploadProgress({ fileName: file.name, status: 'error' });
-      alert("Gagal memproses gambar");
+      alert("Gagal upload gambar ke ImgBB");
       setTimeout(() => setUploadProgress(null), 3000);
     }
   };
 
   const uploadHeroImage = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    
-    // Check image limit
-    const filesToUpload = Array.from(files).length;
-    // Estimate size of new files (assuming they will compress to roughly ESTIMATED_SIZE_PER_IMAGE_KB)
-    const estimatedNewMB = (filesToUpload * UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB) / 1024;
-    if (estimatedStorageMB + estimatedNewMB > UPLOAD_LIMITS.MAX_TOTAL_MB) {
-      alert(`⚠️ MENCAPAI BATAS PENYIMPANAN MAKSIMAL!\n\n📊 Penggunaan Database:\n- Ukuran Database: ${estimatedStorageMB.toFixed(1)} MB / ${UPLOAD_LIMITS.MAX_TOTAL_MB} MB\n- Perkiraan Sisa: ${Math.max(0, Math.floor((UPLOAD_LIMITS.MAX_TOTAL_MB - estimatedStorageMB) / (UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB / 1024)))} gambar lagi\n📝 Anda mencoba upload: ${filesToUpload} gambar sekaligus\n\n💡 Info: Batas penyimpanan diukur menggunakan hitungan Megabyte (MB) secara akurat.\n(Tiap upload akan dikompres ke format WebP, rata-rata ${UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB}KB/gambar)\n\nUntuk menambah kapasitas memori database, silakan hubungi developer untuk upgrade:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
-      return;
-    }
-    
+
     const fileArray = Array.from(files).slice(0, 10);
-    const results: { url: string; originalSize?: number; compressedSize?: number; reduction?: number }[] = [];
+    const results: { url: string }[] = [];
     const skippedFiles: string[] = [];
     
     for (const file of fileArray) {
@@ -274,17 +237,10 @@ export function Admin() {
       }
       try {
         setUploadProgress({ fileName: file.name, status: 'compressing', originalSize: file.size });
-        const { dataUrl, stats } = await compressImageWithStats(file, 1200, 0.8);
-        if (dataUrl) {
-          results.push({ 
-            url: dataUrl, 
-            originalSize: stats.originalSizeKB * 1024, 
-            compressedSize: stats.compressedSizeKB * 1024,
-            reduction: stats.reductionPercent 
-          });
-        }
+        const imgUrl = await uploadToImgBB(file);
+        results.push({ url: imgUrl });
       } catch (e) {
-        console.error("Failed to compress image:", e);
+        console.error("Failed to upload image:", e);
       }
     }
     
@@ -301,13 +257,7 @@ export function Admin() {
         newSettings.push({ image: r.url });
       });
       setConfig((prev) => ({ ...prev, heroSettings: newSettings.slice(0, 10) }));
-      
-      if (results.length > 0) {
-        const totalOriginal = results.reduce((sum, r) => sum + (r.originalSize || 0), 0);
-        const totalCompressed = results.reduce((sum, r) => sum + (r.compressedSize || 0), 0);
-        const totalReduction = totalOriginal > 0 ? Math.round(((totalOriginal - totalCompressed) / totalOriginal) * 100) : 0;
-        alert(`✅ Berhasil upload ${results.length} gambar!\n\n📊 Kompresi: ${formatFileSize(totalOriginal)} → ${formatFileSize(totalCompressed)}\n💾 Penghematan: ${totalReduction}%`);
-      }
+      alert(`✅ Berhasil upload ${results.length} gambar ke ImgBB!`);
     }
   };
 
@@ -491,13 +441,7 @@ export function Admin() {
 
   const uploadGalleryImage = async (id: string, file: File | null) => {
     if (!file) return;
-    
-    // Check image limit
-    if (isAtLimit) {
-      alert(`⚠️ MENCAPAI BATAS PENYIMPANAN MAKSIMAL!\n\n📊 Penggunaan Database:\n- Ukuran Database: ${estimatedStorageMB.toFixed(1)} MB / ${UPLOAD_LIMITS.MAX_TOTAL_MB} MB\n- Perkiraan Sisa: ${Math.max(0, Math.floor((UPLOAD_LIMITS.MAX_TOTAL_MB - estimatedStorageMB) / (UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB / 1024)))} gambar lagi\n\n💡 Info: Batas penyimpanan diukur menggunakan hitungan Megabyte (MB) secara akurat.\n(Tiap upload akan dikompres ke format WebP, rata-rata ${UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB}KB/gambar)\n\nUntuk menambah kapasitas memori database, silakan hubungi developer untuk upgrade:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
-      return;
-    }
-    
+
     const sizeCheck = checkFileSize(file);
     if (!sizeCheck.allowed) {
       alert(`⚠️ ${sizeCheck.message}\n\n💡 Tips: Compress gambar sebelum upload untuk hasil lebih optimal.`);
@@ -505,19 +449,16 @@ export function Admin() {
     }
     try {
       setUploadProgress({ fileName: file.name, status: 'compressing', originalSize: file.size });
-      const { dataUrl, stats } = await compressImageWithStats(file, 1000, 0.8);
-      updateGalleryProject(id, { image: dataUrl });
+      const imgUrl = await uploadToImgBB(file);
+      updateGalleryProject(id, { image: imgUrl });
       setUploadProgress({ 
         fileName: file.name, 
         status: 'done', 
-        originalSize: stats.originalSizeKB * 1024, 
-        compressedSize: stats.compressedSizeKB * 1024,
-        reduction: stats.reductionPercent 
       });
       setTimeout(() => setUploadProgress(null), 3000);
     } catch (e) {
       setUploadProgress({ fileName: file.name, status: 'error' });
-      alert("Gagal memproses gambar");
+      alert("Gagal upload gambar ke ImgBB");
       setTimeout(() => setUploadProgress(null), 3000);
     }
   };
@@ -746,34 +687,28 @@ export function Admin() {
           </h1>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Image Usage Indicator */}
+          {/* Storage Indicator */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             padding: '8px 14px',
-            backgroundColor: isAtLimit ? '#fef2f2' : isAtWarningLevel ? '#fffbeb' : '#f0fdf4',
-            border: `1px solid ${isAtLimit ? '#fecaca' : isAtWarningLevel ? '#fcd34d' : '#bbf7d0'}`,
+            backgroundColor: isBase64Heavy ? '#fef2f2' : '#f0fdf4',
+            border: `1px solid ${isBase64Heavy ? '#fecaca' : '#bbf7d0'}`,
             borderRadius: '10px',
             fontSize: '11px',
           }}>
             <span style={{ fontSize: '14px' }}>📊</span>
             <div>
               <p style={{ margin: 0, fontWeight: 600, color: '#1a1a1a' }}>
-                {estimatedStorageMB.toFixed(1)} MB / {UPLOAD_LIMITS.MAX_TOTAL_MB} MB Terpakai
-              </p>
+                ~{totalImageStrings.toFixed(0)}KB Base64</p>
               <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#666' }}>
-                ~ {Math.max(0, Math.floor((UPLOAD_LIMITS.MAX_TOTAL_MB - estimatedStorageMB) / (UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB / 1024)))} slot gambar tersisa
+                {imageStringCount} gambar • ImgBB menyimpan otomatis
               </p>
             </div>
-            {isAtWarningLevel && !isAtLimit && (
+            {isBase64Heavy && (
               <span style={{ fontSize: '10px', color: '#d97706', fontWeight: 600 }}>
                 ⚠️
-              </span>
-            )}
-            {isAtLimit && (
-              <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 600 }}>
-                ❌
               </span>
             )}
           </div>
@@ -1598,10 +1533,15 @@ function HeroSlotManager({
                         if (file) {
                           if (file.size > 5 * 1024 * 1024) { alert("Maksimal 5MB"); return; }
                           try {
-                            const dataUrl = await compressImage(file, 1200, 0.8);
-                            updateHeroSlot(idx, { image: dataUrl });
+                            setUploadProgress({ fileName: file.name, status: 'compressing' });
+                            const imgUrl = await uploadToImgBB(file);
+                            updateHeroSlot(idx, { image: imgUrl });
+                            setUploadProgress({ fileName: file.name, status: 'done' });
+                            setTimeout(() => setUploadProgress(null), 3000);
                           } catch (err) {
-                            alert("Gagal memproses gambar");
+                            setUploadProgress({ fileName: file.name, status: 'error' });
+                            alert("Gagal upload gambar ke ImgBB");
+                            setTimeout(() => setUploadProgress(null), 3000);
                           }
                         }
                       }} />
@@ -1992,19 +1932,21 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const max = 5 * 1024 * 1024;
-    const promises: Promise<string>[] = [];
-    Array.from(files).forEach((file) => {
+    const imgs: string[] = [];
+    for (const file of Array.from(files)) {
       if (file.size > max) {
-        alert("Beberapa gambar lebih dari 5MB dan dilewati");
-        return;
+        alert(`File ${file.name} lebih dari 5MB dan dilewati`);
+        continue;
       }
-      promises.push(compressImage(file, 1000, 0.8));
-    });
-    try {
-      const dataUrls = await Promise.all(promises);
-      setForm({ ...form, images: [...(form.images || []), ...dataUrls] });
-    } catch (e) {
-      alert("Gagal memproses gambar");
+      try {
+        const imgUrl = await uploadToImgBB(file);
+        imgs.push(imgUrl);
+      } catch (e) {
+        alert(`Gagal upload ${file.name}`);
+      }
+    }
+    if (imgs.length > 0) {
+      setForm({ ...form, images: [...(form.images || []), ...imgs] });
     }
   };
 
@@ -2267,10 +2209,10 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
     
     if (file.type.startsWith('image/')) {
       try {
-        const dataUrl = await compressImage(file, 1000, 0.8);
-        setForm({ ...form, url: dataUrl, source: "file" });
+        const imgUrl = await uploadToImgBB(file);
+        setForm({ ...form, url: imgUrl, source: "file" });
       } catch (err) {
-        alert("Gagal memproses gambar");
+        alert("Gagal upload gambar ke ImgBB");
       }
     } else {
       const reader = new FileReader();
