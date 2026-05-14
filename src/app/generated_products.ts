@@ -6,36 +6,36 @@ export const generatedInitialProducts = [
     "id": "accessories-1",
     "name": "Akrilik frame mini",
     "category": "accessories",
-    "price": 9500000,
+    "price": 95000,
     "priceLabel": "Rp 9.500.000",
     "description": "Aksesori custom yang rapi dan estetik untuk hadiah personal. Akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 10.",
-    "image": "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 10.png",
+    "image": "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 10.png",
     "images": [
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 10.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 2.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 3.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 4.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 5.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 6.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 7.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 8.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 9.png",
-      "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan.png"
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 10.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 2.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 3.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 4.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 5.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 6.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 7.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 8.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan 9.png",
+      "/assets/Akrilik frame mini - Rp 95.000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan.png"
     ]
   },
   {
     "id": "accessories-2",
     "name": "Frame Birthday Edelweis",
     "category": "accessories",
-    "price": 15000000,
+    "price": 150000,
     "priceLabel": "Rp 15.000.000",
     "description": "Aksesori custom yang rapi dan estetik untuk hadiah personal. Frame ukuran 25cm x 35cm. bisa request tulisan plus 2 foto. bunga edelweis mini 2.",
-    "image": "/assets/Frame Birthday Edelweis - Rp 150.00000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 2.png",
+    "image": "/assets/Frame Birthday Edelweis - Rp 150.000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 2.png",
     "images": [
-      "/assets/Frame Birthday Edelweis - Rp 150.00000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 2.png",
-      "/assets/Frame Birthday Edelweis - Rp 150.00000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 3.png",
-      "/assets/Frame Birthday Edelweis - Rp 150.00000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 4.png",
-      "/assets/Frame Birthday Edelweis - Rp 150.00000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini.png"
+      "/assets/Frame Birthday Edelweis - Rp 150.000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 2.png",
+      "/assets/Frame Birthday Edelweis - Rp 150.000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 3.png",
+      "/assets/Frame Birthday Edelweis - Rp 150.000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini 4.png",
+      "/assets/Frame Birthday Edelweis - Rp 150.000 - frame ukuran 25cm x 35cm - bisa request tulisan plus 2 foto - bunga edelweis mini.png"
     ]
   },
   {
@@ -54,34 +54,34 @@ export const generatedInitialProducts = [
     "id": "artificial-flower-4",
     "name": "Bunga Mawar Palsu Premium ukuran Big",
     "category": "artificial-flower",
-    "price": 25000000,
+    "price": 250000,
     "priceLabel": "Rp 25.000.000",
     "description": "Bunga artificial premium yang awet dan tetap menawan.",
-    "image": "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000 2.png",
+    "image": "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000 2.png",
     "images": [
-      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000 2.png",
-      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000 3.png",
-      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000 4.png",
-      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000 5.png",
-      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000 6.png",
-      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000 7.png",
-      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.00000.png"
+      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000 2.png",
+      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000 3.png",
+      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000 4.png",
+      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000 5.png",
+      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000 6.png",
+      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000 7.png",
+      "/assets/Bunga Mawar Palsu Premium ukuran Big - Rp 250.000.png"
     ]
   },
   {
     "id": "artificial-flower-5",
     "name": "Bunga mawar palsu small",
     "category": "artificial-flower",
-    "price": 5000000,
+    "price": 50000,
     "priceLabel": "Rp 5.000.000",
     "description": "Bunga artificial premium yang awet dan tetap menawan.",
-    "image": "/assets/Bunga mawar palsu small - Rp 50.00000 .png",
+    "image": "/assets/Bunga mawar palsu small - Rp 50.000 .png",
     "images": [
-      "/assets/Bunga mawar palsu small - Rp 50.00000 .png",
-      "/assets/Bunga mawar palsu small - Rp 50.00000 2.png",
-      "/assets/Bunga mawar palsu small - Rp 50.00000 3.png",
-      "/assets/Bunga mawar palsu small - Rp 50.00000 4.png",
-      "/assets/Bunga mawar palsu small - Rp 50.00000 5.png"
+      "/assets/Bunga mawar palsu small - Rp 50.000 .png",
+      "/assets/Bunga mawar palsu small - Rp 50.000 2.png",
+      "/assets/Bunga mawar palsu small - Rp 50.000 3.png",
+      "/assets/Bunga mawar palsu small - Rp 50.000 4.png",
+      "/assets/Bunga mawar palsu small - Rp 50.000 5.png"
     ]
   },
   {
@@ -100,28 +100,28 @@ export const generatedInitialProducts = [
     "id": "artificial-flower-7",
     "name": "Peony rose medium",
     "category": "artificial-flower",
-    "price": 8000000,
+    "price": 80000,
     "priceLabel": "Rp 8.000.000",
     "description": "Bunga artificial premium yang awet dan tetap menawan. Bunga palsu premium peony hologram 2.",
-    "image": "/assets/Peony rose medium - Rp 80.00000 - bunga palsu premium peony hologram 2.png",
+    "image": "/assets/Peony rose medium - Rp 80.000 - bunga palsu premium peony hologram 2.png",
     "images": [
-      "/assets/Peony rose medium - Rp 80.00000 - bunga palsu premium peony hologram 2.png",
-      "/assets/Peony rose medium - Rp 80.00000 - bunga palsu premium peony hologram 3.png",
-      "/assets/Peony rose medium - Rp 80.00000 - bunga palsu premium peony hologram 4.png",
-      "/assets/Peony rose medium - Rp 80.00000 - bunga palsu premium peony hologram.png"
+      "/assets/Peony rose medium - Rp 80.000 - bunga palsu premium peony hologram 2.png",
+      "/assets/Peony rose medium - Rp 80.000 - bunga palsu premium peony hologram 3.png",
+      "/assets/Peony rose medium - Rp 80.000 - bunga palsu premium peony hologram 4.png",
+      "/assets/Peony rose medium - Rp 80.000 - bunga palsu premium peony hologram.png"
     ]
   },
   {
     "id": "artificial-flower-8",
     "name": "Rose gonie pink",
     "category": "artificial-flower",
-    "price": 12000000,
+    "price": 120000,
     "priceLabel": "Rp 12.000.000",
     "description": "Bunga artificial premium yang awet dan tetap menawan. Bunga mawar palsu mekar 7 tangkai. bisa request warna chat admin 2.",
-    "image": "/assets/Rose gonie pink - Rp 120.00000 - Bunga mawar palsu mekar 7 tangkai - bisa request warna chat admin 2.png",
+    "image": "/assets/Rose gonie pink - Rp 120.000 - Bunga mawar palsu mekar 7 tangkai - bisa request warna chat admin 2.png",
     "images": [
-      "/assets/Rose gonie pink - Rp 120.00000 - Bunga mawar palsu mekar 7 tangkai - bisa request warna chat admin 2.png",
-      "/assets/Rose gonie pink - Rp 120.00000 - Bunga mawar palsu mekar 7 tangkai - bisa request warna chat admin.png"
+      "/assets/Rose gonie pink - Rp 120.000 - Bunga mawar palsu mekar 7 tangkai - bisa request warna chat admin 2.png",
+      "/assets/Rose gonie pink - Rp 120.000 - Bunga mawar palsu mekar 7 tangkai - bisa request warna chat admin.png"
     ]
   },
   {
@@ -286,16 +286,16 @@ export const generatedInitialProducts = [
     "id": "buckets-22",
     "name": "Buket Bunga Asli Premium",
     "category": "buckets",
-    "price": 35000000,
+    "price": 350000,
     "priceLabel": "Rp 35.000.000",
     "description": "Rangkaian bucket premium dengan komposisi yang elegan.",
-    "image": "/assets/Buket Bunga Asli Premium - Rp 350.00000 2.png",
+    "image": "/assets/Buket Bunga Asli Premium - Rp 350.000 2.png",
     "images": [
-      "/assets/Buket Bunga Asli Premium - Rp 350.00000 2.png",
-      "/assets/Buket Bunga Asli Premium - Rp 350.00000 3.png",
-      "/assets/Buket Bunga Asli Premium - Rp 350.00000 4.png",
-      "/assets/Buket Bunga Asli Premium - Rp 350.00000 5.png",
-      "/assets/Buket Bunga Asli Premium - Rp 350.00000.png"
+      "/assets/Buket Bunga Asli Premium - Rp 350.000 2.png",
+      "/assets/Buket Bunga Asli Premium - Rp 350.000 3.png",
+      "/assets/Buket Bunga Asli Premium - Rp 350.000 4.png",
+      "/assets/Buket Bunga Asli Premium - Rp 350.000 5.png",
+      "/assets/Buket Bunga Asli Premium - Rp 350.000.png"
     ]
   },
   {
@@ -305,26 +305,26 @@ export const generatedInitialProducts = [
     "price": 17000000,
     "priceLabel": "Rp 17.000.000",
     "description": "Rangkaian bucket premium dengan komposisi yang elegan. Bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bu 2.",
-    "image": "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.00000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bu 2.png",
+    "image": "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bu 2.png",
     "images": [
-      "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.00000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bu 2.png",
-      "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.00000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bu.png",
-      "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.00000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bunga kurle3.png"
+      "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bu 2.png",
+      "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bu.png",
+      "/assets/Buket Bunga Gradoll Graduation Doll Big Mesh - Rp 170.000 - bunga palsu mix isian tidak bisa sama persis ukuran and jumlah bunga kurle3.png"
     ]
   },
   {
     "id": "buckets-24",
     "name": "Buket Cilla Estetik Mesh",
     "category": "buckets",
-    "price": 15000000,
+    "price": 150000,
     "priceLabel": "Rp 15.000.000",
     "description": "Rangkaian bucket premium dengan komposisi yang elegan. Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama. bunga palsu premium plus est 2.",
-    "image": "/assets/Buket Cilla Estetik Mesh - Rp 150.00000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 2.png",
+    "image": "/assets/Buket Cilla Estetik Mesh - Rp 150.000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 2.png",
     "images": [
-      "/assets/Buket Cilla Estetik Mesh - Rp 150.00000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 2.png",
-      "/assets/Buket Cilla Estetik Mesh - Rp 150.00000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 3.png",
-      "/assets/Buket Cilla Estetik Mesh - Rp 150.00000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 4.png",
-      "/assets/Buket Cilla Estetik Mesh - Rp 150.00000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est.png"
+      "/assets/Buket Cilla Estetik Mesh - Rp 150.000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 2.png",
+      "/assets/Buket Cilla Estetik Mesh - Rp 150.000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 3.png",
+      "/assets/Buket Cilla Estetik Mesh - Rp 150.000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est 4.png",
+      "/assets/Buket Cilla Estetik Mesh - Rp 150.000 - Isian bunga tidak bisa sama persis untuk jumlah bunga and ukuran buket kurleb sama - bunga palsu premium plus est.png"
     ]
   },
   {
@@ -347,13 +347,13 @@ export const generatedInitialProducts = [
     "price": 17000000,
     "priceLabel": "Rp 17.000.000",
     "description": "Rangkaian bucket premium dengan komposisi yang elegan. Bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 2.",
-    "image": "/assets/Buket skripsi glitter 20 tangkai - Rp 170.00000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 2.png",
+    "image": "/assets/Buket skripsi glitter 20 tangkai - Rp 170.000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 2.png",
     "images": [
-      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.00000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 2.png",
-      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.00000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 3.png",
-      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.00000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 4.png",
-      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.00000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 5.png",
-      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.00000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita.png"
+      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 2.png",
+      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 3.png",
+      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 4.png",
+      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita 5.png",
+      "/assets/Buket skripsi glitter 20 tangkai - Rp 170.000 - bisa bawa kertas skripsi sendiri bisa request warna and tulisan di pita.png"
     ]
   },
   {
@@ -481,12 +481,12 @@ export const generatedInitialProducts = [
     "id": "buckets-37",
     "name": "Round Elegant Dior Mahkota",
     "category": "buckets",
-    "price": 35000000,
+    "price": 350000,
     "priceLabel": "Rp 35.000.000",
     "description": "Rangkaian bucket premium dengan komposisi yang elegan.",
-    "image": "/assets/Round Elegant Dior Mahkota - Rp 350.00000.png",
+    "image": "/assets/Round Elegant Dior Mahkota - Rp 350.000.png",
     "images": [
-      "/assets/Round Elegant Dior Mahkota - Rp 350.00000.png"
+      "/assets/Round Elegant Dior Mahkota - Rp 350.000.png"
     ]
   },
   {
@@ -496,9 +496,9 @@ export const generatedInitialProducts = [
     "price": 32000000,
     "priceLabel": "Rp 32.000.000",
     "description": "Rangkaian bucket premium dengan komposisi yang elegan.",
-    "image": "/assets/Round Elegant Dior non Mahkota - Rp 320.00000.png",
+    "image": "/assets/Round Elegant Dior non Mahkota - Rp 320.000.png",
     "images": [
-      "/assets/Round Elegant Dior non Mahkota - Rp 320.00000.png"
+      "/assets/Round Elegant Dior non Mahkota - Rp 320.000.png"
     ]
   },
   {
@@ -508,13 +508,13 @@ export const generatedInitialProducts = [
     "price": 10000000,
     "priceLabel": "Rp 10.000.000",
     "description": "Rangkaian bunga segar pilihan dengan nuansa mewah. Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 2.",
-    "image": "/assets/Bunga Mawar Medium - Rp 100.00000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 2.png",
+    "image": "/assets/Bunga Mawar Medium - Rp 100.000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 2.png",
     "images": [
-      "/assets/Bunga Mawar Medium - Rp 100.00000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 2.png",
-      "/assets/Bunga Mawar Medium - Rp 100.00000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 3.png",
-      "/assets/Bunga Mawar Medium - Rp 100.00000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 4.png",
-      "/assets/Bunga Mawar Medium - Rp 100.00000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 5.png",
-      "/assets/Bunga Mawar Medium - Rp 100.00000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000.png"
+      "/assets/Bunga Mawar Medium - Rp 100.000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 2.png",
+      "/assets/Bunga Mawar Medium - Rp 100.000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 3.png",
+      "/assets/Bunga Mawar Medium - Rp 100.000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 4.png",
+      "/assets/Bunga Mawar Medium - Rp 100.000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000 5.png",
+      "/assets/Bunga Mawar Medium - Rp 100.000 - Bunga mawar asli isi 7tangkai mekar plus tambahan kain salju 20.000 120.000.png"
     ]
   },
   {
@@ -524,11 +524,11 @@ export const generatedInitialProducts = [
     "price": 12500000,
     "priceLabel": "Rp 12.500.000",
     "description": "Rangkaian bunga segar pilihan dengan nuansa mewah. 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria 2.",
-    "image": "/assets/bunga white sedap - Rp 125.00000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria 2.png",
+    "image": "/assets/bunga white sedap - Rp 125.000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria 2.png",
     "images": [
-      "/assets/bunga white sedap - Rp 125.00000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria 2.png",
-      "/assets/bunga white sedap - Rp 125.00000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria 3.png",
-      "/assets/bunga white sedap - Rp 125.00000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria.png"
+      "/assets/bunga white sedap - Rp 125.000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria 2.png",
+      "/assets/bunga white sedap - Rp 125.000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria 3.png",
+      "/assets/bunga white sedap - Rp 125.000 - 125ribu hanya bunga asli saja 10tangkai sedap malam and 10tangkai asteria.png"
     ]
   },
   {
@@ -538,9 +538,9 @@ export const generatedInitialProducts = [
     "price": 20000000,
     "priceLabel": "Rp 20.000.000",
     "description": "Rangkaian bunga segar pilihan dengan nuansa mewah.",
-    "image": "/assets/Mawar Candy Big Bunga Asli - Rp 200.00000.png",
+    "image": "/assets/Mawar Candy Big Bunga Asli - Rp 200.000.png",
     "images": [
-      "/assets/Mawar Candy Big Bunga Asli - Rp 200.00000.png"
+      "/assets/Mawar Candy Big Bunga Asli - Rp 200.000.png"
     ]
   },
   {
@@ -550,10 +550,10 @@ export const generatedInitialProducts = [
     "price": 17000000,
     "priceLabel": "Rp 17.000.000",
     "description": "Rangkaian bunga segar pilihan dengan nuansa mewah.",
-    "image": "/assets/Mawar Candy Bunga Asli - Rp 170.00000 2.png",
+    "image": "/assets/Mawar Candy Bunga Asli - Rp 170.000 2.png",
     "images": [
-      "/assets/Mawar Candy Bunga Asli - Rp 170.00000 2.png",
-      "/assets/Mawar Candy Bunga Asli - Rp 170.00000.png"
+      "/assets/Mawar Candy Bunga Asli - Rp 170.000 2.png",
+      "/assets/Mawar Candy Bunga Asli - Rp 170.000.png"
     ]
   },
   {
@@ -611,11 +611,11 @@ export const generatedInitialProducts = [
     "price": 2500000,
     "priceLabel": "Rp 2.500.000",
     "description": "Packing premium untuk melengkapi hadiah Anda. Packing box plus kertas plus pita organza 2.",
-    "image": "/assets/packing luxury elegant - Rp 25.00000 - packing box plus kertas plus pita organza 2.png",
+    "image": "/assets/packing luxury elegant - Rp 25.000 - packing box plus kertas plus pita organza 2.png",
     "images": [
-      "/assets/packing luxury elegant - Rp 25.00000 - packing box plus kertas plus pita organza 2.png",
-      "/assets/packing luxury elegant - Rp 25.00000 - packing box plus kertas plus pita organza 3.png",
-      "/assets/packing luxury elegant - Rp 25.00000 - packing box plus kertas plus pita organza.png"
+      "/assets/packing luxury elegant - Rp 25.000 - packing box plus kertas plus pita organza 2.png",
+      "/assets/packing luxury elegant - Rp 25.000 - packing box plus kertas plus pita organza 3.png",
+      "/assets/packing luxury elegant - Rp 25.000 - packing box plus kertas plus pita organza.png"
     ]
   },
   {
@@ -637,11 +637,11 @@ export const generatedInitialProducts = [
     "price": 10000000,
     "priceLabel": "Rp 10.000.000",
     "description": "Selempang & pita wisuda berkualitas untuk melengkapi momen spesial.",
-    "image": "/assets/Round Pita Satin - Rp 100.00000 2.png",
+    "image": "/assets/Round Pita Satin - Rp 100.000 2.png",
     "images": [
-      "/assets/Round Pita Satin - Rp 100.00000 2.png",
-      "/assets/Round Pita Satin - Rp 100.00000 3.png",
-      "/assets/Round Pita Satin - Rp 100.00000.png"
+      "/assets/Round Pita Satin - Rp 100.000 2.png",
+      "/assets/Round Pita Satin - Rp 100.000 3.png",
+      "/assets/Round Pita Satin - Rp 100.000.png"
     ]
   },
   {
@@ -663,28 +663,28 @@ export const generatedInitialProducts = [
     "price": 7500000,
     "priceLabel": "Rp 7.500.000",
     "description": "Selempang & pita wisuda berkualitas untuk melengkapi momen spesial.",
-    "image": "/assets/Selempang list pita - Rp 75.00000.png",
+    "image": "/assets/Selempang list pita - Rp 75.000.png",
     "images": [
-      "/assets/Selempang list pita - Rp 75.00000.png"
+      "/assets/Selempang list pita - Rp 75.000.png"
     ]
   },
   {
     "id": "ribbons-52",
     "name": "Selempang Wisuda 3 Titik",
     "category": "ribbons",
-    "price": 9500000,
+    "price": 95000,
     "priceLabel": "Rp 9.500.000",
     "description": "Selempang & pita wisuda berkualitas untuk melengkapi momen spesial.",
-    "image": "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 2.png",
+    "image": "/assets/Selempang Wisuda 3 Titik - Rp 95.000 2.png",
     "images": [
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 2.png",
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 3.png",
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 4.png",
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 5.png",
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 6.png",
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 7.png",
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000 8.png",
-      "/assets/Selempang Wisuda 3 Titik - Rp 95.00000.png"
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000 2.png",
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000 3.png",
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000 4.png",
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000 5.png",
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000 6.png",
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000 7.png",
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000 8.png",
+      "/assets/Selempang Wisuda 3 Titik - Rp 95.000.png"
     ]
   },
   {
@@ -694,10 +694,10 @@ export const generatedInitialProducts = [
     "price": 10500000,
     "priceLabel": "Rp 10.500.000",
     "description": "Selempang & pita wisuda berkualitas untuk melengkapi momen spesial.",
-    "image": "/assets/Selempang Wisuda 3Titik Garis - Rp 105.00000 .png",
+    "image": "/assets/Selempang Wisuda 3Titik Garis - Rp 105.000 .png",
     "images": [
-      "/assets/Selempang Wisuda 3Titik Garis - Rp 105.00000 .png",
-      "/assets/Selempang Wisuda 3Titik Garis - Rp 105.00000 2.png"
+      "/assets/Selempang Wisuda 3Titik Garis - Rp 105.000 .png",
+      "/assets/Selempang Wisuda 3Titik Garis - Rp 105.000 2.png"
     ]
   },
   {
@@ -707,10 +707,10 @@ export const generatedInitialProducts = [
     "price": 6500000,
     "priceLabel": "Rp 6.500.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara.",
-    "image": "/assets/Akrilik Bulat Baby Blue - Rp 65.00000 2.png",
+    "image": "/assets/Akrilik Bulat Baby Blue - Rp 65.000 2.png",
     "images": [
-      "/assets/Akrilik Bulat Baby Blue - Rp 65.00000 2.png",
-      "/assets/Akrilik Bulat Baby Blue - Rp 65.00000.png"
+      "/assets/Akrilik Bulat Baby Blue - Rp 65.000 2.png",
+      "/assets/Akrilik Bulat Baby Blue - Rp 65.000.png"
     ]
   },
   {
@@ -720,10 +720,10 @@ export const generatedInitialProducts = [
     "price": 6500000,
     "priceLabel": "Rp 6.500.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara.",
-    "image": "/assets/Akrilik Bulat Blue Gold - Rp 65.00000 .png",
+    "image": "/assets/Akrilik Bulat Blue Gold - Rp 65.000 .png",
     "images": [
-      "/assets/Akrilik Bulat Blue Gold - Rp 65.00000 .png",
-      "/assets/Akrilik Bulat Blue Gold - Rp 65.00000 2.png"
+      "/assets/Akrilik Bulat Blue Gold - Rp 65.000 .png",
+      "/assets/Akrilik Bulat Blue Gold - Rp 65.000 2.png"
     ]
   },
   {
@@ -733,10 +733,10 @@ export const generatedInitialProducts = [
     "price": 6500000,
     "priceLabel": "Rp 6.500.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara.",
-    "image": "/assets/Akrilik Bulat Dusty Blue - Rp 65.00000 .png",
+    "image": "/assets/Akrilik Bulat Dusty Blue - Rp 65.000 .png",
     "images": [
-      "/assets/Akrilik Bulat Dusty Blue - Rp 65.00000 .png",
-      "/assets/Akrilik Bulat Dusty Blue - Rp 65.00000 2.png"
+      "/assets/Akrilik Bulat Dusty Blue - Rp 65.000 .png",
+      "/assets/Akrilik Bulat Dusty Blue - Rp 65.000 2.png"
     ]
   },
   {
@@ -746,9 +746,9 @@ export const generatedInitialProducts = [
     "price": 6500000,
     "priceLabel": "Rp 6.500.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara. Harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek.",
-    "image": "/assets/Akrilik Marble Pink - Rp 65.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek.png",
+    "image": "/assets/Akrilik Marble Pink - Rp 65.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek.png",
     "images": [
-      "/assets/Akrilik Marble Pink - Rp 65.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek.png"
+      "/assets/Akrilik Marble Pink - Rp 65.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek.png"
     ]
   },
   {
@@ -758,9 +758,9 @@ export const generatedInitialProducts = [
     "price": 6500000,
     "priceLabel": "Rp 6.500.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara. Harga sewa per 24jam.",
-    "image": "/assets/Akrilik Persegi Orange -Rp 65.00000 - harga sewa per 24jam.png",
+    "image": "/assets/Akrilik Persegi Orange -Rp 65.000 - harga sewa per 24jam.png",
     "images": [
-      "/assets/Akrilik Persegi Orange -Rp 65.00000 - harga sewa per 24jam.png"
+      "/assets/Akrilik Persegi Orange -Rp 65.000 - harga sewa per 24jam.png"
     ]
   },
   {
@@ -812,18 +812,18 @@ export const generatedInitialProducts = [
     "price": 4000000,
     "priceLabel": "Rp 4.000.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara. Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 10.",
-    "image": "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 10.png",
+    "image": "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 10.png",
     "images": [
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 10.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 2.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 3.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 4.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 5.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 6.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 7.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 8.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 9.png",
-      "/assets/Sewa Standing Akrilik PROMO - Rp 40.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah.png"
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 10.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 2.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 3.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 4.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 5.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 6.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 7.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 8.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah 9.png",
+      "/assets/Sewa Standing Akrilik PROMO - Rp 40.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah.png"
     ],
     "tag": "Promo"
   },
@@ -834,11 +834,11 @@ export const generatedInitialProducts = [
     "price": 6500000,
     "priceLabel": "Rp 6.500.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara. Harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.",
-    "image": "/assets/standing akrilik bulat - Rp 65.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
+    "image": "/assets/standing akrilik bulat - Rp 65.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
     "images": [
-      "/assets/standing akrilik bulat - Rp 65.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
-      "/assets/standing akrilik bulat - Rp 65.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 3.png",
-      "/assets/standing akrilik bulat - Rp 65.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek.png"
+      "/assets/standing akrilik bulat - Rp 65.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
+      "/assets/standing akrilik bulat - Rp 65.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 3.png",
+      "/assets/standing akrilik bulat - Rp 65.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek.png"
     ]
   },
   {
@@ -872,14 +872,14 @@ export const generatedInitialProducts = [
     "price": 7000000,
     "priceLabel": "Rp 7.000.000",
     "description": "Layanan sewa standing akrilik & dekorasi untuk segala acara. Harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.",
-    "image": "/assets/Standing akrilik Dome - Rp 70.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
+    "image": "/assets/Standing akrilik Dome - Rp 70.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
     "images": [
-      "/assets/Standing akrilik Dome - Rp 70.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
-      "/assets/Standing akrilik Dome - Rp 70.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 3.png",
-      "/assets/Standing akrilik Dome - Rp 70.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 4.png",
-      "/assets/Standing akrilik Dome - Rp 70.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 5.png",
-      "/assets/Standing akrilik Dome - Rp 70.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 6.png",
-      "/assets/Standing akrilik Dome - Rp 70.00000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 7.png"
+      "/assets/Standing akrilik Dome - Rp 70.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 2.png",
+      "/assets/Standing akrilik Dome - Rp 70.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 3.png",
+      "/assets/Standing akrilik Dome - Rp 70.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 4.png",
+      "/assets/Standing akrilik Dome - Rp 70.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 5.png",
+      "/assets/Standing akrilik Dome - Rp 70.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 6.png",
+      "/assets/Standing akrilik Dome - Rp 70.000 - harga sewa per 24jam bisa request tulisan and warna bunga bisa diambil dikirim kurir ay jek 7.png"
     ]
   },
   {
@@ -901,11 +901,11 @@ export const generatedInitialProducts = [
     "price": 10000000,
     "priceLabel": "Rp 10.000.000",
     "description": "Bouquet snack kreatif dengan susunan menarik dan kekinian. Isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin 2.",
-    "image": "/assets/Donat buket tart - Rp 100.00000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin 2.png",
+    "image": "/assets/Donat buket tart - Rp 100.000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin 2.png",
     "images": [
-      "/assets/Donat buket tart - Rp 100.00000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin 2.png",
-      "/assets/Donat buket tart - Rp 100.00000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin 3.png",
-      "/assets/Donat buket tart - Rp 100.00000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin.png"
+      "/assets/Donat buket tart - Rp 100.000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin 2.png",
+      "/assets/Donat buket tart - Rp 100.000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin 3.png",
+      "/assets/Donat buket tart - Rp 100.000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin.png"
     ]
   },
   {
@@ -1167,10 +1167,10 @@ export const generatedInitialProducts = [
     "price": 50000000,
     "priceLabel": "Rp 50.000.000",
     "description": "Karangan bunga papan dengan tampilan rapi dan profesional. Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.",
-    "image": "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
+    "image": "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
     "images": [
-      "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
-      "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
+      "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
+      "/assets/Karangan Bunga Bunga Papan 1 Titik - Rp 500.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
     ]
   },
   {
@@ -1180,14 +1180,14 @@ export const generatedInitialProducts = [
     "price": 60000000,
     "priceLabel": "Rp 60.000.000",
     "description": "Karangan bunga papan dengan tampilan rapi dan profesional. Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.",
-    "image": "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
+    "image": "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
     "images": [
-      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
-      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 3.png",
-      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 4.png",
-      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 5.png",
-      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 6.png",
-      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
+      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
+      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 3.png",
+      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 4.png",
+      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 5.png",
+      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 6.png",
+      "/assets/Karangan Bunga Bunga Papan 2 Titik - Rp 600.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
     ]
   },
   {
@@ -1197,9 +1197,9 @@ export const generatedInitialProducts = [
     "price": 75000000,
     "priceLabel": "Rp 75.000.000",
     "description": "Karangan bunga papan dengan tampilan rapi dan profesional. Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.",
-    "image": "/assets/Karangan Bunga Bunga Papan 3 Titik - Rp 750.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png",
+    "image": "/assets/Karangan Bunga Bunga Papan 3 Titik - Rp 750.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png",
     "images": [
-      "/assets/Karangan Bunga Bunga Papan 3 Titik - Rp 750.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
+      "/assets/Karangan Bunga Bunga Papan 3 Titik - Rp 750.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
     ]
   },
   {
@@ -1209,9 +1209,9 @@ export const generatedInitialProducts = [
     "price": 100000000,
     "priceLabel": "Rp 100.000.000",
     "description": "Karangan bunga papan dengan tampilan rapi dan profesional. Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangka.",
-    "image": "/assets/Karangan Bunga Bunga Papan 4 titik - Rp 1.000.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangka.png",
+    "image": "/assets/Karangan Bunga Bunga Papan 4 titik - Rp 1.000.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangka.png",
     "images": [
-      "/assets/Karangan Bunga Bunga Papan 4 titik - Rp 1.000.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangka.png"
+      "/assets/Karangan Bunga Bunga Papan 4 titik - Rp 1.000.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangka.png"
     ]
   },
   {
@@ -1221,10 +1221,10 @@ export const generatedInitialProducts = [
     "price": 200000000,
     "priceLabel": "Rp 200.000.000",
     "description": "Karangan bunga papan dengan tampilan rapi dan profesional. Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.",
-    "image": "/assets/Karangan Bunga Full Mega Bintang - Rp 2.000.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
+    "image": "/assets/Karangan Bunga Full Mega Bintang - Rp 2.000.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
     "images": [
-      "/assets/Karangan Bunga Full Mega Bintang - Rp 2.000.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
-      "/assets/Karangan Bunga Full Mega Bintang - Rp 2.000.00000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
+      "/assets/Karangan Bunga Full Mega Bintang - Rp 2.000.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala 2.png",
+      "/assets/Karangan Bunga Full Mega Bintang - Rp 2.000.000 - Karangan Bunga Bunga Papan bisa untuk segala acara Ready setiap hari bisa dikirim Kamal Telang Socah Bangkala.png"
     ]
   }
 ] as any;

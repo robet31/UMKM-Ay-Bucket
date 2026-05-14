@@ -28,6 +28,7 @@ import {
   cleanMapsUrl,
   compressImage,
   compressImageWithStats,
+  migrateLegacyAssetUrl,
   DEVELOPER_CONTACT,
   type GalleryProject,
   type SiteConfig,
@@ -1546,7 +1547,7 @@ function HeroSlotManager({
                   <div style={{ position: 'relative' }}>
                     <div style={{ width: '140px', height: '180px', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#f3f0eb', border: '1px solid rgba(0,0,0,0.08)' }}>
                       {previewImage ? (
-                        <img src={previewImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={migrateLegacyAssetUrl(previewImage)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontFamily: "'Inter', sans-serif", fontSize: '12px', textAlign: 'center', padding: '12px' }}>
                           Belum ada gambar

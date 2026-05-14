@@ -618,9 +618,18 @@ export interface Product {
 
 export function normalizeProductRecord(product: any): Product {
   const source = product && typeof product === "object" ? product : {};
-  const numericPrice = typeof source.price === "number" ? source.price : parseInt(String(source.price || 0).replace(/\D/g, ""), 10) || 0;
+  let numericPrice = typeof source.price === "number" ? source.price : parseInt(String(source.price || 0).replace(/\D/g, ""), 10) || 0;
+  
+  // Auto-fix bloated prices from previous migration
+  if (numericPrice >= 1000000 && numericPrice % 100 === 0 && [9500000, 15000000, 25000000, 5000000, 8000000, 12000000, 35000000].includes(numericPrice)) {
+    numericPrice = numericPrice / 100;
+  }
+
+  const fixImage = (img: string) => typeof img === 'string' ? img.replace(/\.00000/g, '.000').replace(/Rp\s(\d+)\.00000/g, 'Rp $1.000') : img;
+  const imageField = fixImage(source.image);
+
   const normalizedLabel = typeof source.priceLabel === "string" && source.priceLabel.trim().length > 0 ? (source.priceLabel.toLowerCase().includes("rp") ? source.priceLabel : formatRupiah(source.priceLabel)) : formatRupiah(numericPrice);
-  const images = Array.isArray(source.images) ? source.images.filter(Boolean).map((item: string) => migrateLegacyAssetUrl(item)) : source.image ? [migrateLegacyAssetUrl(source.image)] : [];
+  const images = Array.isArray(source.images) ? source.images.filter(Boolean).map((item: string) => migrateLegacyAssetUrl(fixImage(item))) : imageField ? [migrateLegacyAssetUrl(imageField)] : [];
   const fallbackName = typeof source.name === "string" && source.name.trim().length > 0 ? source.name.trim() : "Untitled Product";
   const fallbackCategory = typeof source.category === "string" && source.category.trim().length > 0 ? source.category : "accessories";
   const fallbackId = typeof source.id === "string" && source.id.trim().length > 0 ? source.id.trim() : `product-${toMergeableName(fallbackName) || "item"}-${numericPrice || images[0] || "0"}`;
@@ -720,9 +729,13 @@ export function getGalleryProjects(): GalleryProject[] {
     return { id, title, category, aspect, image, productId };
   };
 
-  if (typeof window === "undefined") return defaultGalleryProjects;
-  const cached = memoryCache[GALLERY_STORAGE_KEY];
-  if (Array.isArray(cached)) return cached.map(normalizeGalleryProject).filter(Boolean) as GalleryProject[];
+  try {
+    const cached = memoryCache[GALLERY_STORAGE_KEY];
+    if (Array.isArray(cached)) {
+      const valid = cached.map(normalizeGalleryProject).filter(Boolean) as GalleryProject[];
+      if (valid.length > 0) return valid;
+    }
+  } catch {}
   return defaultGalleryProjects;
 }
 
@@ -757,7 +770,10 @@ export const defaultProducts: Product[] = initialProducts.map((p) => ({ ...p, im
 export function getProducts(): Product[] {
   try {
     const cached = memoryCache[PRODUCTS_STORAGE_KEY];
-    if (cached) return mergeProductsByNameAndPrice(normalizeStoredProducts(cached));
+    if (Array.isArray(cached)) {
+      const valid = mergeProductsByNameAndPrice(normalizeStoredProducts(cached));
+      if (valid.length > 0) return valid;
+    }
   } catch { }
   return mergeProductsByNameAndPrice(defaultProducts);
 }
@@ -827,7 +843,10 @@ export function getVideos(): VideoItem[] {
 
   try {
     const cached = memoryCache[VIDEOS_STORAGE_KEY];
-    if (Array.isArray(cached)) return cached.map(normalizeVideo).filter(Boolean) as VideoItem[];
+    if (Array.isArray(cached)) {
+      const valid = cached.map(normalizeVideo).filter(Boolean) as VideoItem[];
+      if (valid.length > 0) return valid;
+    }
   } catch { }
   return defaultVideos;
 }

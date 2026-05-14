@@ -5,6 +5,7 @@ import { Nav } from "./components/nav";
 import { CustomCursor } from "./components/custom-cursor";
 import { GrainOverlay } from "./components/grain-overlay";
 import { WhatsAppFloat } from "./components/whatsapp-float";
+import { ScrollToTop } from "./components/scroll-to-top";
 
 export function Root() {
   const location = useLocation();
@@ -112,6 +113,7 @@ export function Root() {
         </AnimatePresence>
       </main>
       <WhatsAppFloat />
+      <ScrollToTop />
     </div>
   );
 }
