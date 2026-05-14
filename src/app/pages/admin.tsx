@@ -115,23 +115,51 @@ export function Admin() {
     MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024,
     RECOMMENDED_SIZE_MB: 2,
     COMPRESSION_QUALITY: 0.8,
-    MAX_TOTAL_IMAGES: 60,
-    WARNING_THRESHOLD: 50,
-    ESTIMATED_SIZE_PER_IMAGE_KB: 80,
+    MAX_TOTAL_IMAGES: 150, // Increase max images slightly, limit more on MB
+    MAX_TOTAL_MB: 60, // Maximum total database size in MB
+    WARNING_THRESHOLD_MB: 50, // Warning when reaching 50MB
+    ESTIMATED_SIZE_PER_IMAGE_KB: 150,
   };
 
-  // Calculate total images across all products (reactive with useMemo)
+  // Calculate total images and precise storage size (reactive with useMemo)
   const { totalImageCount, estimatedStorageMB, isAtWarningLevel, isAtLimit } = useMemo(() => {
+    let totalBytes = 0;
+
+    // Calculate actual bytes used by Base64 images
+    products.forEach(p => {
+      if (p.image && p.image.startsWith('data:image')) totalBytes += p.image.length;
+      if (p.images) {
+        p.images.forEach(img => {
+          if (img && img.startsWith('data:image')) totalBytes += img.length;
+        });
+      }
+    });
+
+    config.heroSettings?.forEach(h => {
+      if (h.image && h.image.startsWith('data:image')) totalBytes += h.image.length;
+    });
+
+    galleryProjects.forEach(g => {
+      if (g.image && g.image.startsWith('data:image')) totalBytes += g.image.length;
+    });
+
+    // Convert Base64 length to approximate actual bytes (length * 0.75)
+    const actualBytes = totalBytes * 0.75;
+    const actualMB = actualBytes / (1024 * 1024);
+
     const productImages = products.reduce((sum, p) => sum + (p.images?.length || (p.image ? 1 : 0)), 0);
     const heroImages = config.heroSettings?.length || 0;
     const galleryImages = galleryProjects.filter(g => g.image).length;
     const count = productImages + heroImages + galleryImages;
-    const storageMB = (count * UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB) / 1024;
+    
+    // Use actual MB if available, otherwise estimate
+    const storageMB = actualMB > 0 ? actualMB : (count * UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB) / 1024;
+
     return {
       totalImageCount: count,
       estimatedStorageMB: storageMB,
-      isAtWarningLevel: count >= UPLOAD_LIMITS.WARNING_THRESHOLD,
-      isAtLimit: count >= UPLOAD_LIMITS.MAX_TOTAL_IMAGES,
+      isAtWarningLevel: storageMB >= UPLOAD_LIMITS.WARNING_THRESHOLD_MB,
+      isAtLimit: storageMB >= UPLOAD_LIMITS.MAX_TOTAL_MB || count >= UPLOAD_LIMITS.MAX_TOTAL_IMAGES,
     };
   }, [products, config.heroSettings, galleryProjects]);
 
@@ -196,7 +224,7 @@ export function Admin() {
     
     // Check image limit
     if (isAtLimit) {
-      alert(`⚠️ MENCAPAI BATAS MAXIMAL ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} GAMBAR!\n\n📊 Penggunaan saat ini: ${totalImageCount} gambar (≈${estimatedStorageMB.toFixed(1)}MB)\n\nUntuk menambah gambar, silakan hubungi developer untuk upgrade paket:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
+      alert(`⚠️ MENCAPAI BATAS PENYIMPANAN MAKSIMAL!\n\n📊 Penggunaan Database:\n- Ukuran Database: ${estimatedStorageMB.toFixed(1)} MB / ${UPLOAD_LIMITS.MAX_TOTAL_MB} MB\n- Jumlah Gambar: ${totalImageCount} / ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} Max\n\n💡 Info: Batas kapasitas gambar diukur berdasarkan ukuran Megabyte (MB) karena penyimpanan tersinkronisasi di cloud.\n\nUntuk menambah kapasitas, silakan hubungi developer untuk upgrade:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
       return;
     }
     
@@ -230,7 +258,7 @@ export function Admin() {
     // Check image limit
     const filesToUpload = Array.from(files).length;
     if (totalImageCount + filesToUpload > UPLOAD_LIMITS.MAX_TOTAL_IMAGES) {
-      alert(`⚠️ MENCAPAI BATAS MAXIMAL ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} GAMBAR!\n\n📊 Penggunaan saat ini: ${totalImageCount} gambar (≈${estimatedStorageMB.toFixed(1)}MB)\n📝 Anda mencoba upload: ${filesToUpload} gambar\n\nUntuk menambah gambar, silakan hubungi developer untuk upgrade paket:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
+      alert(`⚠️ MENCAPAI BATAS PENYIMPANAN MAKSIMAL!\n\n📊 Penggunaan Database:\n- Ukuran Database: ${estimatedStorageMB.toFixed(1)} MB / ${UPLOAD_LIMITS.MAX_TOTAL_MB} MB\n- Jumlah Gambar: ${totalImageCount} / ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} Max\n📝 Anda mencoba upload: ${filesToUpload} gambar\n\n💡 Info: Batas kapasitas gambar diukur berdasarkan ukuran Megabyte (MB) karena penyimpanan tersinkronisasi di cloud.\n\nUntuk menambah kapasitas, silakan hubungi developer untuk upgrade:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
       return;
     }
     
@@ -465,7 +493,7 @@ export function Admin() {
     
     // Check image limit
     if (isAtLimit) {
-      alert(`⚠️ MENCAPAI BATAS MAXIMAL ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} GAMBAR!\n\n📊 Penggunaan saat ini: ${totalImageCount} gambar (≈${estimatedStorageMB.toFixed(1)}MB)\n\nUntuk menambah gambar, silakan hubungi developer untuk upgrade paket:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
+      alert(`⚠️ MENCAPAI BATAS PENYIMPANAN MAKSIMAL!\n\n📊 Penggunaan Database:\n- Ukuran Database: ${estimatedStorageMB.toFixed(1)} MB / ${UPLOAD_LIMITS.MAX_TOTAL_MB} MB\n- Jumlah Gambar: ${totalImageCount} / ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} Max\n\n💡 Info: Batas kapasitas gambar diukur berdasarkan ukuran Megabyte (MB) karena penyimpanan tersinkronisasi di cloud.\n\nUntuk menambah kapasitas, silakan hubungi developer untuk upgrade:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
       return;
     }
     
@@ -731,10 +759,10 @@ export function Admin() {
             <span style={{ fontSize: '14px' }}>📊</span>
             <div>
               <p style={{ margin: 0, fontWeight: 600, color: '#1a1a1a' }}>
-                {totalImageCount} / {UPLOAD_LIMITS.MAX_TOTAL_IMAGES} gambar
+                {estimatedStorageMB.toFixed(1)} MB / {UPLOAD_LIMITS.MAX_TOTAL_MB} MB Terpakai
               </p>
               <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#666' }}>
-                ≈ {estimatedStorageMB.toFixed(1)} MB
+                {totalImageCount} gambar ({UPLOAD_LIMITS.MAX_TOTAL_IMAGES} max)
               </p>
             </div>
             {isAtWarningLevel && !isAtLimit && (
