@@ -27,6 +27,8 @@ import {
   setAdminCredentials,
   cleanMapsUrl,
   compressImage,
+  compressImageWithStats,
+  DEVELOPER_CONTACT,
   type GalleryProject,
   type SiteConfig,
   type Product,
@@ -104,6 +106,31 @@ export function Admin() {
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ fileName: string; status: 'compressing' | 'done' | 'error'; originalSize?: number; compressedSize?: number; reduction?: number } | null>(null);
+
+  // Upload limits configuration
+  const UPLOAD_LIMITS = {
+    MAX_FILE_SIZE_MB: 5,
+    MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024,
+    RECOMMENDED_SIZE_MB: 2,
+    COMPRESSION_QUALITY: 0.8,
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const checkFileSize = (file: File): { allowed: boolean; message: string } => {
+    if (file.size > UPLOAD_LIMITS.MAX_FILE_SIZE_BYTES) {
+      return { allowed: false, message: `File ${file.name} terlalu besar (${formatFileSize(file.size)}). Maksimal ${UPLOAD_LIMITS.MAX_FILE_SIZE_MB}MB.` };
+    }
+    if (file.size > UPLOAD_LIMITS.RECOMMENDED_SIZE_MB * 1024 * 1024) {
+      return { allowed: true, message: `File ${file.name} besar (${formatFileSize(file.size)}). Akan dikompresi otomatis.` };
+    }
+    return { allowed: true, message: '' };
+  };
 
   useEffect(() => {
     if (!authed) {
@@ -144,38 +171,78 @@ export function Admin() {
 
   const uploadBrandLogo = async (file: File | null) => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran gambar maksimal 5MB");
+    const sizeCheck = checkFileSize(file);
+    if (!sizeCheck.allowed) {
+      alert(`⚠️ ${sizeCheck.message}\n\n💡 Tips: Compress gambar sebelum upload untuk hasil lebih optimal.`);
       return;
     }
     try {
-      const dataUrl = await compressImage(file, 800, 0.8);
+      setUploadProgress({ fileName: file.name, status: 'compressing', originalSize: file.size });
+      const { dataUrl, stats } = await compressImageWithStats(file, 800, 0.8);
       setConfig((prev) => ({ ...prev, brandLogoUrl: dataUrl }));
+      setUploadProgress({ 
+        fileName: file.name, 
+        status: 'done', 
+        originalSize: stats.originalSizeKB * 1024, 
+        compressedSize: stats.compressedSizeKB * 1024,
+        reduction: stats.reductionPercent 
+      });
+      setTimeout(() => setUploadProgress(null), 3000);
     } catch (e) {
+      setUploadProgress({ fileName: file.name, status: 'error' });
       alert("Gagal memproses gambar");
+      setTimeout(() => setUploadProgress(null), 3000);
     }
   };
 
   const uploadHeroImage = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files).slice(0, 10);
-    const results: string[] = [];
+    const results: { url: string; originalSize?: number; compressedSize?: number; reduction?: number }[] = [];
+    const skippedFiles: string[] = [];
+    
     for (const file of fileArray) {
-      if (file.size > 5 * 1024 * 1024) continue;
+      const sizeCheck = checkFileSize(file);
+      if (!sizeCheck.allowed) {
+        skippedFiles.push(`${file.name} (terlalu besar)`);
+        continue;
+      }
       try {
-        const dataUrl = await compressImage(file, 1200, 0.8);
-        if (dataUrl) results.push(dataUrl);
+        setUploadProgress({ fileName: file.name, status: 'compressing', originalSize: file.size });
+        const { dataUrl, stats } = await compressImageWithStats(file, 1200, 0.8);
+        if (dataUrl) {
+          results.push({ 
+            url: dataUrl, 
+            originalSize: stats.originalSizeKB * 1024, 
+            compressedSize: stats.compressedSizeKB * 1024,
+            reduction: stats.reductionPercent 
+          });
+        }
       } catch (e) {
         console.error("Failed to compress image:", e);
       }
     }
+    
+    setUploadProgress(null);
+    
+    if (skippedFiles.length > 0) {
+      alert(`⚠️ File berikut dilewati karena melebihi batas ukuran (${UPLOAD_LIMITS.MAX_FILE_SIZE_MB}MB):\n- ${skippedFiles.join('\n- ')}`);
+    }
+    
     if (results.length > 0) {
       const currentSettings = config.heroSettings || [];
       const newSettings = [...currentSettings];
-      results.forEach((url) => {
-        newSettings.push({ image: url });
+      results.forEach((r) => {
+        newSettings.push({ image: r.url });
       });
       setConfig((prev) => ({ ...prev, heroSettings: newSettings.slice(0, 10) }));
+      
+      if (results.length > 0) {
+        const totalOriginal = results.reduce((sum, r) => sum + (r.originalSize || 0), 0);
+        const totalCompressed = results.reduce((sum, r) => sum + (r.compressedSize || 0), 0);
+        const totalReduction = totalOriginal > 0 ? Math.round(((totalOriginal - totalCompressed) / totalOriginal) * 100) : 0;
+        alert(`✅ Berhasil upload ${results.length} gambar!\n\n📊 Kompresi: ${formatFileSize(totalOriginal)} → ${formatFileSize(totalCompressed)}\n💾 Penghematan: ${totalReduction}%`);
+      }
     }
   };
 
@@ -358,15 +425,27 @@ export function Admin() {
 
   const uploadGalleryImage = async (id: string, file: File | null) => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran gambar maksimal 5MB");
+    const sizeCheck = checkFileSize(file);
+    if (!sizeCheck.allowed) {
+      alert(`⚠️ ${sizeCheck.message}\n\n💡 Tips: Compress gambar sebelum upload untuk hasil lebih optimal.`);
       return;
     }
     try {
-      const dataUrl = await compressImage(file, 1000, 0.8);
+      setUploadProgress({ fileName: file.name, status: 'compressing', originalSize: file.size });
+      const { dataUrl, stats } = await compressImageWithStats(file, 1000, 0.8);
       updateGalleryProject(id, { image: dataUrl });
+      setUploadProgress({ 
+        fileName: file.name, 
+        status: 'done', 
+        originalSize: stats.originalSizeKB * 1024, 
+        compressedSize: stats.compressedSizeKB * 1024,
+        reduction: stats.reductionPercent 
+      });
+      setTimeout(() => setUploadProgress(null), 3000);
     } catch (e) {
+      setUploadProgress({ fileName: file.name, status: 'error' });
       alert("Gagal memproses gambar");
+      setTimeout(() => setUploadProgress(null), 3000);
     }
   };
 
@@ -417,12 +496,16 @@ export function Admin() {
           setAuthed(true);
           setAdminCredentials(usernameInput, passwordInput);
           // Sync all data from Turso DB so the admin sees the latest remote changes
-          syncAllWithTurso().then(() => {
-            setConfig(getSiteConfig());
-            setProductsList(mergeProductsByNameAndPrice(getProducts()));
-            setVideosList(getVideos());
-            setGalleryProjectsList(getGalleryProjects());
-          });
+          // If no data in cloud, defaults will be loaded automatically
+          const synced = await syncAllWithTurso();
+          if (!synced) {
+            console.log("Cloud sync failed, using default data");
+          }
+          // Force refresh all data from memory cache (which has defaults if cloud is empty)
+          setConfig(getSiteConfig());
+          setProductsList(mergeProductsByNameAndPrice(getProducts()));
+          setVideosList(getVideos());
+          setGalleryProjectsList(getGalleryProjects());
         } else {
           setLoginError("Username atau password salah!");
           setPasswordInput("");
@@ -590,6 +673,38 @@ export function Admin() {
           </h1>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Upload Progress Indicator */}
+          {uploadProgress && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 16px',
+                backgroundColor: uploadProgress.status === 'error' ? '#fef2f2' : uploadProgress.status === 'done' ? '#f0fdf4' : '#fffbeb',
+                border: `1px solid ${uploadProgress.status === 'error' ? '#fecaca' : uploadProgress.status === 'done' ? '#bbf7d0' : '#fcd34d'}`,
+                borderRadius: '10px',
+                fontSize: '12px',
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>
+                {uploadProgress.status === 'compressing' ? '⏳' : uploadProgress.status === 'done' ? '✅' : '❌'}
+              </span>
+              <div>
+                <p style={{ margin: 0, fontWeight: 600, color: '#1a1a1a' }}>
+                  {uploadProgress.status === 'compressing' ? 'Mengecompress...' : uploadProgress.status === 'done' ? 'Selesai!' : 'Gagal'}
+                </p>
+                {uploadProgress.originalSize && uploadProgress.compressedSize && (
+                  <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#666' }}>
+                    {formatFileSize(uploadProgress.originalSize)} → {formatFileSize(uploadProgress.compressedSize)}
+                    {uploadProgress.reduction !== undefined && ` (${uploadProgress.reduction}%压缩)`}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
           <Link
             to="/"
             style={{
@@ -603,6 +718,26 @@ export function Admin() {
           <button onClick={handleResetAll} style={{ ...btnOutlineStyle, borderColor: "#d44", color: "#d44" }}>
             Reset Semua
           </button>
+          {/* Developer Contact Button */}
+          <a
+            href={DEVELOPER_CONTACT.whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              ...btnOutlineStyle,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              backgroundColor: "#6366f1",
+              borderColor: "#6366f1",
+              color: "#fff",
+            }}
+            title={`Hubungi developer: ${DEVELOPER_CONTACT.name}`}
+          >
+            <span>👨‍💻</span>
+            <span>Hubungi Developer</span>
+          </a>
         </div>
       </div>
 
@@ -714,6 +849,11 @@ export function Admin() {
                     onChange={(e) => uploadBrandLogo(e.target.files?.[0] || null)}
                   />
                 </label>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: "#999", marginTop: "8px", lineHeight: 1.5 }}>
+                  📏 Batas ukuran: max {UPLOAD_LIMITS.MAX_FILE_SIZE_MB}MB (disarankan {UPLOAD_LIMITS.RECOMMENDED_SIZE_MB}MB)<br/>
+                  🔄 Gambar akan dikompres otomatis ke format WebP<br/>
+                  📐 Resolusi max: 800px (logo), 1200px (hero), 1000px (galeri)
+                </p>
               </div>
               {config.brandLogoUrl ? (
                 <img
