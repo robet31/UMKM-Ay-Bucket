@@ -72,9 +72,11 @@ export function migrateLegacyAssetUrl(url?: string): string {
   const final = normalizeAssetUrl(migrated);
   
   // Encode spaces for browser safety if it's a local path
+  // IMPORTANT: First decode to prevent double-encoding when called multiple times
   if (!final.startsWith('data:') && !final.startsWith('http')) {
     try {
-      return encodeURI(final).replace(/#/g, '%23').replace(/\?/g, '%3F');
+      const decoded = decodeURI(final);
+      return encodeURI(decoded).replace(/#/g, '%23').replace(/\?/g, '%3F');
     } catch {
       return final;
     }
@@ -653,11 +655,8 @@ export function normalizeProductRecord(product: any): Product {
     numericPrice = numericPrice / 100;
   }
 
-  const fixImage = (img: string) => typeof img === 'string' ? img.replace(/\.00000/g, '.000').replace(/Rp\s(\d+)\.00000/g, 'Rp $1.000') : img;
-  const imageField = fixImage(source.image);
-
   const normalizedLabel = typeof source.priceLabel === "string" && source.priceLabel.trim().length > 0 ? (source.priceLabel.toLowerCase().includes("rp") ? source.priceLabel : formatRupiah(source.priceLabel)) : formatRupiah(numericPrice);
-  const images = Array.isArray(source.images) ? source.images.filter(Boolean).map((item: string) => migrateLegacyAssetUrl(fixImage(item))) : imageField ? [migrateLegacyAssetUrl(imageField)] : [];
+  const images = Array.isArray(source.images) ? source.images.filter(Boolean).map((item: string) => migrateLegacyAssetUrl(item)) : source.image ? [migrateLegacyAssetUrl(source.image)] : [];
   const fallbackName = typeof source.name === "string" && source.name.trim().length > 0 ? source.name.trim() : "Untitled Product";
   const fallbackCategory = typeof source.category === "string" && source.category.trim().length > 0 ? source.category : "accessories";
   const fallbackId = typeof source.id === "string" && source.id.trim().length > 0 ? source.id.trim() : `product-${toMergeableName(fallbackName) || "item"}-${numericPrice || images[0] || "0"}`;
@@ -669,7 +668,7 @@ export function normalizeProductRecord(product: any): Product {
     category: fallbackCategory,
     price: numericPrice,
     priceLabel: normalizedLabel,
-    image: migrateLegacyAssetUrl(source?.image) || images[0] || "",
+    image: images[0] || migrateLegacyAssetUrl(source?.image) || "",
     images,
   } as Product;
 }

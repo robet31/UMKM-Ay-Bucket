@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router";
 import { motion } from "motion/react";
-import { products, categories, getWhatsAppOrderLink, businessInfo } from "../data";
+import { products, categories, getWhatsAppOrderLink } from "../data";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
