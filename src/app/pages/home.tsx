@@ -266,7 +266,7 @@ export function Home() {
 
   return (
     <PageTransition>
-      <div style={{ padding: "0 clamp(24px, 8vw, 120px)", backgroundImage: "linear-gradient(135deg, #b85c3b 0%, #d17047 50%, #c97047 100%)", borderRadius: "20px", marginBottom: "120px", overflow: "hidden", position: "relative" }}>
+      <div style={{ padding: "0 clamp(24px, 8vw, 120px)", backgroundImage: "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%)", borderRadius: "20px", marginBottom: "120px", overflow: "hidden", position: "relative" }}>
         <motion.div aria-hidden style={{ position: "absolute", top: "-20%", right: "-15%", width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%)", filter: "blur(80px)" }} animate={{ y: [0, 30, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} />
         <motion.div aria-hidden style={{ position: "absolute", bottom: "-10%", left: "-10%", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,100,80,0.15) 0%, rgba(200,100,80,0.02) 100%)", filter: "blur(100px)" }} animate={{ y: [0, -40, 0] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
 
