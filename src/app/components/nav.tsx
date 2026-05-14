@@ -94,14 +94,14 @@ export function Nav({ scrolled = false }: { scrolled?: boolean }) {
               src={config.brandLogoUrl || BRAND_LOGO.logo}
               alt={`${config.businessName} logo`}
               onError={() => setLogoFailed(true)}
-              style={{ width: "36px", height: "36px", objectFit: "contain", borderRadius: "10px", mixBlendMode: "multiply", backgroundColor: "transparent", flexShrink: 0 }}
+              style={{ width: "48px", height: "48px", objectFit: "contain", borderRadius: "12px", mixBlendMode: "multiply", backgroundColor: "transparent", flexShrink: 0 }}
             />
           ) : (
             <span
               aria-hidden
               style={{
-                width: "44px",
-                height: "44px",
+                width: "48px",
+                height: "48px",
                 borderRadius: "14px",
                 display: "inline-flex",
                 alignItems: "center",
@@ -110,7 +110,7 @@ export function Nav({ scrolled = false }: { scrolled?: boolean }) {
                 border: "1px solid rgba(0,0,0,0.08)",
                 color: "#b85c3b",
                 fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "18px",
+                fontSize: "20px",
                 fontWeight: 700,
                 letterSpacing: "0.08em",
               }}
@@ -118,11 +118,11 @@ export function Nav({ scrolled = false }: { scrolled?: boolean }) {
               {brandDisplayName.substring(0, 2).toLowerCase()}
             </span>
           )}
-          <span style={{ display: "flex", flexDirection: "column", marginLeft: 6, lineHeight: 1, minWidth: 0, overflow: "hidden" }}>
+          <span style={{ display: "flex", flexDirection: "column", marginLeft: 8, lineHeight: 1, minWidth: 0, overflow: "hidden" }}>
             <span
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(22px, 3vw, 28px)",
+                fontSize: "clamp(24px, 3.5vw, 32px)",
                 fontWeight: 600,
                 letterSpacing: "0.02em",
                 textTransform: "none",
@@ -153,7 +153,7 @@ export function Nav({ scrolled = false }: { scrolled?: boolean }) {
         </Link>
 
         <div
-          className="items-center gap-8"
+          className="items-center gap-6"
           style={{ display: "none" }}
           id="desktop-nav"
         >
@@ -165,7 +165,7 @@ export function Nav({ scrolled = false }: { scrolled?: boolean }) {
               className="relative"
               style={{
                 fontSize: "11px",
-                fontWeight: 400,
+                fontWeight: 500,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 color: location.pathname === link.to ? "#1a1a1a" : "#777",
@@ -180,57 +180,65 @@ export function Nav({ scrolled = false }: { scrolled?: boolean }) {
             </Link>
           ))}
 
-          <button
-            type="button"
-            onClick={toggleLanguage}
-            aria-label={language === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
-            style={{
-              fontSize: "11px",
-              fontWeight: 500,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "#999",
-              backgroundColor: "transparent",
-              border: "1px solid rgba(0,0,0,0.12)",
-              padding: "8px 12px",
-              borderRadius: "6px",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#1a1a1a";
-              e.currentTarget.style.color = "#1a1a1a";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)";
-              e.currentTarget.style.color = "#999";
-            }}
-          >
-            {language === "id" ? "🇮🇩 ID" : "🇬🇧 ENG"}
-          </button>
+          {/* Combined: Language + CTA in a compact group */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "4px" }}>
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              aria-label={language === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
+              style={{
+                fontSize: "10px",
+                fontWeight: 500,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "#777",
+                backgroundColor: "rgba(0,0,0,0.03)",
+                border: "1px solid rgba(0,0,0,0.10)",
+                padding: "8px 12px",
+                borderRadius: "999px",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#1a1a1a";
+                e.currentTarget.style.color = "#1a1a1a";
+                e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.06)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(0,0,0,0.10)";
+                e.currentTarget.style.color = "#777";
+                e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.03)";
+              }}
+            >
+              {language === "id" ? "🇮🇩" : "🇬🇧"}
+            </button>
 
-          <a
-            href={`https://wa.me/${(config.whatsappNumber || "6285880021020").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "#fff",
-              backgroundColor: "#25D366",
-              textDecoration: "none",
-              padding: "10px 16px",
-              borderRadius: "999px",
-              boxShadow: "0 8px 20px rgba(37,211,102,0.2)",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            💬 {language === "id" ? "Pesan Sekarang" : "Order Now"}
-          </a>
+            <a
+              href={`https://wa.me/${(config.whatsappNumber || "6285880021020").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: "10px",
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "#fff",
+                backgroundColor: "#25D366",
+                textDecoration: "none",
+                padding: "10px 18px",
+                borderRadius: "999px",
+                boxShadow: "0 6px 16px rgba(37,211,102,0.2)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.3s ease",
+                whiteSpace: "nowrap",
+              }}
+            >
+              💬 {language === "id" ? "Pesan Sekarang" : "Order Now"}
+            </a>
+          </div>
         </div>
 
         <button
@@ -305,123 +313,147 @@ export function Nav({ scrolled = false }: { scrolled?: boolean }) {
               position: "fixed",
               inset: 0,
               zIndex: 45,
-              backgroundColor: "rgba(255, 240, 243, 0.98)",
-              backdropFilter: "blur(20px)",
+              background: "linear-gradient(180deg, rgba(255,240,243,0.99) 0%, rgba(255,235,240,0.98) 100%)",
+              backdropFilter: "blur(24px)",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: "12px",
+              padding: "24px",
+              gap: "0px",
             }}
           >
-            {config.navLinks.map((link, i) => (
+            {/* Glassmorphism card container */}
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                width: "100%",
+                maxWidth: "360px",
+                background: "rgba(255,255,255,0.85)",
+                borderRadius: "24px",
+                padding: "32px 28px",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)",
+                backdropFilter: "blur(16px)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              {/* Nav links */}
+              {config.navLinks.map((link, i) => (
+                <motion.div
+                  key={link.to}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ delay: i * 0.06 + 0.15 }}
+                  style={{ width: "100%" }}
+                >
+                  <Link
+                    to={link.to}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={location.pathname === link.to ? "page" : undefined}
+                    style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "28px",
+                      fontWeight: location.pathname === link.to ? 600 : 400,
+                      letterSpacing: "-0.01em",
+                      color: location.pathname === link.to ? "#1a1a1a" : "#888",
+                      textDecoration: "none",
+                      transition: "all 0.3s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "12px 0",
+                      borderRadius: "12px",
+                      background: location.pathname === link.to ? "rgba(184,92,59,0.08)" : "transparent",
+                    }}
+                  >
+                    {getNavLabel(link.to)}
+                  </Link>
+                </motion.div>
+              ))}
+
+              {/* Divider */}
+              <div style={{ width: "60%", height: "1px", background: "rgba(0,0,0,0.08)", margin: "8px 0" }} />
+
+              {/* Language + CTA row */}
               <motion.div
-                key={link.to}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ delay: i * 0.08 + 0.1 }}
+                transition={{ delay: config.navLinks.length * 0.06 + 0.2 }}
+                style={{ display: "flex", gap: "10px", width: "100%", marginTop: "4px" }}
               >
-                <Link
-                  to={link.to}
-                  onClick={() => setMenuOpen(false)}
-                  aria-current={location.pathname === link.to ? "page" : undefined}
+                <button
+                  type="button"
+                  onClick={toggleLanguage}
+                  aria-label={language === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
                   style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "32px",
-                    fontWeight: 300,
-                    letterSpacing: "-0.02em",
-                    color: location.pathname === link.to ? "#1a1a1a" : "#999",
-                    textDecoration: "none",
-                    transition: "color 0.3s ease",
-                    display: "block",
-                    padding: "8px 0",
+                    flex: "0 0 auto",
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "#555",
+                    backgroundColor: "rgba(0,0,0,0.04)",
+                    border: "1px solid rgba(0,0,0,0.10)",
+                    padding: "12px 16px",
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
                   }}
                 >
-                  {getNavLabel(link.to)}
-                </Link>
+                  {language === "id" ? "🇮🇩 ID" : "🇬🇧 EN"}
+                </button>
+
+                <a
+                  href={`https://wa.me/${(config.whatsappNumber || "6285880021020").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    flex: "1 1 auto",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "#fff",
+                    backgroundColor: "#25D366",
+                    textDecoration: "none",
+                    padding: "12px 20px",
+                    borderRadius: "12px",
+                    boxShadow: "0 6px 20px rgba(37,211,102,0.25)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                  }}
+                >
+                  💬 {language === "id" ? "Pesan Sekarang" : "Order Now"}
+                </a>
               </motion.div>
-            ))}
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: config.navLinks.length * 0.08 + 0.15 }}
-              style={{ marginTop: "24px" }}
-            >
-              <button
-                type="button"
-                onClick={toggleLanguage}
-                aria-label={language === "id" ? "Switch to English" : "Ganti ke Bahasa Indonesia"}
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "#1a1a1a",
-                  backgroundColor: "rgba(0,0,0,0.04)",
-                  border: "1px solid rgba(0,0,0,0.12)",
-                  padding: "10px 16px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.08)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.04)";
-                }}
-              >
-                {language === "id" ? "🇮🇩 Bahasa Indonesia" : "🇬🇧 English"}
-              </button>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: config.navLinks.length * 0.08 + 0.25 }}
-              style={{ marginTop: "8px" }}
-            >
-              <a
-                href={`https://wa.me/${(config.whatsappNumber || "6285880021020").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Halo ${config.businessName}! 🌸\nSaya ingin melihat katalog produk Anda.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMenuOpen(false)}
-                style={{
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "#fff",
-                  backgroundColor: "#25D366",
-                  textDecoration: "none",
-                  padding: "14px 32px",
-                  borderRadius: "999px",
-                  boxShadow: "0 8px 24px rgba(37,211,102,0.25)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                💬 {language === "id" ? "Pesan Sekarang" : "Order Now"}
-              </a>
-            </motion.div>
-
+            {/* Address below card */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              style={{ marginTop: "32px", textAlign: "center" }}
+              transition={{ delay: 0.45 }}
+              style={{ marginTop: "20px", textAlign: "center", maxWidth: "320px" }}
             >
               <p
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: "9px",
+                  fontSize: "8px",
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  color: "#bbb",
+                  color: "#aaa",
                   whiteSpace: "pre-wrap",
+                  lineHeight: 1.8,
                 }}
               >
                 📍 {config.address}

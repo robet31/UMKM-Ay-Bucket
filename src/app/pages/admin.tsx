@@ -701,15 +701,32 @@ export function Admin() {
             <span style={{ fontSize: '14px' }}>📊</span>
             <div>
               <p style={{ margin: 0, fontWeight: 600, color: '#1a1a1a' }}>
-                ~{totalImageStrings.toFixed(0)}KB Base64</p>
+                {(totalImageStrings / 1000).toFixed(2)}MB / 30MB
+              </p>
               <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#666' }}>
-                {imageStringCount} gambar • ImgBB menyimpan otomatis
+                {imageStringCount} gambar tersimpan
               </p>
             </div>
-            {isBase64Heavy && (
-              <span style={{ fontSize: '10px', color: '#d97706', fontWeight: 600 }}>
-                ⚠️
-              </span>
+            {totalImageStrings > 28000 && (
+              <a
+                href={DEVELOPER_CONTACT.whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  backgroundColor: "#6366f1",
+                  color: "#fff",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  marginLeft: "8px"
+                }}
+              >
+                Penyimpanan Penuh (Hubungi Developer)
+              </a>
             )}
           </div>
 
@@ -739,7 +756,7 @@ export function Admin() {
                 {uploadProgress.originalSize && uploadProgress.compressedSize && (
                   <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#666' }}>
                     {formatFileSize(uploadProgress.originalSize)} → {formatFileSize(uploadProgress.compressedSize)}
-                    {uploadProgress.reduction !== undefined && ` (${uploadProgress.reduction}%压缩)`}
+                    {uploadProgress.reduction !== undefined && ` (${uploadProgress.reduction}% kompres)`}
                   </p>
                 )}
               </div>
@@ -758,26 +775,6 @@ export function Admin() {
           <button onClick={handleResetAll} style={{ ...btnOutlineStyle, borderColor: "#d44", color: "#d44" }}>
             Reset Semua
           </button>
-          {/* Developer Contact Button */}
-          <a
-            href={DEVELOPER_CONTACT.whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              ...btnOutlineStyle,
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              backgroundColor: "#6366f1",
-              borderColor: "#6366f1",
-              color: "#fff",
-            }}
-            title={`Hubungi developer: ${DEVELOPER_CONTACT.name}`}
-          >
-            <span>👨‍💻</span>
-            <span>Hubungi Developer</span>
-          </a>
         </div>
       </div>
 

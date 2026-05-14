@@ -920,7 +920,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
         <button onClick={(e) => { e.stopPropagation(); onNavigate(nextProduct); }} style={{ position: "absolute", right: "2vw", top: "50%", transform: "translateY(-50%)", width: "80px", aspectRatio: "4/5", background: `url(${nextProduct.images?.[0] || nextProduct.image}) center/cover`, borderRadius: "12px", border: "2px solid rgba(255,255,255,0.4)", cursor: "pointer", opacity: 0.6, filter: "brightness(0.6) blur(2px)", transition: "all 0.3s ease", zIndex: 10 }} onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.filter = "brightness(1) blur(0px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.9)"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; e.currentTarget.style.filter = "brightness(0.6) blur(2px)"; e.currentTarget.style.transform = "translateY(-50%) scale(1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }} />
       )}
 
-      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", maxHeight: isMobile ? "calc(100dvh - 16px)" : "88vh", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.28)", borderRadius: isMobile ? "16px" : "20px", zIndex: 20 }}>
+      <motion.div initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: isMobile ? "100%" : "900px", backgroundColor: "#F9F9F7", display: "flex", flexDirection: isMobile ? "column" : "row", maxHeight: isMobile ? "calc(100dvh - 16px)" : "88vh", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.28)", borderRadius: isMobile ? "20px" : "20px", zIndex: 20 }}>
         {/* Navigation Buttons (Mobile Only) */}
         {isMobile && onNavigate && allProducts && allProducts.length > 1 && (
           <>
@@ -943,7 +943,7 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
           </>
         )}
         <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "14px", right: "14px", zIndex: 12, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.9)", cursor: "pointer", fontSize: "20px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-        <div style={{ flex: isMobile ? "0 0 240px" : "1 1 400px", minHeight: isMobile ? "200px" : "300px", aspectRatio: isMobile ? "4 / 3" : undefined, position: "relative", backgroundColor: "#ebebe9", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ flex: isMobile ? "0 0 280px" : "1 1 400px", minHeight: isMobile ? "240px" : "300px", aspectRatio: isMobile ? "4 / 3" : undefined, position: "relative", backgroundColor: "#ebebe9", overflow: "hidden", flexShrink: 0 }}>
           <div className="embla" ref={emblaRef} style={{ width: "100%", height: "100%" }}>
             <div className="embla__container" style={{ display: "flex", width: "100%", height: "100%" }}>
               {carouselImages.map((img, index) => (
@@ -974,10 +974,10 @@ function ProductDetailModal({ product, onClose, allProducts, onNavigate }: { pro
             </>
           )}
         </div>
-        <div style={{ flex: "1 1 280px", padding: isMobile ? "16px 18px" : "28px", display: "flex", flexDirection: "column", gap: "12px", justifyContent: "flex-start", overflow: "auto", overscrollBehavior: "contain" }}>
+        <div style={{ flex: "1 1 280px", padding: isMobile ? "20px 20px 24px" : "28px", display: "flex", flexDirection: "column", gap: isMobile ? "10px" : "12px", justifyContent: "flex-start", overflow: "auto", overscrollBehavior: "contain" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", margin: 0 }}>{getCategoryLabel(product.category, categoryInfo?.label || product.category, language)}</p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(28px, 8vw, 36px)" : "clamp(32px, 4vw, 50px)", lineHeight: 1, margin: 0, color: "#1a1a1a" }}>{displayName}</h2>
-          <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.8, margin: 0 }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: isMobile ? "clamp(24px, 7vw, 32px)" : "clamp(32px, 4vw, 50px)", lineHeight: 1.05, margin: 0, color: "#1a1a1a" }}>{displayName}</h2>
+          <p style={{ fontFamily: "'Inter', sans-serif", color: "#555", lineHeight: 1.7, margin: 0, fontSize: isMobile ? "13px" : "inherit" }}>
             {description || getCategoryDescription(product.category, categoryInfo?.description || "", language) || (language === "id" ? "Detail produk ini tersedia di katalog lengkap dan bisa dibuka dari tombol di bawah." : "This product detail is available in the full catalog and can be opened using the button below.")}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -1102,9 +1102,9 @@ function CategoryPreviewModal({
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "8px" : "clamp(16px, 4vw, 40px)", overflow: "hidden" }} onClick={onClose}>
-    <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", height: isMobile ? "calc(100dvh - 16px)" : "88vh", maxHeight: isMobile ? "calc(100dvh - 16px)" : "900px", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "16px" : "20px" }}>
+    <motion.div initial={{ y: 40, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.96 }} transition={{ type: "spring", damping: 25, stiffness: 280 }} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "980px", backgroundColor: "#F9F9F7", display: isMobile ? "flex" : "grid", flexDirection: isMobile ? "column" : undefined, gridTemplateColumns: isMobile ? undefined : "minmax(0, 1.05fr) minmax(320px, 0.95fr)", height: isMobile ? "calc(100dvh - 16px)" : "88vh", maxHeight: isMobile ? "calc(100dvh - 16px)" : "900px", overflow: "hidden", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.22)", borderRadius: isMobile ? "20px" : "20px" }}>
         <button onClick={onClose} aria-label={language === "id" ? "Tutup" : "Close"} style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, width: "36px", height: "36px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.92)", cursor: "pointer" }}>×</button>
-        <div style={{ minHeight: 0, padding: isMobile ? "18px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflow: "auto", overscrollBehavior: "contain" }}>
+        <div style={{ minHeight: 0, flex: isMobile ? "1 1 auto" : undefined, padding: isMobile ? "20px" : "28px", background: "linear-gradient(180deg, rgba(184,92,59,0.10), rgba(249,249,247,0.02))", overflow: "auto", overscrollBehavior: "contain" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Preview kategori" : "Category preview"}
           </p>
@@ -1163,7 +1163,7 @@ function CategoryPreviewModal({
           </div>
         </div>
 
-        <div style={{ minHeight: 0, padding: isMobile ? "18px" : "28px", background: "#f2ede7", overflow: "auto", overscrollBehavior: "contain", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
+        <div style={{ minHeight: 0, flex: isMobile ? "1 1 auto" : undefined, padding: isMobile ? "20px" : "28px", background: "#f2ede7", overflow: "auto", overscrollBehavior: "contain", borderLeft: isMobile ? "none" : "1px solid rgba(0,0,0,0.06)", borderTop: isMobile ? "1px solid rgba(0,0,0,0.06)" : "none" }}>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", margin: 0 }}>
             {language === "id" ? "Ringkasan isi kategori" : "Category content summary"}
           </p>
