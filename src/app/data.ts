@@ -462,6 +462,28 @@ let memoryCache: Record<string, any> = {};
 // syncAllWithCloud — sinkronisasi data dari Turso DB ke memori lokal
 // Data cloud SELALU menimpa data lokal untuk memastikan konsistensi lintas perangkat
 export async function syncAllWithTurso(): Promise<boolean> {
+  const normalizeGalleryProject = (project: any): GalleryProject | null => {
+    if (!project || typeof project !== "object") return null;
+    const id = typeof project.id === "string" && project.id.trim().length > 0 ? project.id.trim() : "";
+    const title = typeof project.title === "string" && project.title.trim().length > 0 ? project.title.trim() : "";
+    const category = typeof project.category === "string" && project.category.trim().length > 0 ? project.category.trim() : "gallery";
+    const aspect = project.aspect === "3/4" || project.aspect === "1/1" || project.aspect === "16/9" ? project.aspect : "1/1";
+    const image = migrateLegacyAssetUrl(typeof project.image === "string" ? project.image : "");
+    if (!id || !title || !image) return null;
+    const productId = typeof project.productId === "string" && project.productId.trim().length > 0 ? project.productId.trim() : undefined;
+    return { id, title, category, aspect, image, productId };
+  };
+  const normalizeVideo = (video: any): VideoItem | null => {
+    if (!video || typeof video !== "object") return null;
+    const id = typeof video.id === "string" && video.id.trim().length > 0 ? video.id.trim() : "";
+    const url = typeof video.url === "string" ? video.url.trim() : "";
+    const source = video.source === "youtube" || video.source === "instagram" || video.source === "tiktok" || video.source === "file" ? video.source : detectVideoSource(url);
+    const orientation = video.orientation === "vertical" || video.orientation === "horizontal" || video.orientation === "square" ? video.orientation : "horizontal";
+    const caption = typeof video.caption === "string" ? video.caption.trim() : "";
+    if (!id || !url) return null;
+    return { id, url, source, orientation, caption, thumbnail: typeof video.thumbnail === "string" && video.thumbnail.trim().length > 0 ? migrateLegacyAssetUrl(video.thumbnail) : undefined, featured: Boolean(video.featured) };
+  };
+
   try {
     // Bundle fetch (1 request untuk semua data)
     const res = await fetch(TURSO_API_URL, {
@@ -491,11 +513,11 @@ export async function syncAllWithTurso(): Promise<boolean> {
       synced = true;
     }
     if (vids && Array.isArray(vids)) {
-      memoryCache[VIDEOS_STORAGE_KEY] = vids;
+      memoryCache[VIDEOS_STORAGE_KEY] = vids.map(normalizeVideo).filter(Boolean) as VideoItem[];
       synced = true;
     }
     if (gal && Array.isArray(gal)) {
-      memoryCache[GALLERY_STORAGE_KEY] = gal;
+      memoryCache[GALLERY_STORAGE_KEY] = gal.map(normalizeGalleryProject).filter(Boolean) as GalleryProject[];
       synced = true;
     }
     if (synced) {
@@ -678,17 +700,40 @@ export const defaultGalleryProjects: GalleryProject[] = [
 ];
 
 export function getGalleryProjects(): GalleryProject[] {
+  const normalizeGalleryProject = (project: any): GalleryProject | null => {
+    if (!project || typeof project !== "object") return null;
+    const id = typeof project.id === "string" && project.id.trim().length > 0 ? project.id.trim() : "";
+    const title = typeof project.title === "string" && project.title.trim().length > 0 ? project.title.trim() : "";
+    const category = typeof project.category === "string" && project.category.trim().length > 0 ? project.category.trim() : "gallery";
+    const aspect = project.aspect === "3/4" || project.aspect === "1/1" || project.aspect === "16/9" ? project.aspect : "1/1";
+    const image = migrateLegacyAssetUrl(typeof project.image === "string" ? project.image : "");
+    if (!id || !title || !image) return null;
+    const productId = typeof project.productId === "string" && project.productId.trim().length > 0 ? project.productId.trim() : undefined;
+    return { id, title, category, aspect, image, productId };
+  };
+
   if (typeof window === "undefined") return defaultGalleryProjects;
   const cached = memoryCache[GALLERY_STORAGE_KEY];
-  if (cached) return cached;
+  if (Array.isArray(cached)) return cached.map(normalizeGalleryProject).filter(Boolean) as GalleryProject[];
   return defaultGalleryProjects;
 }
 
 export async function setGalleryProjects(projects: GalleryProject[]): Promise<void> {
   if (typeof window === "undefined") return;
-  const dataToSave = projects.map(p => ({ ...p, image: migrateLegacyAssetUrl(p.image) }));
-  memoryCache[GALLERY_STORAGE_KEY] = dataToSave;
-  await saveToTurso("gallery_projects", dataToSave);
+  const normalized = projects
+    .filter(Boolean)
+    .map((project) => ({
+      ...project,
+      id: typeof project.id === "string" && project.id.trim().length > 0 ? project.id.trim() : `gallery-${project.title || Date.now()}`,
+      title: typeof project.title === "string" ? project.title.trim() : "",
+      category: typeof project.category === "string" ? project.category.trim() : "gallery",
+      aspect: project.aspect === "3/4" || project.aspect === "1/1" || project.aspect === "16/9" ? project.aspect : "1/1",
+      image: migrateLegacyAssetUrl(project.image),
+      productId: typeof project.productId === "string" && project.productId.trim().length > 0 ? project.productId.trim() : undefined,
+    }))
+    .filter((project) => Boolean(project.id && project.title && project.image));
+  memoryCache[GALLERY_STORAGE_KEY] = normalized;
+  await saveToTurso("gallery_projects", normalized);
   window.dispatchEvent(new Event("galleryProjectsChanged"));
 }
 export function resetGalleryProjects(): void {
@@ -752,16 +797,52 @@ export const defaultVideos: VideoItem[] = [
   { id: "v-4", url: "https://www.youtube.com/shorts/_Wbq-ium2GE", source: "youtube", orientation: "vertical", caption: "Money Bouquet Tutorial (Layout Vertikal) 💰", featured: true, },
 ];
 
-export function getVideos(): VideoItem[] { 
-  try { 
+export function getVideos(): VideoItem[] {
+  const normalizeVideo = (video: any): VideoItem | null => {
+    if (!video || typeof video !== "object") return null;
+    const id = typeof video.id === "string" && video.id.trim().length > 0 ? video.id.trim() : "";
+    const url = typeof video.url === "string" ? video.url.trim() : "";
+    const source = video.source === "youtube" || video.source === "instagram" || video.source === "tiktok" || video.source === "file" ? video.source : detectVideoSource(url);
+    const orientation = video.orientation === "vertical" || video.orientation === "horizontal" || video.orientation === "square" ? video.orientation : "horizontal";
+    const caption = typeof video.caption === "string" ? video.caption.trim() : "";
+    if (!id || !url) return null;
+    return {
+      id,
+      url,
+      source,
+      orientation,
+      caption,
+      thumbnail: typeof video.thumbnail === "string" && video.thumbnail.trim().length > 0 ? migrateLegacyAssetUrl(video.thumbnail) : undefined,
+      featured: Boolean(video.featured),
+    };
+  };
+
+  try {
     const cached = memoryCache[VIDEOS_STORAGE_KEY];
-    if (cached) return cached;
-  } catch { } 
-  return defaultVideos; 
+    if (Array.isArray(cached)) return cached.map(normalizeVideo).filter(Boolean) as VideoItem[];
+  } catch { }
+  return defaultVideos;
 }
 export async function saveVideos(vids: VideoItem[]): Promise<void> {
-  memoryCache[VIDEOS_STORAGE_KEY] = vids;
-  await saveToTurso("videos", vids);
+  const normalized = vids
+    .filter(Boolean)
+    .map((video) => {
+      const id = typeof video.id === "string" && video.id.trim().length > 0 ? video.id.trim() : `video-${Date.now()}`;
+      const url = typeof video.url === "string" ? video.url.trim() : "";
+      return {
+        ...video,
+        id,
+        url,
+        source: video.source === "youtube" || video.source === "instagram" || video.source === "tiktok" || video.source === "file" ? video.source : detectVideoSource(url),
+        orientation: video.orientation === "vertical" || video.orientation === "horizontal" || video.orientation === "square" ? video.orientation : "horizontal",
+        caption: typeof video.caption === "string" ? video.caption.trim() : "",
+        thumbnail: typeof video.thumbnail === "string" && video.thumbnail.trim().length > 0 ? migrateLegacyAssetUrl(video.thumbnail) : undefined,
+        featured: Boolean(video.featured),
+      } as VideoItem;
+    })
+    .filter((video) => Boolean(video.id && video.url));
+  memoryCache[VIDEOS_STORAGE_KEY] = normalized;
+  await saveToTurso("videos", normalized);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
