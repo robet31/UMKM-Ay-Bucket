@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
@@ -114,7 +114,28 @@ export function Admin() {
     MAX_FILE_SIZE_BYTES: 5 * 1024 * 1024,
     RECOMMENDED_SIZE_MB: 2,
     COMPRESSION_QUALITY: 0.8,
+    MAX_TOTAL_IMAGES: 60,
+    WARNING_THRESHOLD: 50,
+    ESTIMATED_SIZE_PER_IMAGE_KB: 80,
   };
+
+  // Calculate total images across all products (reactive with useMemo)
+  const { totalImageCount, estimatedStorageMB, isAtWarningLevel, isAtLimit } = useMemo(() => {
+    const productImages = products.reduce((sum, p) => sum + (p.images?.length || (p.image ? 1 : 0)), 0);
+    const heroImages = config.heroSettings?.length || 0;
+    const galleryImages = galleryProjects.filter(g => g.image).length;
+    const count = productImages + heroImages + galleryImages;
+    const storageMB = (count * UPLOAD_LIMITS.ESTIMATED_SIZE_PER_IMAGE_KB) / 1024;
+    return {
+      totalImageCount: count,
+      estimatedStorageMB: storageMB,
+      isAtWarningLevel: count >= UPLOAD_LIMITS.WARNING_THRESHOLD,
+      isAtLimit: count >= UPLOAD_LIMITS.MAX_TOTAL_IMAGES,
+    };
+  }, [products, config.heroSettings, galleryProjects]);
+
+  // Show developer contact warning when limit exceeded
+  const showDeveloperWarning = isAtLimit;
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -171,6 +192,13 @@ export function Admin() {
 
   const uploadBrandLogo = async (file: File | null) => {
     if (!file) return;
+    
+    // Check image limit
+    if (isAtLimit) {
+      alert(`⚠️ MENCAPAI BATAS MAXIMAL ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} GAMBAR!\n\n📊 Penggunaan saat ini: ${totalImageCount} gambar (≈${estimatedStorageMB.toFixed(1)}MB)\n\nUntuk menambah gambar, silakan hubungi developer untuk upgrade paket:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
+      return;
+    }
+    
     const sizeCheck = checkFileSize(file);
     if (!sizeCheck.allowed) {
       alert(`⚠️ ${sizeCheck.message}\n\n💡 Tips: Compress gambar sebelum upload untuk hasil lebih optimal.`);
@@ -197,6 +225,14 @@ export function Admin() {
 
   const uploadHeroImage = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    
+    // Check image limit
+    const filesToUpload = Array.from(files).length;
+    if (totalImageCount + filesToUpload > UPLOAD_LIMITS.MAX_TOTAL_IMAGES) {
+      alert(`⚠️ MENCAPAI BATAS MAXIMAL ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} GAMBAR!\n\n📊 Penggunaan saat ini: ${totalImageCount} gambar (≈${estimatedStorageMB.toFixed(1)}MB)\n📝 Anda mencoba upload: ${filesToUpload} gambar\n\nUntuk menambah gambar, silakan hubungi developer untuk upgrade paket:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
+      return;
+    }
+    
     const fileArray = Array.from(files).slice(0, 10);
     const results: { url: string; originalSize?: number; compressedSize?: number; reduction?: number }[] = [];
     const skippedFiles: string[] = [];
@@ -425,6 +461,13 @@ export function Admin() {
 
   const uploadGalleryImage = async (id: string, file: File | null) => {
     if (!file) return;
+    
+    // Check image limit
+    if (isAtLimit) {
+      alert(`⚠️ MENCAPAI BATAS MAXIMAL ${UPLOAD_LIMITS.MAX_TOTAL_IMAGES} GAMBAR!\n\n📊 Penggunaan saat ini: ${totalImageCount} gambar (≈${estimatedStorageMB.toFixed(1)}MB)\n\nUntuk menambah gambar, silakan hubungi developer untuk upgrade paket:\n👨‍💻 ${DEVELOPER_CONTACT.name}\n📱 ${DEVELOPER_CONTACT.whatsappLink}`);
+      return;
+    }
+    
     const sizeCheck = checkFileSize(file);
     if (!sizeCheck.allowed) {
       alert(`⚠️ ${sizeCheck.message}\n\n💡 Tips: Compress gambar sebelum upload untuk hasil lebih optimal.`);
@@ -673,6 +716,38 @@ export function Admin() {
           </h1>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Image Usage Indicator */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 14px',
+            backgroundColor: isAtLimit ? '#fef2f2' : isAtWarningLevel ? '#fffbeb' : '#f0fdf4',
+            border: `1px solid ${isAtLimit ? '#fecaca' : isAtWarningLevel ? '#fcd34d' : '#bbf7d0'}`,
+            borderRadius: '10px',
+            fontSize: '11px',
+          }}>
+            <span style={{ fontSize: '14px' }}>📊</span>
+            <div>
+              <p style={{ margin: 0, fontWeight: 600, color: '#1a1a1a' }}>
+                {totalImageCount} / {UPLOAD_LIMITS.MAX_TOTAL_IMAGES} gambar
+              </p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#666' }}>
+                ≈ {estimatedStorageMB.toFixed(1)} MB
+              </p>
+            </div>
+            {isAtWarningLevel && !isAtLimit && (
+              <span style={{ fontSize: '10px', color: '#d97706', fontWeight: 600 }}>
+                ⚠️
+              </span>
+            )}
+            {isAtLimit && (
+              <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 600 }}>
+                ❌
+              </span>
+            )}
+          </div>
+
           {/* Upload Progress Indicator */}
           {uploadProgress && (
             <motion.div

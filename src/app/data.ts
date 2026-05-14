@@ -512,12 +512,20 @@ export async function syncAllWithTurso(): Promise<boolean> {
       memoryCache[PRODUCTS_STORAGE_KEY] = mergeProductsByNameAndPrice(normalizeStoredProducts(prods));
       synced = true;
     }
-    if (vids && Array.isArray(vids)) {
+    if (vids && Array.isArray(vids) && vids.length > 0) {
       memoryCache[VIDEOS_STORAGE_KEY] = vids.map(normalizeVideo).filter(Boolean) as VideoItem[];
       synced = true;
+    } else if (!memoryCache[VIDEOS_STORAGE_KEY]) {
+      // Load defaults if cloud is empty
+      memoryCache[VIDEOS_STORAGE_KEY] = defaultVideos;
+      synced = true;
     }
-    if (gal && Array.isArray(gal)) {
+    if (gal && Array.isArray(gal) && gal.length > 0) {
       memoryCache[GALLERY_STORAGE_KEY] = gal.map(normalizeGalleryProject).filter(Boolean) as GalleryProject[];
+      synced = true;
+    } else if (!memoryCache[GALLERY_STORAGE_KEY]) {
+      // Load defaults if cloud is empty
+      memoryCache[GALLERY_STORAGE_KEY] = defaultGalleryProjects;
       synced = true;
     }
     if (synced) {

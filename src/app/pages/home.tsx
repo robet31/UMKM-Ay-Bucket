@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { categories, formatRupiah, getProducts, getSiteConfig, mergeProductsByNameAndPrice, syncAllWithTurso, isProduction, getGalleryProjects, getVideos, type Product, type ProductCategory, type Category } from "../data";
+import { categories, formatRupiah, getProducts, getSiteConfig, mergeProductsByNameAndPrice, syncAllWithTurso, isProduction, getGalleryProjects, getVideos, defaultGalleryProjects, type Product, type ProductCategory, type Category } from "../data";
 import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
@@ -215,7 +215,23 @@ export function Home() {
       variant: "hero",
     }));
 
-    const adminHeroes = [...settingsHeroes, ...legacyHeroes];
+    // 3. Use gallery projects as fallback if still empty
+    const galleryHeroes: Product[] = settingsHeroes.length === 0 && legacyHeroes.length === 0 
+      ? getGalleryProjects().slice(0, 6).map((gal, idx) => ({
+          id: `hero-gallery-${idx}`,
+          name: gal.title || "Gallery",
+          category: "catalog-home" as ProductCategory,
+          description: gal.category || "",
+          image: gal.image,
+          images: [gal.image],
+          price: 0,
+          priceLabel: language === "id" ? "Lihat" : "View",
+          tag: "hero",
+          variant: "hero",
+        }))
+      : [];
+
+    const adminHeroes = [...settingsHeroes, ...legacyHeroes, ...galleryHeroes];
 
     if (adminHeroes.length === 0) {
       adminHeroes.push({
