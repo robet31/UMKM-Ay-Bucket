@@ -4,7 +4,7 @@ import { PageTransition } from "../components/page-transition";
 import { Footer } from "../components/footer";
 import AnimatedPetals from "../components/animated-petals";
 import { StudioVideoSection } from "../components/video-gallery";
-import { getSiteConfig, categories, getWhatsAppLink, BRAND_LOGO, getGalleryProjects, normalizeAssetUrl, syncAllWithNeon, type GalleryProject } from "../data";
+import { getSiteConfig, categories, getWhatsAppLink, BRAND_LOGO, getGalleryProjects, normalizeAssetUrl, syncAllWithTurso, type GalleryProject } from "../data";
 import { useLanguage } from "../language";
 
 const mono = {
@@ -62,9 +62,9 @@ export function Studio() {
     window.addEventListener("galleryProjectsChanged", handler);
 
     // Cloud sync polling setiap 5 detik
-    syncAllWithNeon().then((changed) => { if (changed) handler(); });
+    syncAllWithTurso().then((changed) => { if (changed) handler(); });
     const interval = setInterval(() => {
-      syncAllWithNeon().then((changed) => { if (changed) handler(); });
+      syncAllWithTurso().then((changed) => { if (changed) handler(); });
     }, 5000);
 
     return () => {

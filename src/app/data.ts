@@ -26,7 +26,7 @@ export type AllowedKey = "site_config" | "products" | "videos" | "gallery_projec
 
 // Cloud API URL — Turso DB via Vercel Serverless API
 // Semua data disimpan di Turso (LibSQL), gambar di ImgBB
-export const NEON_API_URL = '/api/config';
+export const TURSO_API_URL = '/api/config';
 
 // Developer Contact Information (shown when storage is full)
 export const DEVELOPER_CONTACT = {
@@ -174,9 +174,9 @@ const defaultConfig: SiteConfig = {
 };
 
 // fetchFromCloud — mengambil data dari Turso DB via Vercel API
-export async function fetchFromNeon(key: AllowedKey): Promise<any | null> {
+export async function fetchFromTurso(key: AllowedKey): Promise<any | null> {
   try {
-    const res = await fetch(NEON_API_URL, {
+    const res = await fetch(TURSO_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "get", key }),
@@ -200,10 +200,10 @@ export function setAdminCredentials(user: string, pass: string) {
 }
 
 // saveToCloud — menyimpan data ke Turso DB via Vercel API
-export async function saveToNeon(key: AllowedKey, data: any): Promise<boolean> {
+export async function saveToTurso(key: AllowedKey, data: any): Promise<boolean> {
   try {
     console.log(`[Cloud Sync] Menyimpan ke ${key}...`);
-    const res = await fetch(NEON_API_URL, {
+    const res = await fetch(TURSO_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -272,7 +272,7 @@ export interface CompressionStats {
   outputHeight: number;
 }
 
-// Cloud storage — semua gambar di-upload ke ImgBB, URL pendek disimpan di Google Sheets
+// Cloud storage — gambar tetap di ImgBB, data aplikasi disimpan di Turso via /api/config
 export const STORAGE_LIMITS = {
   LOCALSTORAGE_LIMIT_MB: 999, // Unlimited — data di cloud, bukan localStorage
   TARGET_IMAGE_SIZE_KB: 80,
@@ -291,7 +291,7 @@ export function getStorageUsageStats(): {
   warningLevel: "safe" | "warning" | "critical" | "full";
   breakdown: { key: string; sizeKB: number; count: number }[];
 } {
-  // Semua data tersimpan di Google Sheets (cloud), bukan localStorage
+  // Semua data tersimpan di Turso (cloud), bukan localStorage
   return {
     totalDataUrlSizeKB: 0, totalDataUrlCount: 0,
     localStorageUsedKB: 0, localStorageLimitKB: STORAGE_LIMITS.LOCALSTORAGE_LIMIT_MB * 1024,
@@ -447,9 +447,9 @@ export async function compressImageWithStats(file: File, maxWidth = 1024, qualit
   };
 }
 
-// [LEGACY] Kept for backward compatibility — these are now no-ops
-export const fetchSiteConfigFromNeon = () => Promise.resolve(null);
-export const saveSiteConfigToNeon = (_config: any) => Promise.resolve(true);
+// [LEGACY] Kept for backward compatibility — these now route through Turso helpers
+export const fetchSiteConfigFromTurso = () => getSiteConfigWithTurso();
+export const saveSiteConfigToTurso = (config: any) => saveSiteConfig(config);
 
 // Fix: import.meta.env.PROD is a boolean in Vite production builds
 export const isProduction = 
@@ -461,10 +461,10 @@ let memoryCache: Record<string, any> = {};
 
 // syncAllWithCloud — sinkronisasi data dari Turso DB ke memori lokal
 // Data cloud SELALU menimpa data lokal untuk memastikan konsistensi lintas perangkat
-export async function syncAllWithNeon(): Promise<boolean> {
+export async function syncAllWithTurso(): Promise<boolean> {
   try {
     // Bundle fetch (1 request untuk semua data)
-    const res = await fetch(NEON_API_URL, {
+    const res = await fetch(TURSO_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "get_bundle" }),
@@ -510,8 +510,8 @@ export async function syncAllWithNeon(): Promise<boolean> {
   return false;
 }
 
-export async function getSiteConfigWithNeon(): Promise<SiteConfig> {
-  const remote = await fetchFromNeon("site_config");
+export async function getSiteConfigWithTurso(): Promise<SiteConfig> {
+  const remote = await fetchFromTurso("site_config");
   if (remote) {
     const merged = { ...defaultConfig, ...remote };
     memoryCache[ADMIN_STORAGE_KEY] = merged;
@@ -563,13 +563,13 @@ export async function saveSiteConfig(config: Partial<SiteConfig>): Promise<void>
   const merged = { ...current, ...config, heroFallbackImage: migrateLegacyAssetUrl(config.heroFallbackImage ?? current.heroFallbackImage), brandLogoUrl: migrateLegacyAssetUrl(config.brandLogoUrl ?? current.brandLogoUrl ?? defaultConfig.brandLogoUrl), };
   
   memoryCache[ADMIN_STORAGE_KEY] = merged;
-  saveToNeon("site_config", merged);
+  await saveToTurso("site_config", merged);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
-export function resetSiteConfig() {
+export async function resetSiteConfig() {
   memoryCache[ADMIN_STORAGE_KEY] = { ...defaultConfig };
-  saveToNeon("site_config", defaultConfig);
+  await saveToTurso("site_config", defaultConfig);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
@@ -657,13 +657,13 @@ export async function setGalleryProjects(projects: GalleryProject[]): Promise<vo
   if (typeof window === "undefined") return;
   const dataToSave = projects.map(p => ({ ...p, image: migrateLegacyAssetUrl(p.image) }));
   memoryCache[GALLERY_STORAGE_KEY] = dataToSave;
-  saveToNeon("gallery_projects", dataToSave);
+  await saveToTurso("gallery_projects", dataToSave);
   window.dispatchEvent(new Event("galleryProjectsChanged"));
 }
 export function resetGalleryProjects(): void {
   if (typeof window === "undefined") return;
   memoryCache[GALLERY_STORAGE_KEY] = defaultGalleryProjects;
-  saveToNeon("gallery_projects", defaultGalleryProjects);
+  void saveToTurso("gallery_projects", defaultGalleryProjects);
   window.dispatchEvent(new Event("galleryProjectsChanged"));
 }
 
@@ -681,13 +681,13 @@ export function getProducts(): Product[] {
 export async function saveProducts(prods: Product[]): Promise<void> {
   const dataToSave = mergeProductsByNameAndPrice(normalizeStoredProducts(prods as any[]));
   memoryCache[PRODUCTS_STORAGE_KEY] = dataToSave;
-  saveToNeon("products", dataToSave);
+  await saveToTurso("products", dataToSave);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 export async function resetProducts() {
   const merged = mergeProductsByNameAndPrice(defaultProducts);
   memoryCache[PRODUCTS_STORAGE_KEY] = merged;
-  await saveToNeon("products", merged);
+  await saveToTurso("products", merged);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 export const products = defaultProducts;
@@ -730,13 +730,13 @@ export function getVideos(): VideoItem[] {
 }
 export async function saveVideos(vids: VideoItem[]): Promise<void> {
   memoryCache[VIDEOS_STORAGE_KEY] = vids;
-  saveToNeon("videos", vids);
+  await saveToTurso("videos", vids);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
 /**
  * Check if admin can still upload more images.
- * Cloud-based: always allowed (ImgBB handles images, Google Sheets stores URLs)
+ * Cloud-based: always allowed (ImgBB handles images, Turso stores URLs and metadata)
  */
 export function canUploadImage(): { allowed: boolean; remainingImages: number; usagePercent: number } {
   return {
@@ -747,6 +747,6 @@ export function canUploadImage(): { allowed: boolean; remainingImages: number; u
 }
 export function resetVideos() {
   memoryCache[VIDEOS_STORAGE_KEY] = defaultVideos;
-  saveToNeon("videos", defaultVideos);
+  void saveToTurso("videos", defaultVideos);
   window.dispatchEvent(new Event("siteConfigChanged"));
 }

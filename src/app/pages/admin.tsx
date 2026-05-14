@@ -22,17 +22,11 @@ import {
   defaultVideos,
   detectVideoSource,
   formatRupiah,
-  syncAllWithNeon,
+  getSiteConfigWithTurso,
+  syncAllWithTurso,
   setAdminCredentials,
   cleanMapsUrl,
   compressImage,
-  compressImageWithStats,
-  uploadToImgBB,
-  getStorageUsageStats,
-  canUploadImage,
-  STORAGE_LIMITS,
-  DEVELOPER_CONTACT,
-  MAX_IMAGES_PER_PRODUCT,
   type GalleryProject,
   type SiteConfig,
   type Product,
@@ -40,7 +34,6 @@ import {
   type VideoSource,
   type VideoOrientation,
   type HeroSetting,
-  type CompressionStats,
 } from "../data";
 
 const mono = {
@@ -111,11 +104,6 @@ export function Admin() {
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-
-  // Track whether the component has been initialized (to prevent auto-save on first mount)
-  const isInitialized = useRef(false);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!authed) {
@@ -129,70 +117,6 @@ export function Admin() {
         htmlElem.style.overflow = prevHtmlOverflow;
         bodyElem.style.overflow = prevBodyOverflow;
       };
-    }
-  }, [authed]);
-
-  // ====== AUTO-SAVE SYSTEM ======
-  // Setiap perubahan config, products, videos, gallery → otomatis simpan ke cloud setelah 2 detik idle
-  const triggerAutoSave = (saveFn: () => Promise<void>) => {
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    setAutoSaveStatus('saving');
-    autoSaveTimerRef.current = setTimeout(async () => {
-      try {
-        await saveFn();
-        setAutoSaveStatus('saved');
-        setTimeout(() => setAutoSaveStatus('idle'), 2000);
-      } catch {
-        setAutoSaveStatus('error');
-        setTimeout(() => setAutoSaveStatus('idle'), 3000);
-      }
-    }, 2000);
-  };
-
-  // Auto-save config (Umum, Hero, Navbar, Footer)
-  useEffect(() => {
-    if (!authed || !isInitialized.current) return;
-    const normalizedConfig = {
-      ...config,
-      instagram: config.instagram?.startsWith('@@') ? config.instagram.substring(1) : config.instagram,
-      tiktok: config.tiktok?.startsWith('@@') ? config.tiktok.substring(1) : config.tiktok,
-      customCategories: categoriesList,
-    };
-    triggerAutoSave(async () => {
-      await saveSiteConfig(normalizedConfig);
-      window.dispatchEvent(new Event("siteConfigChanged"));
-    });
-  }, [config, categoriesList]);
-
-  // Auto-save products
-  useEffect(() => {
-    if (!authed || !isInitialized.current) return;
-    triggerAutoSave(async () => {
-      await saveProducts(products);
-    });
-  }, [products]);
-
-  // Auto-save videos
-  useEffect(() => {
-    if (!authed || !isInitialized.current) return;
-    triggerAutoSave(async () => {
-      await saveVideos(videos);
-    });
-  }, [videos]);
-
-  // Auto-save gallery
-  useEffect(() => {
-    if (!authed || !isInitialized.current) return;
-    triggerAutoSave(async () => {
-      await setGalleryProjects(galleryProjects);
-    });
-  }, [galleryProjects]);
-
-  // Mark as initialized after first render (prevents auto-save on mount)
-  useEffect(() => {
-    if (authed) {
-      const timer = setTimeout(() => { isInitialized.current = true; }, 3000);
-      return () => clearTimeout(timer);
     }
   }, [authed]);
 
@@ -211,8 +135,6 @@ export function Admin() {
     };
     try {
       await saveSiteConfig(normalizedConfig);
-      // Immediately notify all open tabs/pages that config changed
-      window.dispatchEvent(new Event("siteConfigChanged"));
       showSaved();
       alert("Pengaturan Website berhasil disimpan!");
     } catch (e: any) {
@@ -227,7 +149,7 @@ export function Admin() {
       return;
     }
     try {
-      const dataUrl = await uploadToImgBB(file);
+      const dataUrl = await compressImage(file, 800, 0.8);
       setConfig((prev) => ({ ...prev, brandLogoUrl: dataUrl }));
     } catch (e) {
       alert("Gagal memproses gambar");
@@ -241,7 +163,7 @@ export function Admin() {
     for (const file of fileArray) {
       if (file.size > 5 * 1024 * 1024) continue;
       try {
-        const dataUrl = await uploadToImgBB(file);
+        const dataUrl = await compressImage(file, 1200, 0.8);
         if (dataUrl) results.push(dataUrl);
       } catch (e) {
         console.error("Failed to compress image:", e);
@@ -277,8 +199,6 @@ export function Admin() {
     try {
       await saveProducts(merged);
       setProductsList(merged);
-      // Immediately notify home page
-      window.dispatchEvent(new Event("siteConfigChanged"));
       showSaved();
       alert("Data Produk berhasil disimpan!");
     } catch (e: any) {
@@ -289,8 +209,6 @@ export function Admin() {
   const handleSaveVideos = async () => {
     try {
       await saveVideos(videos);
-      // Immediately notify home page
-      window.dispatchEvent(new Event("siteConfigChanged"));
       showSaved();
       alert("Data Video berhasil disimpan!");
     } catch (e: any) {
@@ -301,9 +219,6 @@ export function Admin() {
   const handleSaveGallery = async () => {
     try {
       await setGalleryProjects(galleryProjects);
-      // Immediately notify home page
-      window.dispatchEvent(new Event("siteConfigChanged"));
-      window.dispatchEvent(new Event("galleryProjectsChanged"));
       showSaved();
       alert("Data Galeri berhasil disimpan!");
     } catch (e: any) {
@@ -324,10 +239,10 @@ export function Admin() {
     }
   };
 
-  const handleResetAll = async () => {
-    if (confirm("Reset semua pengaturan ke default? Ini akan mengembalikan data ke konfigurasi awal.")) {
+  const handleResetAll = () => {
+    if (confirm("Reset semua pengaturan ke default?")) {
       resetSiteConfig();
-      await resetProducts();
+      resetProducts();
       resetVideos();
       resetGalleryProjects();
       setConfig(getSiteConfig());
@@ -335,7 +250,6 @@ export function Admin() {
       setVideosList(defaultVideos);
       setGalleryProjectsList(defaultGalleryProjects);
       showSaved();
-      alert("✅ Semua data berhasil direset & disinkronkan ke database! Data produk terbaru (93 produk) sudah aktif.");
     }
   };
 
@@ -378,7 +292,7 @@ export function Admin() {
     const newProduct: Product = {
       id: `custom-${Date.now()}`,
       name: "Produk Baru",
-      category: "buckets",
+      category: "catalog-home",
       price: 100000,
       priceLabel: "Rp 100.000",
       image: "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=600&q=80",
@@ -449,7 +363,7 @@ export function Admin() {
       return;
     }
     try {
-      const dataUrl = await uploadToImgBB(file);
+      const dataUrl = await compressImage(file, 1000, 0.8);
       updateGalleryProject(id, { image: dataUrl });
     } catch (e) {
       alert("Gagal memproses gambar");
@@ -495,39 +409,26 @@ export function Admin() {
       setLoginError("");
       
       try {
-        // CLOUD-FIRST: Sinkronkan data dari Google Sheets dulu sebelum login
-        await syncAllWithNeon();
-        const cfg = getSiteConfig();
-        
+        const cfg = await getSiteConfigWithTurso().catch(() => getSiteConfig());
         const username = cfg.adminUsername || 'admin';
         const pass = cfg.adminPassword || 'AyBucket2026!';
         
         if (usernameInput === username && passwordInput === pass) {
           setAuthed(true);
           setAdminCredentials(usernameInput, passwordInput);
-          
-          // Load semua data dari cloud (sudah di-sync ke memoryCache)
-          setConfig(getSiteConfig());
-          setProductsList(mergeProductsByNameAndPrice(getProducts()));
-          setVideosList(getVideos());
-          setGalleryProjectsList(getGalleryProjects());
+          // Sync all data from Turso DB so the admin sees the latest remote changes
+          syncAllWithTurso().then(() => {
+            setConfig(getSiteConfig());
+            setProductsList(mergeProductsByNameAndPrice(getProducts()));
+            setVideosList(getVideos());
+            setGalleryProjectsList(getGalleryProjects());
+          });
         } else {
           setLoginError("Username atau password salah!");
           setPasswordInput("");
         }
       } catch (err) {
-        // Fallback: coba default credentials jika cloud offline
-        const username = 'admin';
-        const pass = 'AyBucket2026!';
-        if (usernameInput === username && passwordInput === pass) {
-          setAuthed(true);
-          setAdminCredentials(usernameInput, passwordInput);
-          setTimeout(() => {
-            alert("⚠️ Database cloud offline. Anda masuk dengan kredensial default.");
-          }, 500);
-        } else {
-          setLoginError("Koneksi cloud gagal & kredensial tidak cocok.");
-        }
+        setLoginError("Koneksi gagal, silakan coba lagi.");
       } finally {
         setIsLoggingIn(false);
       }
@@ -654,7 +555,7 @@ export function Admin() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#FFF0F3",
+        backgroundColor: "#F9F9F7",
         padding: "0 clamp(24px, 6vw, 80px)",
       }}
     >
@@ -687,25 +588,6 @@ export function Admin() {
           >
             🛠️ Pengaturan Website
           </h1>
-          {/* Auto-save status indicator */}
-          {autoSaveStatus !== 'idle' && (
-            <span style={{
-              fontSize: '11px',
-              fontFamily: "'JetBrains Mono', monospace",
-              padding: '4px 12px',
-              borderRadius: '20px',
-              marginLeft: '12px',
-              verticalAlign: 'middle',
-              animation: autoSaveStatus === 'saving' ? 'pulse 1.5s infinite' : 'none',
-              ...(autoSaveStatus === 'saving' ? { background: '#FFF3CD', color: '#856404' } : {}),
-              ...(autoSaveStatus === 'saved' ? { background: '#D4EDDA', color: '#155724' } : {}),
-              ...(autoSaveStatus === 'error' ? { background: '#F8D7DA', color: '#721C24' } : {}),
-            }}>
-              {autoSaveStatus === 'saving' && '⏳ Menyimpan...'}
-              {autoSaveStatus === 'saved' && '✅ Tersimpan ke Cloud!'}
-              {autoSaveStatus === 'error' && '❌ Gagal simpan'}
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <Link
@@ -722,39 +604,6 @@ export function Admin() {
             Reset Semua
           </button>
         </div>
-      </div>
-
-      {/* Cloud Storage Info Widget */}
-      <div style={{
-        background: '#f0fdf4',
-        border: '1px solid #bbf7d0',
-        borderRadius: '16px',
-        padding: '20px 24px',
-        marginBottom: '24px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <span style={{ fontSize: '16px' }}>☁️</span>
-          <span style={{ ...mono, fontSize: '9px', color: '#555' }}>PENYIMPANAN CLOUD (TURSO DB + IMGBB)</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
-          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#22c55e', fontWeight: 600 }}>
-            ✅ Turso DB aktif — Gambar di ImgBB, data di Turso (LibSQL)
-          </span>
-          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#888' }}>
-            🔄 Sinkronisasi real-time setiap 5 detik
-          </span>
-        </div>
-        <details style={{ marginTop: '12px' }}>
-          <summary style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: '#999', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            ℹ️ Info Arsitektur Cloud
-          </summary>
-          <div style={{ marginTop: '10px', padding: '12px', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: '10px', fontFamily: "'Inter', sans-serif", fontSize: '11px', color: '#666', lineHeight: 1.7 }}>
-            <p style={{ margin: '0 0 6px 0' }}><strong>📂 Gambar Bawaan:</strong> 93 produk default di folder frontend — gratis unlimited.</p>
-            <p style={{ margin: '0 0 6px 0' }}><strong>📸 Gambar Kustom:</strong> Upload ke ImgBB (gratis unlimited), URL pendek disimpan di Turso DB.</p>
-            <p style={{ margin: '0 0 6px 0' }}><strong>☁️ Database Cloud:</strong> Turso (LibSQL) — edge database cepat &amp; reliable, tanpa kuota habis.</p>
-            <p style={{ margin: '0' }}><strong>🔄 Real-Time Sync:</strong> Perubahan langsung terlihat di semua device dalam 5 detik.</p>
-          </div>
-        </details>
       </div>
 
       {/* Success Toast Notification */}
@@ -924,7 +773,6 @@ export function Admin() {
 
         {activeTab === "gallery" && (
           <GalleryManager
-            products={products}
             items={galleryProjects}
             onUpdate={setGalleryProjectsList}
             onSave={handleSaveGallery}
@@ -1100,59 +948,9 @@ export function Admin() {
               </div>
             </div>
 
-            {/* Stats Dashboard */}
-            {(() => {
-              const totalImages = products.reduce((sum, p) => sum + (p.images?.length || 1), 0);
-              const totalCategories = new Set(products.map(p => p.category)).size;
-              const avgImagesPerProduct = products.length > 0 ? (totalImages / products.length).toFixed(1) : '0';
-              const productsAtLimit = products.filter(p => (p.images?.length || 0) >= MAX_IMAGES_PER_PRODUCT).length;
-              // Rough storage estimate: ~200KB per local asset image, data URLs are larger
-              const estimatedStorageKB = products.reduce((sum, p) => {
-                return sum + (p.images || []).reduce((s, img) => {
-                  if (img.startsWith('data:')) return s + Math.round(img.length * 0.75 / 1024);
-                  return s + 200; // ~200KB per static asset
-                }, 0);
-              }, 0);
-              const storageMB = (estimatedStorageKB / 1024).toFixed(1);
-              return (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                  gap: '12px',
-                  marginBottom: '20px',
-                }}>
-                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>{products.length}</div>
-                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>TOTAL PRODUK</div>
-                  </div>
-                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#b85c3b', fontFamily: "'Inter', sans-serif" }}>{totalImages}</div>
-                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>TOTAL GAMBAR</div>
-                  </div>
-                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#2563eb', fontFamily: "'Inter', sans-serif" }}>{storageMB} MB</div>
-                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>EST. STORAGE</div>
-                  </div>
-                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#059669', fontFamily: "'Inter', sans-serif" }}>{totalCategories}</div>
-                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>KATEGORI AKTIF</div>
-                  </div>
-                  <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#7c3aed', fontFamily: "'Inter', sans-serif" }}>{avgImagesPerProduct}</div>
-                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>AVG IMG/PRODUK</div>
-                  </div>
-                  <div style={{ background: productsAtLimit > 0 ? '#fef2f2' : '#fff', border: `1px solid ${productsAtLimit > 0 ? '#fecaca' : 'rgba(0,0,0,0.06)'}`, borderRadius: '14px', padding: '16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 700, color: productsAtLimit > 0 ? '#dc2626' : '#1a1a1a', fontFamily: "'Inter', sans-serif" }}>{MAX_IMAGES_PER_PRODUCT}</div>
-                    <div style={{ ...mono, fontSize: '8px', color: '#999', marginTop: '4px' }}>MAKS IMG/PRODUK</div>
-                  </div>
-                </div>
-              );
-            })()}
-
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: "#888", marginBottom: "14px", lineHeight: 1.7 }}>
-              Gambar pertama pada daftar produk adalah gambar utama (cover) di katalog. Buka <strong>Edit</strong> lalu klik ● pada thumbnail untuk memilih cover produk. Maks. {MAX_IMAGES_PER_PRODUCT} gambar per produk.
+              Gambar pertama pada daftar produk adalah gambar utama (cover) di katalog. Buka <strong>Edit</strong> lalu klik ● pada thumbnail untuk memilih cover produk.
             </p>
-
 
             {/* Edit Modal */}
             <AnimatePresence>
@@ -1685,7 +1483,6 @@ function HeroSlotManager({
 
 // GalleryManager component dengan drag-and-drop
 interface GalleryManagerProps {
-  products: Product[];
   items: GalleryProject[];
   onUpdate: (items: GalleryProject[]) => void;
   onSave: () => void;
@@ -1695,7 +1492,6 @@ interface GalleryManagerProps {
 }
 
 function GalleryManager({
-  products,
   items,
   onUpdate,
   onSave,
@@ -1785,35 +1581,6 @@ function GalleryManager({
               </span>
             </div>
             <div style={{ display: "grid", gap: "10px" }}>
-              <div>
-                <label style={labelStyle}>Tautkan ke Produk</label>
-                <select
-                  style={inputStyle}
-                  value={item.productId || ""}
-                  onChange={(e) => {
-                    const prodId = e.target.value;
-                    const prod = products.find(p => p.id === prodId);
-                    const newItems = items.map((i) => {
-                      if (i.id === item.id) {
-                        const updated = { ...i, productId: prodId };
-                        if (prod) {
-                          if (!updated.title) updated.title = prod.name;
-                          if (!updated.category) updated.category = prod.category;
-                          if (!updated.image) updated.image = prod.image;
-                        }
-                        return updated;
-                      }
-                      return i;
-                    });
-                    onUpdate(newItems);
-                  }}
-                >
-                  <option value="">-- Tidak ditautkan --</option>
-                  {products.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} — {formatRupiah(p.price)}</option>
-                  ))}
-                </select>
-              </div>
               <FieldInput label="Judul" value={item.title} onChange={(v) => handleFieldChange(item.id, "title", v)} />
               <FieldInput label="Kategori" value={item.category} onChange={(v) => handleFieldChange(item.id, "category", v)} />
               <div>
@@ -1977,41 +1744,18 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    // Check storage capacity before upload
-    const storageCheck = canUploadImage();
-    if (!storageCheck.allowed) {
-      alert(`🛑 PENYIMPANAN PENUH!\n\nTidak bisa upload gambar baru karena penyimpanan browser sudah penuh (${storageCheck.usagePercent.toFixed(0)}%).\n\nSolusi:\n1. Hapus beberapa gambar kustom yang tidak terpakai\n2. Gunakan gambar dari folder /assets/ (unlimited)\n\nAtau hubungi developer untuk upgrade:\n💬 WhatsApp: ${DEVELOPER_CONTACT.whatsapp}\n🔗 LinkedIn: ${DEVELOPER_CONTACT.linkedin}`);
-      window.open(DEVELOPER_CONTACT.whatsappLink, '_blank');
-      return;
-    }
-    if (storageCheck.remainingImages <= 3) {
-      const proceed = confirm(`⚠️ PERHATIAN: Sisa kuota hanya ~${storageCheck.remainingImages} gambar lagi!\n\nApakah Anda yakin ingin melanjutkan upload?`);
-      if (!proceed) return;
-    }
-    const currentCount = (form.images || []).length;
-    const remaining = MAX_IMAGES_PER_PRODUCT - currentCount;
-    if (remaining <= 0) {
-      alert(`Sudah mencapai batas maksimal ${MAX_IMAGES_PER_PRODUCT} gambar per produk.`);
-      return;
-    }
     const max = 5 * 1024 * 1024;
-    const filesToProcess = Array.from(files).slice(0, remaining);
-    if (filesToProcess.length < files.length) {
-      alert(`Hanya ${remaining} gambar lagi yang bisa ditambahkan (maks. ${MAX_IMAGES_PER_PRODUCT} per produk).`);
-    }
-    const validFiles: File[] = [];
-    filesToProcess.forEach((file) => {
+    const promises: Promise<string>[] = [];
+    Array.from(files).forEach((file) => {
       if (file.size > max) {
         alert("Beberapa gambar lebih dari 5MB dan dilewati");
         return;
       }
-      validFiles.push(file);
+      promises.push(compressImage(file, 1000, 0.8));
     });
     try {
-      // Mengirim semua file terpilih ke ImgBB secara paralel agar mendapatkan link CDN pendek yang sangat hemat kuota
-      const dataUrls = await Promise.all(validFiles.map(f => uploadToImgBB(f)));
+      const dataUrls = await Promise.all(promises);
       setForm({ ...form, images: [...(form.images || []), ...dataUrls] });
-      alert(`🚀 Upload Berhasil ke ImgBB CDN!\n\nGambar-gambar telah dihosting di server eksternal berkecepatan tinggi dengan URL pendek.\nKuota database teks 100% aman dan tidak terbebani!`);
     } catch (e) {
       alert("Gagal memproses gambar");
     }
@@ -2021,10 +1765,6 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
   const addImageUrl = (url: string) => {
     if (!url) return;
-    if ((form.images || []).length >= MAX_IMAGES_PER_PRODUCT) {
-      alert(`Sudah mencapai batas maksimal ${MAX_IMAGES_PER_PRODUCT} gambar per produk.`);
-      return;
-    }
     setForm({ ...form, images: [...(form.images || []), url] });
     if (urlRef.current) urlRef.current.value = "";
   };
@@ -2076,7 +1816,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: "#FFF0F3",
+          backgroundColor: "#F9F9F7",
           padding: isMobile ? "18px" : "32px",
           maxWidth: "680px",
           width: "100%",
@@ -2110,10 +1850,7 @@ function ProductEditor({ product, onSave, onCancel }: { product: Product; onSave
 
         {/* Images manager */}
         <div style={{ marginBottom: "16px" }}>
-          <label style={labelStyle}>
-            Gambar Produk ({(form.images || []).length}/{MAX_IMAGES_PER_PRODUCT})
-            {(form.images || []).length >= MAX_IMAGES_PER_PRODUCT && <span style={{ color: '#dc2626', marginLeft: 6 }}>⚠ BATAS MAKS</span>}
-          </label>
+          <label style={labelStyle}>Gambar Produk (geser untuk mengurutkan)</label>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
             {(form.images || []).map((src, i) => (
               <div
@@ -2283,7 +2020,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
     
     if (file.type.startsWith('image/')) {
       try {
-        const dataUrl = await uploadToImgBB(file);
+        const dataUrl = await compressImage(file, 1000, 0.8);
         setForm({ ...form, url: dataUrl, source: "file" });
       } catch (err) {
         alert("Gagal memproses gambar");
@@ -2322,7 +2059,7 @@ function VideoEditor({ video, onSave, onCancel }: { video: VideoItem; onSave: (v
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: "#FFF0F3",
+          backgroundColor: "#F9F9F7",
           padding: isMobile ? "18px" : "32px",
           maxWidth: "500px",
           width: "100%",
