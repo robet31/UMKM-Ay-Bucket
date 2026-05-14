@@ -39,30 +39,48 @@ export const DEVELOPER_CONTACT = {
 export function normalizeAssetUrl(url?: string): string {
   if (!url) return "";
   const s = String(url).trim();
-  // Don't normalize data URLs or absolute URLs
   if (s.startsWith('data:') || s.startsWith('http')) return s;
   
-  let normalized = s.replace(/\\/g, "/");
-  try { normalized = decodeURIComponent(normalized); } catch { }
-  try { 
-    // Only encode if it looks like a local path
-    if (!normalized.includes(':')) {
-      return encodeURI(normalized); 
-    }
-    return normalized;
-  } catch { return normalized; }
+  // Clean path
+  let path = s.replace(/\\/g, "/");
+  if (!path.startsWith('/')) path = '/' + path;
+  
+  // We want to return a path that is usable in an img src.
+  // Browsers handle spaces, but some environments prefer encoded.
+  // However, we MUST ensure the legacy mapping works first.
+  return path;
 }
 
 export function migrateLegacyAssetUrl(url?: string): string {
-  const normalized = normalizeAssetUrl(url);
-  if (!normalized) return "";
+  if (!url) return "";
+  const rawUrl = String(url).trim();
+  
   const legacyMap: Record<string, string> = {
     "/assets/buket-satin-rp20000-item-01.jpg": "/assets/Buket Bunga Asli Premium - Rp 350.00000.png",
+    "/assets/buket-satin-rp20000-item-02.jpg": "/assets/Round Elegant Dior (Mahkota) - Rp 350.00000.png",
+    "/assets/money-bouquet-01.jpg": "/assets/Mawar Candy (Bunga Asli) - Rp 170.000,00.png",
     "/assets/money-bouquet-rp50000-item-01.jpg": "/assets/Mawar Candy (Bunga Asli) - Rp 170.000,00.png",
     "/assets/snack-bouquet-rp35000-item-01.jpg": "/assets/Donat buket tart - Rp 100.00000 - isi 7 donat bomboloni isi coklat topping glaze bisa request warna. silahkan chat admin.png",
     "/assets/catalog-home-rp150000-item-02.jpg": "/assets/Akrilik frame mini - Rp 95.00000 - akrilik dome ukuran A5 standing lampu warna putih bisa request warna foto and tulisan.png",
   };
-  return legacyMap[normalized] || normalized;
+
+  // Try both raw and with leading slash
+  const withSlash = rawUrl.startsWith('/') ? rawUrl : '/' + rawUrl;
+  const migrated = legacyMap[rawUrl] || legacyMap[withSlash] || rawUrl;
+  
+  // Now normalize for final use
+  const final = normalizeAssetUrl(migrated);
+  
+  // Encode spaces for browser safety if it's a local path
+  if (!final.startsWith('data:') && !final.startsWith('http')) {
+    try {
+      return encodeURI(final).replace(/#/g, '%23').replace(/\?/g, '%3F');
+    } catch {
+      return final;
+    }
+  }
+  
+  return final;
 }
 
 function normalizeForMatching(value: string): string {
