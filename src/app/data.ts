@@ -43,7 +43,7 @@ export function normalizeAssetUrl(url?: string): string {
   try { return encodeURI(normalized); } catch { return normalized; }
 }
 
-function migrateLegacyAssetUrl(url?: string): string {
+export function migrateLegacyAssetUrl(url?: string): string {
   const normalized = normalizeAssetUrl(url);
   if (!normalized) return "";
   const legacyMap: Record<string, string> = {
