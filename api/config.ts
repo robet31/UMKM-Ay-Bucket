@@ -7,12 +7,12 @@ type AllowedKey = (typeof ALLOWED_KEYS)[number];
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb',
+      sizeLimit: '50mb',
     },
   },
 };
 
-const DB_SOFT_LIMIT_BYTES = Number(process.env.DB_SOFT_LIMIT_BYTES || 2_000_000);
+const DB_SOFT_LIMIT_BYTES = Number(process.env.DB_SOFT_LIMIT_BYTES || 50_000_000);
 const MIN_IMAGES_PER_PRODUCT = Number(process.env.MIN_IMAGES_PER_PRODUCT || 1);
 const MAX_IMAGES_PER_PRODUCT = Number(process.env.MAX_IMAGES_PER_PRODUCT || 10);
 const MAX_PRODUCTS = Number(process.env.MAX_PRODUCTS || 600);
@@ -54,7 +54,7 @@ setInterval(() => {
   });
 }, 300_000); // Clean every 5 minutes
 
-const MAX_BODY_SIZE_BYTES = 10_000_000; // 10MB max request body
+const MAX_BODY_SIZE_BYTES = 50_000_000; // 50MB max request body
 
 // ---- Security: Input Sanitization ----
 function sanitizeString(value: unknown, maxLength: number = 10000): string {

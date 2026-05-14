@@ -175,6 +175,10 @@ export function Home() {
       "packaging": "#6f6f8d",
       "ribbons": "#b66aa0",
       "sewa": "#5a8fa6",
+      "bloom-box": "#d48a6a",
+      "thumbelina": "#c98b3f",
+      "bucket-unik": "#b85c3b",
+      "vas-dekorasi": "#4f8f7a",
     };
     return accentMap[category] || "#b85c3b";
   };
@@ -601,7 +605,119 @@ export function Home() {
         )}
       </AnimatePresence>
       <Footer />
+      <ScrollToTop />
     </PageTransition>
+  );
+}
+
+function ScrollToTop() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 500) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener("scroll", toggleVisibility);
+    return () => window.removeEventListener("scroll", toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: 20, x: "-50%" }}
+          animate={{ opacity: 1, y: 0, x: "-50%" }}
+          exit={{ opacity: 0, y: 20, x: "-50%" }}
+          whileHover={{ scale: 1.1, y: -5 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={scrollToTop}
+          style={{
+            position: "fixed",
+            bottom: "30px",
+            left: "50%",
+            zIndex: 9999,
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <div
+            style={{
+              width: "40px",
+              height: "64px",
+              borderRadius: "20px",
+              border: "2px solid rgba(255, 255, 255, 0.4)",
+              backgroundColor: "rgba(26, 26, 26, 0.4)",
+              backdropFilter: "blur(12px)",
+              display: "flex",
+              justifyContent: "center",
+              paddingTop: "10px",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <motion.div
+              animate={{
+                y: [0, 15, 0],
+                opacity: [1, 0.5, 1],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              style={{
+                width: "4px",
+                height: "10px",
+                backgroundColor: "#fff",
+                borderRadius: "2px",
+              }}
+            />
+            {/* Pulsing rings around the mouse icon */}
+            <motion.div
+              animate={{ scale: [1, 1.4, 1], opacity: [0, 0.3, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: "20px",
+                border: "1px solid #fff",
+                pointerEvents: "none",
+              }}
+            />
+          </div>
+          <span style={{ 
+            fontFamily: "'JetBrains Mono', monospace", 
+            fontSize: "9px", 
+            color: "#fff", 
+            textTransform: "uppercase", 
+            letterSpacing: "0.1em",
+            textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+            backgroundColor: "rgba(0,0,0,0.2)",
+            padding: "2px 8px",
+            borderRadius: "4px",
+            backdropFilter: "blur(4px)"
+          }}>
+            Back to Top
+          </span>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -696,7 +812,7 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
   const hasMultipleImages = images.length > 1;
   const currentImage = images[currentImageIndex] || product.image;
 
-  const accent = {
+  const accentMap: Record<ProductCategory, string> = {
     "buket-satin": "#d48a6a",
     "snack-bouquet": "#c98b3f",
     "money-bouquet": "#7d5ba6",
@@ -710,7 +826,12 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
     "packaging": "#6f6f8d",
     "ribbons": "#b66aa0",
     "sewa": "#5a8fa6",
-  }[product.category] || "#999";
+    "bloom-box": "#d48a6a",
+    "thumbelina": "#c98b3f",
+    "bucket-unik": "#b85c3b",
+    "vas-dekorasi": "#4f8f7a",
+  };
+  const accent = accentMap[product.category] || "#999";
 
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();

@@ -76,16 +76,18 @@ export function Footer() {
                 transition: "all 0.3s ease",
               };
 
+              const showSecondWA = config.whatsappNumber2 && config.whatsappNumber2 !== config.whatsappNumber;
+
               return (
                 <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <a href={getWhatsAppLink(undefined, 1)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
-                      {waIcon} {config.whatsappNumber2 ? (language === "id" ? "Pusat / Madura" : "HQ / Madura") : (language === "id" ? "Hubungi Kami" : "Contact Us")}
+                      {waIcon} {showSecondWA ? (language === "id" ? "Pusat / Madura" : "HQ / Madura") : (language === "id" ? "Hubungi Kami" : "Contact Us")}
                     </a>
                     <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "14px", color: "#555" }}>{config.whatsappDisplay}</span>
                   </div>
                   
-                  {config.whatsappNumber2 && (
+                  {showSecondWA && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       <a href={getWhatsAppLink(undefined, 2)} target="_blank" rel="noopener noreferrer" style={btnStyle} className="whatsapp-btn-hover">
                         {waIcon} {language === "id" ? "Cabang Surabaya" : "Surabaya Branch"}

@@ -38,9 +38,19 @@ export const DEVELOPER_CONTACT = {
 
 export function normalizeAssetUrl(url?: string): string {
   if (!url) return "";
-  let normalized = String(url).trim().replace(/\\/g, "/");
+  const s = String(url).trim();
+  // Don't normalize data URLs or absolute URLs
+  if (s.startsWith('data:') || s.startsWith('http')) return s;
+  
+  let normalized = s.replace(/\\/g, "/");
   try { normalized = decodeURIComponent(normalized); } catch { }
-  try { return encodeURI(normalized); } catch { return normalized; }
+  try { 
+    // Only encode if it looks like a local path
+    if (!normalized.includes(':')) {
+      return encodeURI(normalized); 
+    }
+    return normalized;
+  } catch { return normalized; }
 }
 
 export function migrateLegacyAssetUrl(url?: string): string {
@@ -603,7 +613,7 @@ export async function resetSiteConfig() {
   window.dispatchEvent(new Event("siteConfigChanged"));
 }
 
-export type ProductCategory = "snack-bouquet" | "money-bouquet" | "fresh-flower" | "artificial-flower" | "catalog-home" | "accessories" | "buckets" | "wreaths" | "packaging" | "ribbons" | "sewa" | "bloom-box" | "thumbelina" | "bucket-unik" | "vas-dekorasi";
+export type ProductCategory = "snack-bouquet" | "money-bouquet" | "fresh-flower" | "artificial-flower" | "catalog-home" | "accessories" | "buckets" | "wreaths" | "packaging" | "ribbons" | "sewa" | "bloom-box" | "thumbelina" | "bucket-unik" | "vas-dekorasi" | "buket-satin" | "chocolate-bouquet";
 
 // Image limit per product (enforced in admin dashboard)
 export const MAX_IMAGES_PER_PRODUCT = 12;

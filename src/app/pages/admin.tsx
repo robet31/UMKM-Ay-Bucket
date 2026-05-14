@@ -421,14 +421,15 @@ export function Admin() {
   };
 
   const handleAddProduct = () => {
+    const firstCategoryKey = categories.length > 0 ? categories[0].key : "snack-bouquet";
     const newProduct: Product = {
       id: `custom-${Date.now()}`,
       name: "Produk Baru",
-      category: "catalog-home",
+      category: firstCategoryKey as any,
       price: 100000,
       priceLabel: "Rp 100.000",
-      image: "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=600&q=80"],
+      image: "",
+      images: [],
     };
     setProductsList([...products, newProduct]);
     setEditingProduct(newProduct);
@@ -1577,8 +1578,10 @@ function HeroSlotManager({
                       {previewImage ? (
                         <img src={migrateLegacyAssetUrl(previewImage)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontFamily: "'Inter', sans-serif", fontSize: '12px', textAlign: 'center', padding: '12px' }}>
-                          Belum ada gambar
+                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#999', fontFamily: "'Inter', sans-serif", fontSize: '11px', textAlign: 'center', padding: '12px', background: 'linear-gradient(135deg, #f5f5f5 0%, #eee 100%)' }}>
+                          <span style={{ fontSize: '24px', marginBottom: '8px' }}>🖼️</span>
+                          Slot Kosong<br/>
+                          <span style={{ fontSize: '9px', opacity: 0.7 }}>(Pilih produk atau upload)</span>
                         </div>
                       )}
                     </div>
